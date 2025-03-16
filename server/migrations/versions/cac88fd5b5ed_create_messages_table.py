@@ -28,6 +28,8 @@ def upgrade() -> None:
         sa.Column('queue_id', sa.Integer(), sa.ForeignKey('queues.id', ondelete="CASCADE"), nullable=True),
         sa.Column('topic_id', sa.Integer(), sa.ForeignKey('topics.id', ondelete="CASCADE"), nullable=True),
         sa.Column('status', sa.Enum('pending', 'processed', name="message_status"), default="pending"),
+        sa.Column('created_at', sa.DateTime(), nullable=False),
+        sa.Column('routing_key', sa.String(length=255), nullable=False),
     )
     pass
     # ### end Alembic commands ###
