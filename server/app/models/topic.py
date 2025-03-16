@@ -7,5 +7,5 @@ class Topic(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), unique=True, nullable=False)
-    users = relationship('User', secondary='user_topic')
-    messages = relationship('Message')
+    users = relationship('User', secondary='user_topic', overlaps="topics")
+    messages = relationship('Message', overlaps="topic")

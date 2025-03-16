@@ -23,5 +23,5 @@ class Message(Base):
     routing_key = Column(String(100), nullable=False)
     created_at = Column(DateTime, default=func.now()) 
 
-    queue = relationship("Queue")
-    topic = relationship("Topic")
+    queue = relationship("Queue",  overlaps="messages")
+    topic = relationship("Topic", overlaps="messages")

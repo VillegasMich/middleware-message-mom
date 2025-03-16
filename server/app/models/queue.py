@@ -8,4 +8,4 @@ class Queue(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), unique=True, nullable=False)
-    messages = relationship('Message')
+    messages = relationship('Message', overlaps="queue")
