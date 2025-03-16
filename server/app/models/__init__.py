@@ -3,3 +3,4 @@ from app.models.user import User
 from app.models.message import Message 
 from app.models.queue import Queue
 from app.models.topic import Topic
+from app.models.user_topic import user_topic

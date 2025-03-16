@@ -1,8 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 
 app = FastAPI()
 
-
 @app.get("/")
-async def root():
-    return {"message": "Hello World"}
+def root():
+    return {"message": "Records successfully created"}
