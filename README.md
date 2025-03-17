@@ -2,6 +2,20 @@
 
 ## Client
 
+Edit `boostrap.py` file contents:
+
+```python
+SERVER_URL = "http://{SERVER_IP}:{PORT}"
+```
+
+Run client:
+
+```bash
+cd client
+pip install -r requirements.txt
+python main.py
+```
+
 ## Server
 
 Set up MySQL database (if needed):
@@ -31,5 +45,5 @@ cd server
 pip install -r requirements.txt
 alembic init alembic
 alembic upgrade head
-python main.py
+fastapi main
 ```
