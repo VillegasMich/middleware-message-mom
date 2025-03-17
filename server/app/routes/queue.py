@@ -68,7 +68,7 @@ async def publish_message(queue_id: int, message: MessageCreate, db: Session = D
 async def consume_message(queue_id: int, db: Session = Depends(get_db)):
     popped_message = db.query(Message) \
         .filter(Message.queue_id == queue_id) \
-        .order_by(Message.created_at.desc()) \
+        .order_by(Message.created_at.asc()) \
         .with_for_update(skip_locked=True) \
         .first()
     

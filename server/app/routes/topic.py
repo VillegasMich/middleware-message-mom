@@ -67,7 +67,7 @@ async def publish_message(topic_id: int, message: MessageCreate, db: Session = D
 async def consume_message(topic_id: int, db: Session = Depends(get_db)):
     message = db.query(Message) \
         .filter(Message.topic_id == topic_id) \
-        .order_by(Message.created_at.desc()) \
+        .order_by(Message.created_at.asc()) \
         .first()
     
     if not message:
