@@ -9,11 +9,30 @@ TOKEN = ""  # Stores authentication token
 
 def main():
     """Main interactive loop"""
+
+    # User authentication
+    # while True:
+    #     print("\n[bold]Welcome to the Middleware MOM Client![/]")
+    #     print("1. Regster")
+    #     print("2. Login")
+    #
+    #     choice = Prompt.ask("[bold yellow]Choose an option[/]")
+    #
+    #     if choice == "1":
+    #         User.register()
+    #         break
+    #     elif choice == "2":
+    #         User.login(TOKEN)
+    #         break
+    #     else:
+    #         print("[red]Invalid option, try again.[/]")
+
+    # Main menu
     while True:
         print("\n[bold cyan]Middleware MOM Client[/]")
-        print("1. Register")
-        print("2. Login")
-        print("3. Create Queue")
+        print("1. Create Queue")
+        print("2. List all the Queues")
+        print("3. Delete Queue")
         print("4. Send Message to Queue")
         print("5. Receive Message from Queue")
         print("6. Create Topic")
@@ -25,11 +44,11 @@ def main():
         choice = Prompt.ask("[bold yellow]Choose an option[/]")
 
         if choice == "1":
-            User.register()
-        elif choice == "2":
-            User.login(TOKEN)
-        elif choice == "3":
             Queue.create()
+        elif choice == "2":
+            Queue.get_all()
+        elif choice == "3":
+            Queue.delete()
         elif choice == "4":
             Queue.send_message()
         elif choice == "5":
