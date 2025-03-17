@@ -1,1 +1,6 @@
+**/__pycache__/
+**/*.pyc
 .venv
+.env
+/venv
+docker-compose.yml
