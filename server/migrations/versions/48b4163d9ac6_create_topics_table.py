@@ -24,6 +24,7 @@ def upgrade() -> None:
     op.create_table('topics',
         sa.Column('id', sa.Integer(), primary_key=True, index=True),
         sa.Column('name', sa.String(length=100), nullable=False),
+        sa.Column('user_id', sa.Integer(), sa.ForeignKey('users.id', ondelete="CASCADE"), nullable=True),
     )
     pass
     # ### end Alembic commands ###
