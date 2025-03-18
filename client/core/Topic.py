@@ -163,7 +163,7 @@ class Topic:
                 }"""
             )
     
-    def pull_messages(topic_id:int):
+    def pull_message(topic_id:int):
         response = requests.get(
             f"{SERVER_URL}/topics/{topic_id}/consume",
             headers=Util.get_headers(),
