@@ -54,11 +54,9 @@ async def delete_queue(queue_id: int, db: Session = Depends(get_db), current_use
 @router.post("/queues/{queue_id}/publish")
 async def publish_message(queue_id: int, message: MessageCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     existing_queue = db.query(Queue).filter(Queue.id == queue_id).first()
+    
     if not existing_queue:
         raise HTTPException(status_code=404, detail="Queue not found")
-    
-    if existing_queue.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="You do not have permission to publish messages in this queue")
     
     new_message = Message(content=message.content, routing_key=message.routing_key, queue_id=existing_queue.id)
     db.add(new_message)
@@ -68,7 +66,7 @@ async def publish_message(queue_id: int, message: MessageCreate, db: Session = D
 
 # The query is made this way bc we want to ensure two consumers can't consume the same message
 @router.get("/queues/{queue_id}/consume")
-async def consume_message(queue_id: int, db: Session = Depends(get_db)):
+async def consume_message(queue_id: int, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     popped_message = db.query(Message) \
         .filter(Message.queue_id == queue_id) \
         .order_by(Message.created_at.asc()) \

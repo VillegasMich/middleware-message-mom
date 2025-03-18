@@ -54,7 +54,7 @@ async def delete_topic(topic_id: int, db: Session = Depends(get_db),  current_us
 
 
 @router.post("/topics/{topic_id}/publish")
-async def publish_message(topic_id: int, message: MessageCreate, db: Session = Depends(get_db)):
+async def publish_message(topic_id: int, message: MessageCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     existing_topic = db.query(Topic).filter(Topic.id == topic_id).first()
     if not existing_topic:
         raise HTTPException(status_code=404, detail="Topic not found")
@@ -67,7 +67,7 @@ async def publish_message(topic_id: int, message: MessageCreate, db: Session = D
 
 
 @router.get("/topics/{topic_id}/consume")
-async def consume_message(topic_id: int, db: Session = Depends(get_db)):
+async def consume_message(topic_id: int, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     message = db.query(Message) \
         .filter(Message.topic_id == topic_id) \
         .order_by(Message.created_at.desc()) \
