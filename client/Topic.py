@@ -1,5 +1,6 @@
 import requests
 from boostrap import SERVER_URL
+from rich import print
 from rich.prompt import Prompt
 from rich.tree import Tree
 from Util import Util
@@ -143,3 +144,32 @@ class Topic:
                     response.json().get('detail', 'No messages available')
                 }"""
             )
+
+    def subscribe():
+        topic_name = Prompt.ask("[cyan]Enter topic name[/]")
+         
+        response = requests.post(
+            f"{SERVER_URL}/topics/subscribe",
+            json={"name": topic_name},
+            headers=Util.get_headers(),
+        )
+        
+        if response.status_code == 200:
+            print(f"[yellow]Subscribed to topic:[/] {topic_name}")
+        else:
+            print(
+                f"""[red]Error:[/] {
+                    response.json().get('detail', 'No topic found')
+                }"""
+            )
+    
+    def pull_messages(topic_id:int):
+        response = requests.get(
+            f"{SERVER_URL}/topics/{topic_id}/consume",
+            headers=Util.get_headers(),
+        )
+
+        if response.status_code == 200:
+            return tuple((response.json()['content'], response.json()['id']))
+        else:
+            pass

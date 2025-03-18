@@ -5,12 +5,13 @@ import time
 import queue
 import threading
 from Topic import Topic
+from User import User
 
 class Listener:
 
-    def __init__(self, period: int, queue: queue):
+    def __init__(self, period: int, dict={}):
         self.period = period
-        self.queue = queue
+        self.dict = dict
         self.running = False
 
     def start(self):
@@ -28,8 +29,15 @@ class Listener:
     def listen(self):
         while True:
             try:
-                #! Fetch messages from the subscribed topics.
-                pass
+                topics = User.get_user_topics()
+                if topics and len(topics) > 0:
+                    for topic in topics:
+                        message = Topic.pull_messages(topic['id'])
+                        if message:
+                            if topic['name'] in self.dict:
+                                self.dict[topic['name']].add(message) 
+                            else:
+                                self.dict[topic['name']] = {message} 
             except Exception as e:
                 print(f"Error al realizar la petición: {e}")
 
