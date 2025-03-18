@@ -1,6 +1,7 @@
 from app.core.database import get_db
 from app.models.topic import Topic
 from app.models.message import Message
+from app.models.user import User
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -54,7 +55,7 @@ async def delete_topic(topic_id: int, db: Session = Depends(get_db),  current_us
 
 
 @router.post("/topics/{topic_id}/publish")
-async def publish_message(topic_id: int, message: MessageCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+async def publish_message(topic_id: int, message: MessageCreate, db: Session = Depends(get_db)):
     existing_topic = db.query(Topic).filter(Topic.id == topic_id).first()
     if not existing_topic:
         raise HTTPException(status_code=404, detail="Topic not found")
@@ -67,15 +68,27 @@ async def publish_message(topic_id: int, message: MessageCreate, db: Session = D
 
 
 @router.get("/topics/{topic_id}/consume")
-async def consume_message(topic_id: int, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+async def consume_message(topic_id: int, db: Session = Depends(get_db)):
     message = db.query(Message) \
         .filter(Message.topic_id == topic_id) \
-        .order_by(Message.created_at.desc()) \
+        .order_by(Message.created_at.asc()) \
         .first()
     
     if not message:
         raise HTTPException(status_code=404, detail="Message not found")
     
-    return {"message": "Message consumed successfully", "content": message.content}
+    return {"message": "Message consumed successfully", "content": message.content, "id":message.id }
 
+@router.post("/topics/subscribe")
+async def subscribe( topic:TopicCreate ,db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    existing_topic = db.query(Topic).filter(Topic.name == topic.name).first()
 
+    if not existing_topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    
+    existing_topic.users = [current_user]
+
+    db.add(existing_topic)
+    db.commit()
+
+    return {"message": "Successfully subscribed to the topic"}

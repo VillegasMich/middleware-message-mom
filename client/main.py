@@ -1,9 +1,9 @@
-from Queue import Queue
+from core.Queue import Queue
 from rich import print
 from rich.prompt import Prompt
-from Topic import Topic
-from User import User
-from Listener import Listener
+from core.Topic import Topic
+from core.User import User
+from core.Listener import Listener
 import queue
 
 TOKEN = "" 
@@ -30,7 +30,11 @@ def main():
                 print("[red]Login failed. Try again.[/]")
         else:
             print("[red]Invalid option, try again.[/]")
-
+    
+    messages_dict = {}
+    listener = Listener(period=10, dict=messages_dict)
+    listener.start()
+    
     # Main menu after successful login
     while True:
         print("\n[bold cyan]Middleware MOM Client[/]")
@@ -43,7 +47,8 @@ def main():
         print("7. Create Topic")
         print("8. Send Message to Topic")
         print("9. Receive Message from Topic")
-        print("10. Exit")
+        print("10. Subscribe to a topic")
+        print("11. Exit")
 
         choice = Prompt.ask("[bold yellow]Choose an option[/]")
 
@@ -66,13 +71,13 @@ def main():
         elif choice == "9":
             Topic.receive_message()
         elif choice == "10":
+            Topic.subscribe()
+        elif choice == "11":
             print("[bold red]Exiting...[/]")
             break
         else:
             print("[red]Invalid option, try again.[/]")
+    print(messages_dict)
 
 if __name__ == "__main__":
-    messages_queue = queue.Queue() 
-    listener = Listener(period=10, queue=messages_queue)
-    listener.start()
     main()

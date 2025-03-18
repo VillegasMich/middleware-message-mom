@@ -1,6 +1,7 @@
 import requests
 from boostrap import SERVER_URL
 from rich.prompt import Prompt
+from rich import print
 from Util import Util
 
 class User:
@@ -38,3 +39,10 @@ class User:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
             return None
         
+    def get_user_topics():
+        response = requests.get( f"{SERVER_URL}/users/topics", headers=Util.get_headers())
+        
+        if response.status_code == 200:
+            return response.json()['topics']
+        else:
+            return None
