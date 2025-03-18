@@ -4,30 +4,32 @@ from rich.prompt import Prompt
 from Topic import Topic
 from User import User
 
-TOKEN = ""  # Stores authentication token
-
+TOKEN = "" 
 
 def main():
     """Main interactive loop"""
+    global TOKEN 
 
-    # User authentication
-    # while True:
-    #     print("\n[bold]Welcome to the Middleware MOM Client![/]")
-    #     print("1. Regster")
-    #     print("2. Login")
-    #
-    #     choice = Prompt.ask("[bold yellow]Choose an option[/]")
-    #
-    #     if choice == "1":
-    #         User.register()
-    #         break
-    #     elif choice == "2":
-    #         User.login(TOKEN)
-    #         break
-    #     else:
-    #         print("[red]Invalid option, try again.[/]")
+    while True:
+        print("\n[bold]Welcome to the Middleware MOM Client![/]")
+        print("1. Register")
+        print("2. Login")
+    
+        choice = Prompt.ask("[bold yellow]Choose an option[/]")
+    
+        if choice == "1":
+            User.register()
+            break
+        elif choice == "2":
+            TOKEN = User.login()
+            if TOKEN:  
+                break
+            else:
+                print("[red]Login failed. Try again.[/]")
+        else:
+            print("[red]Invalid option, try again.[/]")
 
-    # Main menu
+    # Main menu after successful login
     while True:
         print("\n[bold cyan]Middleware MOM Client[/]")
         print("1. Create Queue")
@@ -38,13 +40,12 @@ def main():
         print("6. Create Topic")
         print("7. Send Message to Topic")
         print("8. Receive Message from Topic")
-
         print("9. Exit")
 
         choice = Prompt.ask("[bold yellow]Choose an option[/]")
 
         if choice == "1":
-            Queue.create()
+            Queue.create() 
         elif choice == "2":
             Queue.get_all()
         elif choice == "3":
@@ -64,7 +65,6 @@ def main():
             break
         else:
             print("[red]Invalid option, try again.[/]")
-
 
 if __name__ == "__main__":
     main()

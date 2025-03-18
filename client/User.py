@@ -3,7 +3,6 @@ from boostrap import SERVER_URL
 from rich.prompt import Prompt
 from Util import Util
 
-
 class User:
     @staticmethod
     def register():
@@ -21,7 +20,7 @@ class User:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
 
     @staticmethod
-    def login(token: str):
+    def login():
         """Logs in and obtains a token"""
         username = Prompt.ask("[cyan]Enter username[/]")
         password = Prompt.ask("[cyan]Enter password[/]", password=True)
@@ -34,5 +33,8 @@ class User:
             token = response.json()["access_token"]
             Util.set_token(token)
             print("[green]Login successful![/]")
+            return token
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
+            return None
+        

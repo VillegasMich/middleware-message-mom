@@ -4,6 +4,8 @@ from app.models.message import Message
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from app.core.auth_helpers import get_current_user
+
 
 router = APIRouter()
 
@@ -22,14 +24,13 @@ async def get_topics(db: Session = Depends(get_db)):
     return {"message": "Topics listed successfully", "topics": topics}
 
 
-# TODO: Add 'creator' created by user ...
 @router.post("/topics/")
-async def create_topic(topic: TopicCreate, db: Session = Depends(get_db)):
+async def create_topic(topic: TopicCreate, db: Session = Depends(get_db),  current_user: str = Depends(get_current_user)):
     existing_topic = db.query(Topic).filter(Topic.name == topic.name).first()
     if existing_topic:
         raise HTTPException(status_code=400, detail="Topic already exists")
 
-    new_topic = Topic(name=topic.name)
+    new_topic = Topic(name=topic.name, user_id=current_user.id)
     db.add(new_topic)
     db.commit()
     db.refresh(new_topic)
@@ -37,21 +38,23 @@ async def create_topic(topic: TopicCreate, db: Session = Depends(get_db)):
     return {"message": "Topic created successfully", "topic_id": new_topic.id}
 
 
-# TODO: Add user 'creator' verification
 @router.delete("/topics/{topic_id}")
-async def delete_topic(topic_id: int, db: Session = Depends(get_db)):
-    deleted_topic = db.query(Topic).filter(Topic.id == topic_id).first()
-    if not deleted_topic:
+async def delete_topic(topic_id: int, db: Session = Depends(get_db),  current_user: str = Depends(get_current_user)):
+    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+    if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
 
-    db.delete(deleted_topic)
+    if topic.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You do not have permission to delete this topic")
+    
+    db.delete(topic)
     db.commit()
 
-    return {"message": "Topic deleted successfully", "topic_id": deleted_topic.id}
+    return {"message": "Topic deleted successfully", "topic_id": topic.id}
 
 
 @router.post("/topics/{topic_id}/publish")
-async def publish_message(topic_id: int, message: MessageCreate, db: Session = Depends(get_db)):
+async def publish_message(topic_id: int, message: MessageCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     existing_topic = db.query(Topic).filter(Topic.id == topic_id).first()
     if not existing_topic:
         raise HTTPException(status_code=404, detail="Topic not found")
@@ -64,10 +67,10 @@ async def publish_message(topic_id: int, message: MessageCreate, db: Session = D
 
 
 @router.get("/topics/{topic_id}/consume")
-async def consume_message(topic_id: int, db: Session = Depends(get_db)):
+async def consume_message(topic_id: int, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     message = db.query(Message) \
         .filter(Message.topic_id == topic_id) \
-        .order_by(Message.created_at.asc()) \
+        .order_by(Message.created_at.desc()) \
         .first()
     
     if not message:

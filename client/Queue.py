@@ -23,7 +23,7 @@ class Queue:
             ]"
         }
         """
-        response = requests.get(f"{SERVER_URL}/queues/")
+        response = requests.get(f"{SERVER_URL}/queues/", headers=Util.get_headers())
 
         if response.status_code == 200:
             tree_root = Tree("\n[bold yellow]Queues:[/]")
@@ -57,11 +57,7 @@ class Queue:
         """
         name = Prompt.ask("[cyan]Enter queue name[/]")
 
-        response = requests.post(
-            # f"{SERVER_URL}/queues/", json={"name": name}, headers=Util.get_headers()
-            f"{SERVER_URL}/queues/",
-            json={"name": name},
-        )
+        response = requests.post(f"{SERVER_URL}/queues/", json={"name": name}, headers=Util.get_headers())
 
         if response.status_code == 200:
             print(f"[green]Queue '{name}' created successfully![/]")
@@ -74,8 +70,7 @@ class Queue:
         queue_id = Prompt.ask("[cyan]Enter queue id to [bold red]delete[/]")
 
         response = requests.delete(
-            # f"{SERVER_URL}/queues/{queue_id}", headers=Util.get_headers()
-            f"{SERVER_URL}/queues/{queue_id}",
+            f"{SERVER_URL}/queues/{queue_id}", headers=Util.get_headers()
         )
 
         if response.status_code == 200:
@@ -89,9 +84,20 @@ class Queue:
         queue_name = Prompt.ask("[cyan]Enter queue name[/]")
         message = Prompt.ask("[cyan]Enter message[/]")
 
+        queue_response = requests.get(f"{SERVER_URL}/queues/", headers=Util.get_headers())
+        queues = queue_response.json().get("queues", [])
+
+        queue = next((q for q in queues if q["name"] == queue_name), None)
+
+        if queue is None:
+            print(f"[red]Error:[/] Queue '{queue_name}' not found.")
+            return
+
+        queue_id = queue["id"]  
+
         response = requests.post(
-            f"{SERVER_URL}/queues/{queue_name}/send/",
-            json={"message": message},
+            f"{SERVER_URL}/queues/{queue_id}/publish",
+             json={"content": message, "routing_key": "default"},
             headers=Util.get_headers(),
         )
 
@@ -100,21 +106,29 @@ class Queue:
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
 
-    # TODO:
     @staticmethod
     def receive_message():
         """Receives a message from a queue"""
         queue_name = Prompt.ask("[cyan]Enter queue name[/]")
 
+        queue_response = requests.get(f"{SERVER_URL}/queues/", headers=Util.get_headers())
+        queues = queue_response.json().get("queues", [])
+
+        queue = next((q for q in queues if q["name"] == queue_name), None)
+
+        if queue is None:
+            print(f"[red]Error:[/] Queue '{queue_name}' not found.")
+            return
+
+        queue_id = queue["id"]
+
         response = requests.get(
-            f"{SERVER_URL}/queues/{queue_name}/receive/", headers=Util.get_headers()
+            f"{SERVER_URL}/queues/{queue_id}/consume",  
+            headers=Util.get_headers(),
         )
 
         if response.status_code == 200:
-            print(f"[yellow]Message received:[/] {response.json()['message']}")
+            print(f"[yellow]Message received:[/] {response.json()['content']}")  
         else:
-            print(
-                f"[red]Error:[/] {
-                    response.json().get('detail', 'No messages available')
-                }"
-            )
+            print(f"[red]Error:[/] {response.json().get('detail', 'No messages available')}")
+
