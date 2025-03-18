@@ -3,6 +3,8 @@ from rich import print
 from rich.prompt import Prompt
 from Topic import Topic
 from User import User
+from Listener import Listener
+import queue
 
 TOKEN = "" 
 
@@ -67,4 +69,7 @@ def main():
             print("[red]Invalid option, try again.[/]")
 
 if __name__ == "__main__":
+    messages_queue = queue.Queue() 
+    listener = Listener(period=10, queue=messages_queue)
+    listener.start()
     main()
