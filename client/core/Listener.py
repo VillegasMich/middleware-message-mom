@@ -4,8 +4,8 @@ from Util import Util
 import time
 import queue
 import threading
-from client.core.Topic import Topic
-from client.core.User import User
+from core.Topic import Topic
+from core.User import User
 
 class Listener:
 

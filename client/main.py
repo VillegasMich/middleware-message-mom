@@ -1,9 +1,9 @@
-from client.core.Queue import Queue
+from core.Queue import Queue
 from rich import print
 from rich.prompt import Prompt
-from client.core.Topic import Topic
-from client.core.User import User
-from client.core.Listener import Listener
+from core.Topic import Topic
+from core.User import User
+from core.Listener import Listener
 import queue
 
 TOKEN = "" 
