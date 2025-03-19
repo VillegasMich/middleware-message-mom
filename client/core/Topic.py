@@ -63,7 +63,6 @@ class Topic:
             headers=Util.get_headers(),
         )
 
-
         if response.status_code == 200:
             print(f"[green]Topic '{name}' created successfully![/]")
         else:
@@ -79,7 +78,6 @@ class Topic:
             headers=Util.get_headers(),
         )
 
-
         if response.status_code == 200:
             print("[green]Topic deleted successfully![/]")
         else:
@@ -88,11 +86,13 @@ class Topic:
     @staticmethod
     def send_message():
         """Sends a message to a topic"""
-        
+
         topic_name = Prompt.ask("[cyan]Enter topic name[/]")
         message = Prompt.ask("[cyan]Enter message[/]")
 
-        topic_response = requests.get(f"{SERVER_URL}/topics/", headers=Util.get_headers())
+        topic_response = requests.get(
+            f"{SERVER_URL}/topics/", headers=Util.get_headers()
+        )
         topics = topic_response.json().get("topics", [])
 
         topic = next((t for t in topics if t["name"] == topic_name), None)
@@ -101,14 +101,13 @@ class Topic:
             print(f"[red]Error:[/] Topic '{topic_name}' not found.")
             return
 
-        topic_id = topic["id"]  
+        topic_id = topic["id"]
 
         response = requests.post(
             f"{SERVER_URL}/topics/{topic_id}/publish",
-             json={"content": message, "routing_key": "default"},
+            json={"content": message, "routing_key": "default"},
             headers=Util.get_headers(),
         )
-        
 
         if response.status_code == 200:
             print("[green]Message sent successfully![/]")
@@ -116,60 +115,41 @@ class Topic:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
 
     @staticmethod
-    def receive_message():
-        """Receives a message from a topic"""
-        topic_name = Prompt.ask("[cyan]Enter topic name[/]")
-        
-        topic_response = requests.get(f"{SERVER_URL}/topics/", headers=Util.get_headers())
-        topics = topic_response.json().get("topics", [])
+    def show_collected_messages(message_dict: dict[str, set]):
+        """Show all collected messages from user topics"""
+        tree_root = Tree("\n[bold yellow]Topics:[/]")
 
-        topic = next((t for t in topics if t["name"] == topic_name), None)
+        for topic in message_dict.keys():
+            topic_root = tree_root.add("[bold]" + topic + "[/]")
+            for message in message_dict[topic]:
+                topic_root.add(str(message))
+        print(tree_root)
 
-        if topic is None:
-            print(f"[red]Error:[/] Topic '{topic_name}' not found.")
-            return
-
-        topic_id = topic["id"]  
-
-        response = requests.get(
-            f"{SERVER_URL}/topics/{topic_id}/consume",
-            headers=Util.get_headers(),
-        )
-
-        if response.status_code == 200:
-            print(f"[yellow]Message received:[/] {response.json()['content']}")
-        else:
-            print(
-                f"""[red]Error:[/] {
-                    response.json().get('detail', 'No messages available')
-                }"""
-            )
-
+    @staticmethod
     def subscribe():
         topic_name = Prompt.ask("[cyan]Enter topic name[/]")
-         
+
         response = requests.post(
             f"{SERVER_URL}/topics/subscribe",
             json={"name": topic_name},
             headers=Util.get_headers(),
         )
-        
+
         if response.status_code == 200:
             print(f"[yellow]Subscribed to topic:[/] {topic_name}")
         else:
             print(
-                f"""[red]Error:[/] {
-                    response.json().get('detail', 'No topic found')
-                }"""
+                f"""[red]Error:[/] {response.json().get("detail", "No topic found")}"""
             )
-    
-    def pull_message(topic_id:int):
+
+    @staticmethod
+    def pull_message(topic_id: int):
         response = requests.get(
             f"{SERVER_URL}/topics/{topic_id}/consume",
             headers=Util.get_headers(),
         )
 
         if response.status_code == 200:
-            return tuple((response.json()['content'], response.json()['id']))
+            return tuple((response.json()["content"], response.json()["id"]))
         else:
             pass
