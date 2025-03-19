@@ -120,72 +120,53 @@ class Topic:
 
         response = requests.post(
             f"{SERVER_URL}/topics/{topic_id}/publish",
-             json={"content": message, "routing_key": "default"},
+            json={"content": message, "routing_key": "default"},
             headers=Util.get_headers(),
         )
-        
         if response.status_code == 200:
             print("[green]Message sent successfully![/]")
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
 
     @staticmethod
-    def receive_message():
-        """Receives a message from a topic"""
-        
-        topics = Topic.get_all()
-        
-        if not topics:
-            return 
-        
-        topic_name = Prompt.ask("[cyan]Enter topic name[/]")
-        
-        topic = next((q for q in topics if q["name"] == topic_name), None)
+    def show_collected_messages(message_dict: dict[str, set]):
+        """Show all collected messages from user topics"""
+        tree_root = Tree("\n[bold yellow]Topics:[/]")
 
-        if topic is None:
-            print(f"[red]Error:[/] Topic '{topic_name}' not found.")
-            return
-        
-        topic_id = topic["id"]
+        for topic in message_dict.keys():
+            topic_root = tree_root.add("[bold]" + topic + "[/]")
+            for message in message_dict[topic]:
+                topic_root.add(str(message))
+        print(tree_root)
 
-        response = requests.get(
-            f"{SERVER_URL}/topics/{topic_id}/consume",
-            headers=Util.get_headers(),
-        )
-
-        if response.status_code == 200:
-            print(f"[yellow]Message received:[/] {response.json()['content']}")
-        else:
-            print(f"[red]Error:[/] {response.json().get('detail', 'No messages available')}")
-
+    @staticmethod
     def subscribe():
         
         Topic.get_all()
         
         topic_name = Prompt.ask("[cyan]Enter topic name[/]")
-         
+
         response = requests.post(
             f"{SERVER_URL}/topics/subscribe",
             json={"name": topic_name},
             headers=Util.get_headers(),
         )
-        
+
         if response.status_code == 200:
             print(f"[yellow]Subscribed to topic:[/] {topic_name}")
         else:
             print(
-                f"""[red]Error:[/] {
-                    response.json().get('detail', 'No topic found')
-                }"""
+                f"""[red]Error:[/] {response.json().get("detail", "No topic found")}"""
             )
-    
-    def pull_message(topic_id:int):
+
+    @staticmethod
+    def pull_message(topic_id: int):
         response = requests.get(
             f"{SERVER_URL}/topics/{topic_id}/consume",
             headers=Util.get_headers(),
         )
 
         if response.status_code == 200:
-            return tuple((response.json()['content'], response.json()['id']))
+            return tuple((response.json()["content"], response.json()["id"]))
         else:
             pass

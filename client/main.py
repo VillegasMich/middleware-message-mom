@@ -1,40 +1,40 @@
+from core.Listener import Listener
 from core.Queue import Queue
-from rich import print
-from rich.prompt import Prompt
 from core.Topic import Topic
 from core.User import User
-from core.Listener import Listener
-import queue
+from rich import print
+from rich.prompt import Prompt
 
-TOKEN = "" 
+TOKEN = ""
+
 
 def main():
     """Main interactive loop"""
-    global TOKEN 
+    global TOKEN
 
     while True:
         print("\n[bold]Welcome to the Middleware MOM Client![/]")
         print("1. Register")
         print("2. Login")
-    
+
         choice = Prompt.ask("[bold yellow]Choose an option[/]")
-    
+
         if choice == "1":
             User.register()
             break
         elif choice == "2":
             TOKEN = User.login()
-            if TOKEN:  
+            if TOKEN:
                 break
             else:
                 print("[red]Login failed. Try again.[/]")
         else:
             print("[red]Invalid option, try again.[/]")
-    
+
     messages_dict = {}
     listener = Listener(period=10, dict=messages_dict)
     listener.start()
-    
+
     # Main menu after successful login
     while True:
         print("\n[bold cyan]Middleware MOM Client[/]")
@@ -46,7 +46,7 @@ def main():
         print("6. List all the Topics")
         print("7. Create Topic")
         print("8. Delete Topic")
-        print("9. Send Message to Topic")
+        print("9. Show collected Messages from Topic")
         print("10. Receive Message from Topic")
         print("11. Subscribe to a topic")
         print("12. Exit")
@@ -70,7 +70,7 @@ def main():
         elif choice == "8":
             Topic.delete()
         elif choice == "9":
-            Topic.send_message()
+            Topic.show_collected_messages(messages_dict)
         elif choice == "10":
             Topic.receive_message()
         elif choice == "11":
@@ -80,7 +80,8 @@ def main():
             break
         else:
             print("[red]Invalid option, try again.[/]")
-    print(messages_dict)
+    print("[bold yellow]Disconnecting...[/]")
+
 
 if __name__ == "__main__":
     main()
