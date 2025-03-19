@@ -8,7 +8,7 @@ from Util import Util
 
 class Topic:
     @staticmethod
-    def get_all():
+    def get_all(message : str = "Topics", only_owned: bool = False):
         """
         Lists all the topics
         Response:
@@ -16,30 +16,38 @@ class Topic:
             "message": "message_output"
             "topics": "[
                 {
-                    "name": queue_name
-                    "id": queue_id
+                    "name": topic_name
+                    "id": topic_id
                 },
                 ...
             ]"
         }
         """
-        response = requests.get(f"{SERVER_URL}/topics/", headers=Util.get_headers())
+        response = requests.get(f"{SERVER_URL}/topics?{only_owned}", headers=Util.get_headers())
+        
+        topics = response.json().get("topics", [])
 
         if response.status_code == 200:
-            tree_root = Tree("\n[bold yellow]Topics:[/]")
-            for topic in response.json()["topics"]:
-                tree_root.add(
-                    "[bold]#"
-                    + str(topic["id"])
-                    + "[/]"
-                    + " - "
-                    + "'"
-                    + topic["name"]
-                    + "'"
-                )
-            print(tree_root)
+            if not topics:
+                print("[yellow]There aren't any topics yet.[/]")
+                return
+            else:
+                tree_root = Tree(f"\n[bold yellow]{message}:[/]")
+                for topic in topics:
+                    tree_root.add(
+                        "[bold]#"
+                        + str(topic["id"])
+                        + "[/]"
+                        + " - "
+                        + "'"
+                        + topic["name"]
+                        + "'"
+                    )
+                print(tree_root)
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
+            
+        return topics
 
     @staticmethod
     def create():
@@ -63,7 +71,6 @@ class Topic:
             headers=Util.get_headers(),
         )
 
-
         if response.status_code == 200:
             print(f"[green]Topic '{name}' created successfully![/]")
         else:
@@ -72,36 +79,44 @@ class Topic:
     @staticmethod
     def delete():
         """Deletes a topic"""
-        queue_id = Prompt.ask("[cyan]Enter topic id to [bold red]delete[/]")
+        
+        topics = Topic.get_all("Your Topics", only_owned=True)
+        
+        if not topics:
+            print("[yellow]You don't own any topics to delete.[/]")
+            return
+        
+        topic_name = Prompt.ask("[cyan]Enter topic name to [bold red]delete[/]")
 
-        response = requests.delete(
-            f"{SERVER_URL}/topic/{queue_id}",
-            headers=Util.get_headers(),
+        delete_response = requests.delete(
+            f"{SERVER_URL}/topics/{topic_name}", headers=Util.get_headers()
         )
 
-
-        if response.status_code == 200:
+        if delete_response.status_code == 200:
             print("[green]Topic deleted successfully![/]")
         else:
-            print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
+            print(f"[red]Error:[/] {delete_response.json().get('detail', 'Unknown error')}")
 
     @staticmethod
     def send_message():
         """Sends a message to a topic"""
         
-        topic_name = Prompt.ask("[cyan]Enter topic name[/]")
-        message = Prompt.ask("[cyan]Enter message[/]")
-
-        topic_response = requests.get(f"{SERVER_URL}/topics/", headers=Util.get_headers())
-        topics = topic_response.json().get("topics", [])
-
-        topic = next((t for t in topics if t["name"] == topic_name), None)
+        topics = Topic.get_all()
+        
+        if not topics:
+            return  
+        
+        topic_name = Prompt.ask("[cyan]Enter topic name to send a message[/]")
+        
+        topic = next((q for q in topics if q["name"] == topic_name), None)
 
         if topic is None:
             print(f"[red]Error:[/] Topic '{topic_name}' not found.")
             return
-
-        topic_id = topic["id"]  
+        
+        topic_id = topic["id"]
+        
+        message = Prompt.ask("[cyan]Enter message[/]")
 
         response = requests.post(
             f"{SERVER_URL}/topics/{topic_id}/publish",
@@ -109,7 +124,6 @@ class Topic:
             headers=Util.get_headers(),
         )
         
-
         if response.status_code == 200:
             print("[green]Message sent successfully![/]")
         else:
@@ -118,18 +132,21 @@ class Topic:
     @staticmethod
     def receive_message():
         """Receives a message from a topic"""
+        
+        topics = Topic.get_all()
+        
+        if not topics:
+            return 
+        
         topic_name = Prompt.ask("[cyan]Enter topic name[/]")
         
-        topic_response = requests.get(f"{SERVER_URL}/topics/", headers=Util.get_headers())
-        topics = topic_response.json().get("topics", [])
-
-        topic = next((t for t in topics if t["name"] == topic_name), None)
+        topic = next((q for q in topics if q["name"] == topic_name), None)
 
         if topic is None:
             print(f"[red]Error:[/] Topic '{topic_name}' not found.")
             return
-
-        topic_id = topic["id"]  
+        
+        topic_id = topic["id"]
 
         response = requests.get(
             f"{SERVER_URL}/topics/{topic_id}/consume",
@@ -139,13 +156,12 @@ class Topic:
         if response.status_code == 200:
             print(f"[yellow]Message received:[/] {response.json()['content']}")
         else:
-            print(
-                f"""[red]Error:[/] {
-                    response.json().get('detail', 'No messages available')
-                }"""
-            )
+            print(f"[red]Error:[/] {response.json().get('detail', 'No messages available')}")
 
     def subscribe():
+        
+        Topic.get_all()
+        
         topic_name = Prompt.ask("[cyan]Enter topic name[/]")
          
         response = requests.post(

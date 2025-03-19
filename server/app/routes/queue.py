@@ -8,7 +8,7 @@ from app.core.auth_helpers import get_current_user
 
 router = APIRouter()
 
-class QueueCreate(BaseModel):
+class QueueModel(BaseModel):
     name: str
     
 class MessageCreate(BaseModel):
@@ -17,14 +17,20 @@ class MessageCreate(BaseModel):
 
 
 @router.get("/queues/")
-async def get_queues(db: Session = Depends(get_db)):
-    queues = db.query(Queue).all()
+async def get_queues(
+    db: Session = Depends(get_db), current_user: str = Depends(get_current_user), only_owned: bool = False):
+    
+    query = db.query(Queue)
+    
+    if only_owned:
+        query = query.filter(Queue.user_id == current_user.id) 
 
+    queues = query.all()
     return {"message": "Queues listed successfully", "queues": queues}
 
 
 @router.post("/queues/")
-async def create_queue(queue: QueueCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+async def create_queue(queue: QueueModel, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
     if existing_queue:
         raise HTTPException(status_code=400, detail="Queue already exists")
@@ -37,19 +43,18 @@ async def create_queue(queue: QueueCreate, db: Session = Depends(get_db), curren
     return {"message": "Queue created successfully", "queue_id": new_queue.id}
 
 
-@router.delete("/queues/{queue_id}")
-async def delete_queue(queue_id: int, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
-    queue = db.query(Queue).filter(Queue.id == queue_id).first()
-    if not queue:
-        raise HTTPException(status_code=404, detail="Queue not found")
+@router.delete("/queues/{queue_name}")
+async def delete_queue(queue_name: str, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     
-    if queue.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="You do not have permission to delete this queue")
+    queue = db.query(Queue).filter(Queue.name == queue_name).first()
+    
+    if not queue:
+        raise HTTPException(status_code=404, detail="Queue not found or you do not have permission to delete it.")
     
     db.delete(queue)
     db.commit()
 
-    return {"message": "Queue deleted successfully", "queue_id": queue.id}
+    return {"message": "Queue deleted successfully", "queue_name": queue_name}
 
 @router.post("/queues/{queue_id}/publish")
 async def publish_message(queue_id: int, message: MessageCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):

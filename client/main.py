@@ -38,24 +38,25 @@ def main():
     # Main menu after successful login
     while True:
         print("\n[bold cyan]Middleware MOM Client[/]")
-        print("1. Create Queue")
-        print("2. List all the Queues")
+        print("1. List all the Queues")
+        print("2. Create Queue")
         print("3. Delete Queue")
         print("4. Send Message to Queue")
         print("5. Receive Message from Queue")
         print("6. List all the Topics")
         print("7. Create Topic")
-        print("8. Send Message to Topic")
-        print("9. Receive Message from Topic")
-        print("10. Subscribe to a topic")
-        print("11. Exit")
+        print("8. Delete Topic")
+        print("9. Send Message to Topic")
+        print("10. Receive Message from Topic")
+        print("11. Subscribe to a topic")
+        print("12. Exit")
 
         choice = Prompt.ask("[bold yellow]Choose an option[/]")
 
         if choice == "1":
-            Queue.create() 
+            Queue.get_all() 
         elif choice == "2":
-            Queue.get_all()
+            Queue.create()
         elif choice == "3":
             Queue.delete()
         elif choice == "4":
@@ -67,12 +68,14 @@ def main():
         elif choice == "7":
             Topic.create()
         elif choice == "8":
-            Topic.send_message()
+            Topic.delete()
         elif choice == "9":
-            Topic.receive_message()
+            Topic.send_message()
         elif choice == "10":
-            Topic.subscribe()
+            Topic.receive_message()
         elif choice == "11":
+            Topic.subscribe()
+        elif choice == "12":
             print("[bold red]Exiting...[/]")
             break
         else:
