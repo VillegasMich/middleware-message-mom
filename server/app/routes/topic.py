@@ -18,10 +18,17 @@ class MessageCreate(BaseModel):
     content: str
     routing_key: str
 
-@router.get("/topics/")
-async def get_topics(db: Session = Depends(get_db)):
-    topics = db.query(Topic).all()
 
+@router.get("/topics/")
+async def get_topics(
+    db: Session = Depends(get_db), current_user: str = Depends(get_current_user), only_owned: bool = False):
+    
+    query = db.query(Topic)
+    
+    if only_owned:
+        query = query.filter(Topic.user_id == current_user.id) 
+
+    topics = query.all()
     return {"message": "Topics listed successfully", "topics": topics}
 
 
@@ -39,9 +46,9 @@ async def create_topic(topic: TopicCreate, db: Session = Depends(get_db),  curre
     return {"message": "Topic created successfully", "topic_id": new_topic.id}
 
 
-@router.delete("/topics/{topic_id}")
-async def delete_topic(topic_id: int, db: Session = Depends(get_db),  current_user: str = Depends(get_current_user)):
-    topic = db.query(Topic).filter(Topic.id == topic_id).first()
+@router.delete("/topics/{topic_name}")
+async def delete_topic(topic_name: str, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+    topic = db.query(Topic).filter(Topic.name == topic_name).first()
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
 
@@ -51,7 +58,7 @@ async def delete_topic(topic_id: int, db: Session = Depends(get_db),  current_us
     db.delete(topic)
     db.commit()
 
-    return {"message": "Topic deleted successfully", "topic_id": topic.id}
+    return {"message": "Topic deleted successfully", "topic_name": topic.name}
 
 
 @router.post("/topics/{topic_id}/publish")
@@ -80,7 +87,7 @@ async def consume_message(topic_id: int, db: Session = Depends(get_db)):
     return {"message": "Message consumed successfully", "content": message.content, "id":message.id }
 
 @router.post("/topics/subscribe")
-async def subscribe( topic:TopicCreate ,db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
+async def subscribe(topic: TopicCreate, db: Session = Depends(get_db), current_user: str = Depends(get_current_user)):
     existing_topic = db.query(Topic).filter(Topic.name == topic.name).first()
 
     if not existing_topic:
