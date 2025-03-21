@@ -2,6 +2,7 @@ from collections import deque
 
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
+from app.core.rrmanager import get_round_robin_manager
 from app.models.message import Message
 from app.models.queue import Queue
 from app.RoundRobinManager import RoundRobinManager
@@ -41,6 +42,7 @@ async def create_queue(
     queue: QueueCreate,
     db: Session = Depends(get_db),
     current_user: str = Depends(get_current_user),
+    round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
     if existing_queue:
@@ -51,7 +53,7 @@ async def create_queue(
     db.commit()
     db.refresh(new_queue)
 
-    RoundRobinManager.user_queues_dict[new_queue.name] = deque()
+    round_robin_manager.user_queues_dict[new_queue.name] = deque()
 
     return {"message": "Queue created successfully", "queue_id": new_queue.id}
 
@@ -61,6 +63,7 @@ async def delete_queue(
     queue_name: str,
     db: Session = Depends(get_db),
     current_user: str = Depends(get_current_user),
+    round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     queue = db.query(Queue).filter(Queue.name == queue_name).first()
 
@@ -73,7 +76,7 @@ async def delete_queue(
     db.delete(queue)
     db.commit()
 
-    del RoundRobinManager.user_queues_dict[queue_name]
+    del round_robin_manager.user_queues_dict[queue_name]
 
     return {"message": "Queue deleted successfully", "queue_name": queue_name}
 
@@ -111,13 +114,16 @@ async def consume_message(
     queue_id: int,
     db: Session = Depends(get_db),
     current_user: str = Depends(get_current_user),
+    round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
 
     if not queue:
         raise HTTPException(status_code=404, detail="Queue not found")
 
-    if RoundRobinManager.user_queues_dict[queue.name][-1] == current_user:
+    expected_user_name = round_robin_manager.user_queues_dict[queue.name][-1].name
+
+    if expected_user_name == current_user.name:
         popped_message = (
             db.query(Message)
             .filter(Message.queue_id == queue_id)
@@ -132,8 +138,8 @@ async def consume_message(
         db.delete(popped_message)
         db.commit()
 
-        turn_user = RoundRobinManager[queue.name].pop()
-        RoundRobinManager[queue.name].append(turn_user)
+        turn_user = round_robin_manager.user_queues_dict[queue.name].pop()
+        round_robin_manager.user_queues_dict[queue.name].append(turn_user)
 
         return {
             "message": "Message consumed successfully",
@@ -149,6 +155,7 @@ async def subscribe(
     queue: QueueCreate,
     db: Session = Depends(get_db),
     current_user: str = Depends(get_current_user),
+    round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
 
@@ -160,6 +167,6 @@ async def subscribe(
     db.add(existing_queue)
     db.commit()
 
-    RoundRobinManager.user_queues_dict[queue.name].append(current_user)
+    round_robin_manager.user_queues_dict[queue.name].append(current_user)
 
     return {"message": "Successfully subscribed to the queue"}

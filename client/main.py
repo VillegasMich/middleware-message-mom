@@ -85,7 +85,7 @@ def main():
             else:
                 print("[red]Invalid option, try again.[/]")
     except KeyboardInterrupt:
-        print("[bold red]Disconnecting...[/]")
+        print("[bold red]\nDisconnecting...[/]")
 
 
 if __name__ == "__main__":
