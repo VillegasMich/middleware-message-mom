@@ -14,4 +14,4 @@ class RoundRobinManager:
             if queue not in self.user_queues_dict.keys():
                 self.user_queues_dict[queue.name] = deque()
             for user in queue.users:
-                self.user_queues_dict[queue.name].append(user)
+                self.user_queues_dict[queue.name].append(user.name)

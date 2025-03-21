@@ -25,7 +25,7 @@ class MessageCreate(BaseModel):
 @router.get("/queues/")
 async def get_queues(
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     only_owned: bool = False,
 ):
     query = db.query(Queue)
@@ -41,7 +41,7 @@ async def get_queues(
 async def create_queue(
     queue: QueueCreate,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
@@ -62,7 +62,7 @@ async def create_queue(
 async def delete_queue(
     queue_name: str,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     queue = db.query(Queue).filter(Queue.name == queue_name).first()
@@ -76,8 +76,13 @@ async def delete_queue(
     db.delete(queue)
     db.commit()
 
-    del round_robin_manager.user_queues_dict[queue_name]
-
+    try:
+        del round_robin_manager.user_queues_dict[queue_name]
+    except KeyError:
+        raise HTTPException(
+            status_code=500,
+            detail="Round Robin Manager could not find the Queue",
+        )
     return {"message": "Queue deleted successfully", "queue_name": queue_name}
 
 
@@ -86,7 +91,7 @@ async def publish_message(
     queue_id: int,
     message: MessageCreate,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     existing_queue = db.query(Queue).filter(Queue.id == queue_id).first()
 
@@ -113,7 +118,7 @@ async def publish_message(
 async def consume_message(
     queue_id: int,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
@@ -121,7 +126,7 @@ async def consume_message(
     if not queue:
         raise HTTPException(status_code=404, detail="Queue not found")
 
-    expected_user_name = round_robin_manager.user_queues_dict[queue.name][-1].name
+    expected_user_name = round_robin_manager.user_queues_dict[queue.name][-1]
 
     if expected_user_name == current_user.name:
         popped_message = (
@@ -138,7 +143,7 @@ async def consume_message(
         db.delete(popped_message)
         db.commit()
 
-        turn_user = round_robin_manager.user_queues_dict[queue.name].pop()
+        turn_user = round_robin_manager.user_queues_dict[queue.name].popleft()
         round_robin_manager.user_queues_dict[queue.name].append(turn_user)
 
         return {
@@ -147,14 +152,14 @@ async def consume_message(
         }
 
     else:
-        raise HTTPException(status_code=404, detail="Invalid user turn")
+        raise HTTPException(status_code=409, detail="Invalid user turn")
 
 
 @router.post("/queues/subscribe")
 async def subscribe(
     queue: QueueCreate,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
@@ -162,11 +167,47 @@ async def subscribe(
     if not existing_queue:
         raise HTTPException(status_code=404, detail="Queue not found")
 
-    existing_queue.users = [current_user]
+    if len(existing_queue.users) != 0:
+        if current_user not in existing_queue.users:
+            existing_queue.users.append(current_user)
+        else:
+            raise HTTPException(status_code=409, detail="User already subscribe")
+    else:
+        existing_queue.users = [current_user]
 
     db.add(existing_queue)
     db.commit()
 
-    round_robin_manager.user_queues_dict[queue.name].append(current_user)
+    round_robin_manager.user_queues_dict[queue.name].append(current_user.name)
+
+    return {"message": "Successfully subscribed to the queue"}
+
+
+@router.post("/queues/unsubscribe")
+async def unsubscribe(
+    queue: QueueCreate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
+):
+    existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
+
+    if not existing_queue:
+        raise HTTPException(status_code=404, detail="Queue not found")
+
+    if len(existing_queue.users) != 0:
+        if current_user in existing_queue.users:
+            existing_queue.users.remove(current_user)
+    else:
+        raise HTTPException(status_code=409, detail="User was not subscribe")
+
+    db.add(existing_queue)
+    db.commit()
+
+    round_robin_manager.user_queues_dict[queue.name] = deque(
+        user
+        for user in round_robin_manager.user_queues_dict[queue.name]
+        if user != current_user.name
+    )
 
     return {"message": "Successfully subscribed to the queue"}

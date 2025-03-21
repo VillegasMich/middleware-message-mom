@@ -45,13 +45,14 @@ def main():
             print("4. Send Message to Queue")
             print("5. Receive Message from Queue")
             print("6. Subscribe to a queue")
-            print("7. List all the Topics")
-            print("8. Create Topic")
-            print("9. Delete Topic")
-            print("10. Show collected Messages from Topic")
-            print("11. Send Message to Topic")
-            print("12. Subscribe to a topic")
-            print("13. Exit")
+            print("7. Unsubscribe to a queue")
+            print("8. List all the Topics")
+            print("9. Create Topic")
+            print("10. Delete Topic")
+            print("11. Show collected Messages from Topic")
+            print("12. Send Message to Topic")
+            print("13. Subscribe to a topic")
+            print("14. Exit")
 
             choice = Prompt.ask("[bold yellow]Choose an option[/]")
 
@@ -68,18 +69,20 @@ def main():
             elif choice == "6":
                 Queue.subscribe()
             elif choice == "7":
-                Topic.get_all()
+                Queue.unsubscribe()
             elif choice == "8":
-                Topic.create()
+                Topic.get_all()
             elif choice == "9":
-                Topic.delete()
+                Topic.create()
             elif choice == "10":
-                Topic.show_collected_messages(messages_dict)
+                Topic.delete()
             elif choice == "11":
-                Topic.send_message()
+                Topic.show_collected_messages(messages_dict)
             elif choice == "12":
-                Topic.subscribe()
+                Topic.send_message()
             elif choice == "13":
+                Topic.subscribe()
+            elif choice == "14":
                 print("[bold red]Exiting...[/]")
                 break
             else:

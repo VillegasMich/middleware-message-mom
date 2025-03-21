@@ -126,7 +126,11 @@ async def subscribe(
     if not existing_topic:
         raise HTTPException(status_code=404, detail="Topic not found")
 
-    existing_topic.users = [current_user]
+    if len(existing_topic.users) != 0:
+        if current_user not in existing_topic.users:
+            existing_topic.users.append(current_user)
+    else:
+        existing_topic.users = [current_user]
 
     db.add(existing_topic)
     db.commit()

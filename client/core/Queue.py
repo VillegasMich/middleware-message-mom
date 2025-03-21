@@ -119,6 +119,25 @@ class Queue:
             )
 
     @staticmethod
+    def unsubscribe():
+        Queue.get_all()
+
+        queue_name = Prompt.ask("[cyan]Enter queue name[/]")
+
+        response = requests.post(
+            f"{SERVER_URL}/queues/unsubscribe",
+            json={"name": queue_name},
+            headers=Util.get_headers(),
+        )
+
+        if response.status_code == 200:
+            print(f"[yellow]Unsubscribe from queue:[/] {queue_name}")
+        else:
+            print(
+                f"""[red]Error:[/] {response.json().get("detail", "No queue found")}"""
+            )
+
+    @staticmethod
     def send_message():
         """Sends a message to a queue"""
 
