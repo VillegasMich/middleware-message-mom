@@ -1,5 +1,5 @@
 import requests
-from boostrap import SERVER_URL
+from bootstrap import SERVER_URL
 from rich import print
 from rich.prompt import Prompt
 from rich.tree import Tree
@@ -8,7 +8,7 @@ from Util import Util
 
 class Queue:
     @staticmethod
-    def get_all(message : str = "Queues", only_owned: bool = False):
+    def get_all(message: str = "Queues", only_owned: bool = False):
         """
         Lists all the queues
         Response:
@@ -23,8 +23,10 @@ class Queue:
             ]"
         }
         """
-        response = requests.get(f"{SERVER_URL}/queues?{only_owned}", headers=Util.get_headers())
-        
+        response = requests.get(
+            f"{SERVER_URL}/queues?{only_owned}", headers=Util.get_headers()
+        )
+
         queues = response.json().get("queues", [])
 
         if response.status_code == 200:
@@ -46,7 +48,7 @@ class Queue:
                 print(tree_root)
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
-            
+
         return queues
 
     @staticmethod
@@ -65,7 +67,9 @@ class Queue:
         """
         name = Prompt.ask("[cyan]Enter queue name[/]")
 
-        response = requests.post(f"{SERVER_URL}/queues/", json={"name": name}, headers=Util.get_headers())
+        response = requests.post(
+            f"{SERVER_URL}/queues/", json={"name": name}, headers=Util.get_headers()
+        )
 
         if response.status_code == 200:
             print(f"[green]Queue '{name}' created successfully![/]")
@@ -75,13 +79,13 @@ class Queue:
     @staticmethod
     def delete():
         """Deletes a queue"""
-        
+
         queues = Queue.get_all("Your Queues", only_owned=True)
-        
+
         if not queues:
             print("[yellow]You don't own any queues to delete.[/]")
             return
-        
+
         queue_name = Prompt.ask("[cyan]Enter queue name to [bold red]delete[/]")
 
         delete_response = requests.delete(
@@ -91,19 +95,40 @@ class Queue:
         if delete_response.status_code == 200:
             print("[green]Queue deleted successfully![/]")
         else:
-            print(f"[red]Error:[/] {delete_response.json().get('detail', 'Unknown error')}")
+            print(
+                f"[red]Error:[/] {delete_response.json().get('detail', 'Unknown error')}"
+            )
+
+    @staticmethod
+    def subscribe():
+        Queue.get_all()
+
+        queue_name = Prompt.ask("[cyan]Enter queue name[/]")
+
+        response = requests.post(
+            f"{SERVER_URL}/queues/subscribe",
+            json={"name": queue_name},
+            headers=Util.get_headers(),
+        )
+
+        if response.status_code == 200:
+            print(f"[yellow]Subscribed to queue:[/] {queue_name}")
+        else:
+            print(
+                f"""[red]Error:[/] {response.json().get("detail", "No queue found")}"""
+            )
 
     @staticmethod
     def send_message():
         """Sends a message to a queue"""
 
-        queues = Queue.get_all() 
+        queues = Queue.get_all()
 
         if not queues:
-            return  
+            return
 
         queue_name = Prompt.ask("[cyan]Enter queue name to send a message[/]")
-        
+
         queue = next((q for q in queues if q["name"] == queue_name), None)
 
         if queue is None:
@@ -114,7 +139,10 @@ class Queue:
 
         response = requests.post(
             f"{SERVER_URL}/queues/{queue_id}/publish",
-            json={"content": Prompt.ask("[cyan]Enter message[/]"), "routing_key": "default"},
+            json={
+                "content": Prompt.ask("[cyan]Enter message[/]"),
+                "routing_key": "default",
+            },
             headers=Util.get_headers(),
         )
 
@@ -123,15 +151,14 @@ class Queue:
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
 
-
     @staticmethod
     def receive_message():
         """Receives a message from a queue"""
 
-        queues = Queue.get_all()  
+        queues = Queue.get_all()
 
         if not queues:
-            return  
+            return
 
         queue_name = Prompt.ask("[cyan]Enter queue name[/]")
 
@@ -144,12 +171,13 @@ class Queue:
         queue_id = queue["id"]
 
         response = requests.get(
-            f"{SERVER_URL}/queues/{queue_id}/consume",  
+            f"{SERVER_URL}/queues/{queue_id}/consume",
             headers=Util.get_headers(),
         )
 
         if response.status_code == 200:
-            print(f"[yellow]Message received:[/] {response.json()['content']}")  
+            print(f"[yellow]Message received:[/] {response.json()['content']}")
         else:
-            print(f"[red]Error:[/] {response.json().get('detail', 'No messages available')}")
-
+            print(
+                f"[red]Error:[/] {response.json().get('detail', 'No messages available')}"
+            )
