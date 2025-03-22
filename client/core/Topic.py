@@ -1,5 +1,5 @@
 import requests
-from boostrap import SERVER_URL
+from bootstrap import SERVER_URL
 from rich import print
 from rich.prompt import Prompt
 from rich.tree import Tree
@@ -8,7 +8,7 @@ from Util import Util
 
 class Topic:
     @staticmethod
-    def get_all(message : str = "Topics", only_owned: bool = False):
+    def get_all(message: str = "Topics", only_owned: bool = False):
         """
         Lists all the topics
         Response:
@@ -23,8 +23,10 @@ class Topic:
             ]"
         }
         """
-        response = requests.get(f"{SERVER_URL}/topics?{only_owned}", headers=Util.get_headers())
-        
+        response = requests.get(
+            f"{SERVER_URL}/topics?{only_owned}", headers=Util.get_headers()
+        )
+
         topics = response.json().get("topics", [])
 
         if response.status_code == 200:
@@ -46,7 +48,7 @@ class Topic:
                 print(tree_root)
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
-            
+
         return topics
 
     @staticmethod
@@ -79,13 +81,13 @@ class Topic:
     @staticmethod
     def delete():
         """Deletes a topic"""
-        
+
         topics = Topic.get_all("Your Topics", only_owned=True)
-        
+
         if not topics:
             print("[yellow]You don't own any topics to delete.[/]")
             return
-        
+
         topic_name = Prompt.ask("[cyan]Enter topic name to [bold red]delete[/]")
 
         delete_response = requests.delete(
@@ -95,27 +97,29 @@ class Topic:
         if delete_response.status_code == 200:
             print("[green]Topic deleted successfully![/]")
         else:
-            print(f"[red]Error:[/] {delete_response.json().get('detail', 'Unknown error')}")
+            print(
+                f"[red]Error:[/] {delete_response.json().get('detail', 'Unknown error')}"
+            )
 
     @staticmethod
     def send_message():
         """Sends a message to a topic"""
-        
+
         topics = Topic.get_all()
-        
+
         if not topics:
-            return  
-        
+            return
+
         topic_name = Prompt.ask("[cyan]Enter topic name to send a message[/]")
-        
+
         topic = next((q for q in topics if q["name"] == topic_name), None)
 
         if topic is None:
             print(f"[red]Error:[/] Topic '{topic_name}' not found.")
             return
-        
+
         topic_id = topic["id"]
-        
+
         message = Prompt.ask("[cyan]Enter message[/]")
 
         response = requests.post(
@@ -141,9 +145,8 @@ class Topic:
 
     @staticmethod
     def subscribe():
-        
         Topic.get_all()
-        
+
         topic_name = Prompt.ask("[cyan]Enter topic name[/]")
 
         response = requests.post(

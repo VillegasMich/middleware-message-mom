@@ -1,8 +1,9 @@
 import requests
-from boostrap import SERVER_URL
-from rich.prompt import Prompt
+from bootstrap import SERVER_URL
 from rich import print
+from rich.prompt import Prompt
 from Util import Util
+
 
 class User:
     @staticmethod
@@ -38,11 +39,13 @@ class User:
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
             return None
-        
+
     def get_user_topics():
-        response = requests.get( f"{SERVER_URL}/users/topics", headers=Util.get_headers())
-        
+        response = requests.get(
+            f"{SERVER_URL}/users/topics", headers=Util.get_headers()
+        )
+
         if response.status_code == 200:
-            return response.json()['topics']
+            return response.json()["topics"]
         else:
             return None
