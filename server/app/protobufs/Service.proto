@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+service MessageService {
+    rpc AddMessage (Message) returns (MessageResponse);
+}
+
+message Message {
+    int32 queue_id = 1;
+    int32 topic_id = 2;
+    string routing_key = 3;
+    string content = 4; 
+}
+
+message MessageResponse {
+    int32 status_code = 1; 
+}

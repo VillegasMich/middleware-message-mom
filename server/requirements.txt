@@ -15,6 +15,8 @@ email_validator==2.2.0
 fastapi==0.115.11
 fastapi-cli==0.0.7
 greenlet==3.1.1
+grpcio==1.71.0
+grpcio-tools==1.71.0
 h11==0.14.0
 httpcore==1.0.7
 httptools==0.6.4
@@ -26,6 +28,7 @@ markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
 passlib==1.7.4
+protobuf==5.29.4
 pyasn1==0.4.8
 pycparser==2.22
 pydantic==2.10.6
