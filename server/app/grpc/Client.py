@@ -18,12 +18,12 @@ class Client:
         within him, create the message and save it. 
     '''
     @staticmethod
-    def send_grpc_message(content:str, routing_key:str, remote_host:str, queue_id:int = None,topic_id:int = None):
+    def send_grpc_message(obj_type:str, obj_id:int, content:str, routing_key:str, remote_host:str):
 
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.MessageServiceStub(channel)
             
-            request = Service_pb2.Message(queue_id=queue_id, topic_id=topic_id, routing_key=routing_key, content=content)
+            request = Service_pb2.Message(id=obj_id, type=obj_type, routing_key=routing_key, content=content)
 
             try:
                 response = stub.AddMessage(request)

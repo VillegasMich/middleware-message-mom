@@ -5,16 +5,16 @@ from typing import ClassVar as _ClassVar, Optional as _Optional
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class Message(_message.Message):
-    __slots__ = ("queue_id", "topic_id", "routing_key", "content")
-    QUEUE_ID_FIELD_NUMBER: _ClassVar[int]
-    TOPIC_ID_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("id", "type", "routing_key", "content")
+    ID_FIELD_NUMBER: _ClassVar[int]
+    TYPE_FIELD_NUMBER: _ClassVar[int]
     ROUTING_KEY_FIELD_NUMBER: _ClassVar[int]
     CONTENT_FIELD_NUMBER: _ClassVar[int]
-    queue_id: int
-    topic_id: int
+    id: int
+    type: str
     routing_key: str
     content: str
-    def __init__(self, queue_id: _Optional[int] = ..., topic_id: _Optional[int] = ..., routing_key: _Optional[str] = ..., content: _Optional[str] = ...) -> None: ...
+    def __init__(self, id: _Optional[int] = ..., type: _Optional[str] = ..., routing_key: _Optional[str] = ..., content: _Optional[str] = ...) -> None: ...
 
 class MessageResponse(_message.Message):
     __slots__ = ("status_code",)

@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rService.proto\"S\n\x07Message\x12\x10\n\x08queue_id\x18\x01 \x01(\x05\x12\x10\n\x08topic_id\x18\x02 \x01(\x05\x12\x13\n\x0brouting_key\x18\x03 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\"&\n\x0fMessageResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x32:\n\x0eMessageService\x12(\n\nAddMessage\x12\x08.Message\x1a\x10.MessageResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rService.proto\"I\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x13\n\x0brouting_key\x18\x03 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\"&\n\x0fMessageResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x32:\n\x0eMessageService\x12(\n\nAddMessage\x12\x08.Message\x1a\x10.MessageResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,9 +32,9 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'Service_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_MESSAGE']._serialized_start=17
-  _globals['_MESSAGE']._serialized_end=100
-  _globals['_MESSAGERESPONSE']._serialized_start=102
-  _globals['_MESSAGERESPONSE']._serialized_end=140
-  _globals['_MESSAGESERVICE']._serialized_start=142
-  _globals['_MESSAGESERVICE']._serialized_end=200
+  _globals['_MESSAGE']._serialized_end=90
+  _globals['_MESSAGERESPONSE']._serialized_start=92
+  _globals['_MESSAGERESPONSE']._serialized_end=130
+  _globals['_MESSAGESERVICE']._serialized_start=132
+  _globals['_MESSAGESERVICE']._serialized_end=190
 # @@protoc_insertion_point(module_scope)

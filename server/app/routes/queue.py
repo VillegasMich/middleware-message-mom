@@ -34,6 +34,11 @@ async def get_queues(
     if only_owned:
         query = query.filter(Queue.user_id == current_user.id)
 
+    # #TEST
+    # #------------------------------
+    # Client.send_grpc_message('queue',1,'listando todas las queues','default','127.0.0.1:8080')
+    # #------------------------------
+
     queues = query.all()
     return {"message": "Queues listed successfully", "queues": queues}
 

@@ -41,6 +41,6 @@ class Server:
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         Service_pb2_grpc.add_MessageServiceServicer_to_server(MessageService(), server)
         server.add_insecure_port(HOST)
-        print("Production service started...")
+        print("Production service started on port 8080")
         server.start()
         server.wait_for_termination()
