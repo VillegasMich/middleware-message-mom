@@ -75,7 +75,8 @@ app.include_router(topic_router)
 app.include_router(auth_router)
 app.include_router(user_router)
 
-print(f"🚀 Using SERVER_PORT={SERVER_PORT}")  # Debugging output
+print(f"🚀 Using SERVER_PORT {SERVER_PORT}")
+print(f"ZK NODE: /servers/{HOSTNAME}:{SERVER_PORT}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=SERVER_PORT)
