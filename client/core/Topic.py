@@ -1,5 +1,5 @@
 import requests
-from bootstrap import SERVER_URL
+from config import SERVER_ZOO
 from rich import print
 from rich.prompt import Prompt
 from rich.tree import Tree
@@ -24,7 +24,7 @@ class Topic:
         }
         """
         response = requests.get(
-            f"{SERVER_URL}/topics?{only_owned}", headers=Util.get_headers()
+            f"{SERVER_ZOO}/topics?{only_owned}", headers=Util.get_headers()
         )
 
         topics = response.json().get("topics", [])
@@ -68,7 +68,7 @@ class Topic:
         name = Prompt.ask("[cyan]Enter topic name[/]")
 
         response = requests.post(
-            f"{SERVER_URL}/topics/",
+            f"{SERVER_ZOO}/topics/",
             json={"name": name},
             headers=Util.get_headers(),
         )
@@ -91,7 +91,7 @@ class Topic:
         topic_name = Prompt.ask("[cyan]Enter topic name to [bold red]delete[/]")
 
         delete_response = requests.delete(
-            f"{SERVER_URL}/topics/{topic_name}", headers=Util.get_headers()
+            f"{SERVER_ZOO}/topics/{topic_name}", headers=Util.get_headers()
         )
 
         if delete_response.status_code == 200:
@@ -123,7 +123,7 @@ class Topic:
         message = Prompt.ask("[cyan]Enter message[/]")
 
         response = requests.post(
-            f"{SERVER_URL}/topics/{topic_id}/publish",
+            f"{SERVER_ZOO}/topics/{topic_id}/publish",
             json={"content": message, "routing_key": "default"},
             headers=Util.get_headers(),
         )
@@ -150,7 +150,7 @@ class Topic:
         topic_name = Prompt.ask("[cyan]Enter topic name[/]")
 
         response = requests.post(
-            f"{SERVER_URL}/topics/subscribe",
+            f"{SERVER_ZOO}/topics/subscribe",
             json={"name": topic_name},
             headers=Util.get_headers(),
         )
@@ -165,7 +165,7 @@ class Topic:
     @staticmethod
     def pull_message(topic_id: int):
         response = requests.get(
-            f"{SERVER_URL}/topics/{topic_id}/consume",
+            f"{SERVER_ZOO}/topics/{topic_id}/consume",
             headers=Util.get_headers(),
         )
 

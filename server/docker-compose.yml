@@ -1,0 +1,30 @@
+services:
+  mysql:
+    image: mysql
+    container_name: mysql_mom
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root # Change this to a secure password
+      MYSQL_DATABASE: mom
+      MYSQL_USER: user
+      MYSQL_PASSWORD: root # Change this to a secure password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  zookeeper:
+    image: bitnami/zookeeper:3.8
+    container_name: zookeeper
+    restart: always
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    volumes:
+      - zk_data:/bitnami/zookeeper
+
+volumes:
+  mysql_data:
+  zk_data:
+  zk_datalog:

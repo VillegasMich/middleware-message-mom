@@ -1,5 +1,5 @@
 import requests
-from bootstrap import SERVER_URL
+from config import SERVER_ZOO
 from rich import print
 from rich.prompt import Prompt
 from rich.tree import Tree
@@ -24,7 +24,7 @@ class Queue:
         }
         """
         response = requests.get(
-            f"{SERVER_URL}/queues?{only_owned}", headers=Util.get_headers()
+            f"{SERVER_ZOO}/queues?{only_owned}", headers=Util.get_headers()
         )
 
         queues = response.json().get("queues", [])
@@ -68,7 +68,7 @@ class Queue:
         name = Prompt.ask("[cyan]Enter queue name[/]")
 
         response = requests.post(
-            f"{SERVER_URL}/queues/", json={"name": name}, headers=Util.get_headers()
+            f"{SERVER_ZOO}/queues/", json={"name": name}, headers=Util.get_headers()
         )
 
         if response.status_code == 200:
@@ -89,7 +89,7 @@ class Queue:
         queue_name = Prompt.ask("[cyan]Enter queue name to [bold red]delete[/]")
 
         delete_response = requests.delete(
-            f"{SERVER_URL}/queues/{queue_name}", headers=Util.get_headers()
+            f"{SERVER_ZOO}/queues/{queue_name}", headers=Util.get_headers()
         )
 
         if delete_response.status_code == 200:
@@ -106,7 +106,7 @@ class Queue:
         queue_name = Prompt.ask("[cyan]Enter queue name[/]")
 
         response = requests.post(
-            f"{SERVER_URL}/queues/subscribe",
+            f"{SERVER_ZOO}/queues/subscribe",
             json={"name": queue_name},
             headers=Util.get_headers(),
         )
@@ -125,7 +125,7 @@ class Queue:
         queue_name = Prompt.ask("[cyan]Enter queue name[/]")
 
         response = requests.post(
-            f"{SERVER_URL}/queues/unsubscribe",
+            f"{SERVER_ZOO}/queues/unsubscribe",
             json={"name": queue_name},
             headers=Util.get_headers(),
         )
@@ -157,7 +157,7 @@ class Queue:
         queue_id = queue["id"]
 
         response = requests.post(
-            f"{SERVER_URL}/queues/{queue_id}/publish",
+            f"{SERVER_ZOO}/queues/{queue_id}/publish",
             json={
                 "content": Prompt.ask("[cyan]Enter message[/]"),
                 "routing_key": "default",
@@ -190,7 +190,7 @@ class Queue:
         queue_id = queue["id"]
 
         response = requests.get(
-            f"{SERVER_URL}/queues/{queue_id}/consume",
+            f"{SERVER_ZOO}/queues/{queue_id}/consume",
             headers=Util.get_headers(),
         )
 

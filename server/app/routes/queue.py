@@ -3,6 +3,7 @@ from collections import deque
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
 from app.core.rrmanager import get_round_robin_manager
+from app.grpc.Client import Client
 from app.models.message import Message
 from app.models.queue import Queue
 from app.RoundRobinManager import RoundRobinManager
@@ -10,7 +11,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.grpc.Client import Client
 router = APIRouter()
 
 
@@ -36,7 +36,8 @@ async def get_queues(
 
     # #TEST
     # #------------------------------
-    # Client.send_grpc_message('queue',1,'listando todas las queues','default','127.0.0.1:8080')
+    # Client.send_grpc_message(
+    #     "queue", 1, "listando todas las queues", "default", "127.0.0.1:8080")
     # #------------------------------
 
     queues = query.all()
