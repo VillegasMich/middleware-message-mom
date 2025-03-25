@@ -1,5 +1,5 @@
 import requests
-from bootstrap import SERVER_URL
+from config import SERVER_ZOO
 from rich import print
 from rich.prompt import Prompt
 from Util import Util
@@ -13,7 +13,7 @@ class User:
         password = Prompt.ask("[cyan]Enter password[/]", password=True)
 
         response = requests.post(
-            f"{SERVER_URL}/register/", json={"username": username, "password": password}
+            f"{SERVER_ZOO}/register/", json={"username": username, "password": password}
         )
 
         if response.status_code == 200:
@@ -28,7 +28,7 @@ class User:
         password = Prompt.ask("[cyan]Enter password[/]", password=True)
 
         response = requests.post(
-            f"{SERVER_URL}/login/", json={"username": username, "password": password}
+            f"{SERVER_ZOO}/login/", json={"username": username, "password": password}
         )
 
         if response.status_code == 200:
@@ -40,9 +40,10 @@ class User:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
             return None
 
+    @staticmethod
     def get_user_topics():
         response = requests.get(
-            f"{SERVER_URL}/users/topics", headers=Util.get_headers()
+            f"{SERVER_ZOO}/users/topics", headers=Util.get_headers()
         )
 
         if response.status_code == 200:
