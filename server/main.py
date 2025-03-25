@@ -14,15 +14,32 @@ from kazoo.client import KazooClient
 
 app = FastAPI()
 
-ZK_HOST = "localhost:2181"
+# ZK_HOST = "localhost:2181" # LOCAL
+ZK_HOST = "52.21.11.66:2181"  # EC2
+
 zk = KazooClient(hosts=ZK_HOST)
 zk.start()
 
+
+def get_local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
+
+
 # Server identification
 HOSTNAME = socket.gethostname()
-SERVER_IP = socket.gethostbyname(HOSTNAME)
-SERVER_PORT = int(os.getenv("SERVER_PORT", 8000))  # Change per instance
-ZK_NODE = f"/servers/{HOSTNAME}:{SERVER_PORT}"  # Unique node for this server
+# SERVER_IP = "127.0.0.1" # LOCAL
+SERVER_IP = get_local_ip()  # LOCAL
+SERVER_PORT = int(os.getenv("SERVER_PORT", 8000))
+ZK_NODE = f"/servers/{HOSTNAME}:{SERVER_PORT}"
+
 
 db = next(get_db())
 round_robin_manager.sync_users_queues(db)
@@ -58,5 +75,7 @@ app.include_router(topic_router)
 app.include_router(auth_router)
 app.include_router(user_router)
 
+print(f"🚀 Using SERVER_PORT={SERVER_PORT}")  # Debugging output
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=SERVER_PORT)
+    uvicorn.run(app, host="127.0.0.1", port=SERVER_PORT)

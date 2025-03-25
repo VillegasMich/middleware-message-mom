@@ -1,23 +1,26 @@
-
-from concurrent import futures
-import grpc
-from . import Service_pb2
-from . import Service_pb2_grpc
+import os
 import threading
+from concurrent import futures
 
-HOST = '127.0.0.1:8080'
+import grpc
+
+from . import Service_pb2, Service_pb2_grpc
+
+GRPC_PORT = int(os.getenv("GRPC_PORT", 8080))  # Change per instance
+HOST = "127.0.0.1:" + str(GRPC_PORT)
+
 
 class MessageService(Service_pb2_grpc.MessageServiceServicer):
-   
-   '''
-        Here the message should be saved in the queue or topic received.
-   '''
-   def AddMessage(self, request, context):
-      print("Request is received: " + str(request))
-      return Service_pb2.MessageResponse(status_code=1)
-   
-class Server:
+    """
+    Here the message should be saved in the queue or topic received.
+    """
 
+    def AddMessage(self, request, context):
+        print("Request is received: " + str(request))
+        return Service_pb2.MessageResponse(status_code=1)
+
+
+class Server:
     def __init__(self):
         self.running = False
 
@@ -33,9 +36,10 @@ class Server:
             if self.thread:
                 self.thread.join()
 
-    '''
+    """
         Init the thread that listens for new incoming requests in this MOM.
-    '''
+    """
+
     @staticmethod
     def listen():
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -44,3 +48,4 @@ class Server:
         print("Production service started on port 8080")
         server.start()
         server.wait_for_termination()
+

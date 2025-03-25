@@ -1,18 +1,16 @@
+from config import SERVER_IP_PORT
 from core.Listener import Listener
 from core.Queue import Queue
 from core.Topic import Topic
 from core.User import User
 from rich import print
 from rich.prompt import Prompt
-from zookeeper import get_server
 
 TOKEN = ""
 
 
 def main():
-    global SERVER_ZOO
-    SERVER_ZOO = get_server()
-    if SERVER_ZOO:
+    if SERVER_IP_PORT:
         try:
             """Main interactive loop"""
             global TOKEN

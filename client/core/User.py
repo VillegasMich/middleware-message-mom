@@ -9,6 +9,7 @@ class User:
     @staticmethod
     def register():
         """Registers a new user"""
+        print("SERVER:", SERVER_ZOO)
         username = Prompt.ask("[cyan]Enter username[/]")
         password = Prompt.ask("[cyan]Enter password[/]", password=True)
 
