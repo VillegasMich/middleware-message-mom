@@ -1,5 +1,6 @@
 import os
 import socket
+from contextlib import asynccontextmanager
 
 import uvicorn
 from app.core.database import get_db
@@ -12,10 +13,8 @@ from app.routes.user import router as user_router
 from fastapi import FastAPI
 from kazoo.client import KazooClient
 
-app = FastAPI()
-
-# ZK_HOST = "localhost:2181" # LOCAL
-ZK_HOST = "52.21.11.66:2181"  # EC2
+ZK_HOST = "localhost:2181"  # LOCAL
+# ZK_HOST = "52.21.11.66:2181"  # EC2
 
 zk = KazooClient(hosts=ZK_HOST)
 zk.start()
@@ -23,8 +22,8 @@ zk.start()
 
 # Server identification
 HOSTNAME = socket.gethostname()
-# SERVER_IP = "127.0.0.1" # LOCAL
-SERVER_IP = os.getenv("SERVER_ELASTIC_IP")  # EC2
+SERVER_IP = "127.0.0.1"  # LOCAL
+# SERVER_IP = os.getenv("SERVER_ELASTIC_IP")  # EC2
 SERVER_PORT = int(os.getenv("SERVER_PORT", 8000))
 ZK_NODE = f"/servers/{SERVER_IP}:{SERVER_PORT}"
 
@@ -41,21 +40,23 @@ def get_round_robin_manager():
     return round_robin_manager
 
 
-# Register server on startup
-@app.on_event("startup")
-def register_server():
-    zk.ensure_path("/servers")  # Ensure the parent node exists
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Register server on startup
+    zk.ensure_path("/servers")
     zk.create(ZK_NODE, f"{SERVER_IP}:{SERVER_PORT}".encode(), ephemeral=True)
     print(f"Registered: {ZK_NODE}")
 
+    yield
 
-# Deregister server on shutdown
-@app.on_event("shutdown")
-def deregister_server():
+    # Deregister server on shutdown
     if zk.exists(ZK_NODE):
         zk.delete(ZK_NODE)
     zk.stop()
     print(f"Deregistered: {ZK_NODE}")
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 app.include_router(queue_router)

@@ -2,12 +2,6 @@
 
 ## Client
 
-Edit `boostrap.py` file contents:
-
-```python
-SERVER_URL = "http://{SERVER_IP}:{PORT}"
-```
-
 Run client:
 
 ```bash
@@ -18,32 +12,54 @@ python main.py
 
 ## Server
 
-Set up MySQL database (if needed):
+### Set up MySQL database and/or ZooKeeper:
 
-- Need to have docker and docker compose installed
+- Need to have docker and docker-compose installed to start the container
 
 ```bash
-docker compose up -d
+docker-compose up -d
 ```
 
-Set up .env file:
+- For monitoring the ZooKeeper use the nest command:
+
+```bash
+docker exec -it zookeeper zkCli.sh -server localhost:2181
+```
+
+### Set up .env file:
 
 ```bash
 touch .env
+nano .env
 ```
 
-Edit `.env` file contents:
+### Edit `.env` file contents:
 
 ```bash
 DATABASE_URL=mysql+pymysql://user:root@localhost:3306/mom
+SECRET_KEY=...
+ALGORITHM=HS256
+SERVER_ELASTIC_IP=...
 ```
 
-Run migrations and server:
+#### Secret Key
+
+- The SECRET_KEY enviroment variable must be generated with the following code (can be generated with ChatGPT):
+
+```python
+import secrets
+print(secrets.token_hex(32))
+```
+
+#### Server Elastic IP
+
+- This is the IP of the EC2 Instance if the server is running on AWS
+
+### Run migrations and server:
 
 ```bash
 cd server
 pip install -r requirements.txt
-alembic init alembic
 alembic upgrade head
-fastapi main
+fastapi run main.py
 ```
