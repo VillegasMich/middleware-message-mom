@@ -21,24 +21,12 @@ zk = KazooClient(hosts=ZK_HOST)
 zk.start()
 
 
-def get_local_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-    except Exception:
-        ip = "127.0.0.1"
-    finally:
-        s.close()
-    return ip
-
-
 # Server identification
 HOSTNAME = socket.gethostname()
 # SERVER_IP = "127.0.0.1" # LOCAL
-SERVER_IP = get_local_ip()  # LOCAL
+SERVER_IP = os.getenv("SERVER_ELASTIC_IP")  # EC2
 SERVER_PORT = int(os.getenv("SERVER_PORT", 8000))
-ZK_NODE = f"/servers/{HOSTNAME}:{SERVER_PORT}"
+ZK_NODE = f"/servers/{SERVER_IP}:{SERVER_PORT}"
 
 
 db = next(get_db())
@@ -76,7 +64,7 @@ app.include_router(auth_router)
 app.include_router(user_router)
 
 print(f"🚀 Using SERVER_PORT {SERVER_PORT}")
-print(f"ZK NODE: /servers/{HOSTNAME}:{SERVER_PORT}")
+print(f"ZK NODE: /servers/{SERVER_IP}:{SERVER_PORT}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=SERVER_PORT)
