@@ -10,3 +10,4 @@ class Topic(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     users = relationship('User', secondary='user_topic', overlaps="topics")
     messages = relationship('Message', overlaps="topic")
+    queues = relationship("Queue", back_populates="topic")
