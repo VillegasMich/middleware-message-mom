@@ -3,7 +3,7 @@ from collections import deque
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
 from app.core.rrmanager import get_round_robin_manager
-#from app.grpc.Client import Client
+from app.grpc.Client import Client
 from app.models.message import Message
 from app.models.queue import Queue
 from app.models.user_queue import user_queue as UserQueue
