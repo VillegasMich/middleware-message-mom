@@ -105,9 +105,6 @@ async def publish_message(
     if not existing_queue:
         raise HTTPException(status_code=404, detail="Queue not found")
 
-    if existing_queue.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="You do not have permission to publish to this queue.")
-
     new_message = Message(
         content=message.content,
         routing_key=message.routing_key,
