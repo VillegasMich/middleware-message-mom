@@ -121,10 +121,11 @@ class Topic:
         topic_id = topic["id"]
 
         message = Prompt.ask("[cyan]Enter message[/]")
+        routing_key = Prompt.ask("[cyan]Enter routing key[/]")
 
         response = requests.post(
             f"{SERVER_ZOO}/topics/{topic_id}/publish",
-            json={"content": message, "routing_key": "default"},
+            json={"content": message, "routing_key": routing_key},
             headers=Util.get_headers(),
         )
         if response.status_code == 200:
@@ -148,10 +149,14 @@ class Topic:
         Topic.get_all()
 
         topic_name = Prompt.ask("[cyan]Enter topic name[/]")
+        routing_key = Prompt.ask("[cyan]Enter routing key[/]")
 
         response = requests.post(
             f"{SERVER_ZOO}/topics/subscribe",
-            json={"name": topic_name},
+            json={
+                "name": topic_name,
+                "routing_key": routing_key,
+            },
             headers=Util.get_headers(),
         )
 
@@ -163,13 +168,11 @@ class Topic:
             )
 
     @staticmethod
-    def pull_message(topic_id: int):
-        response = requests.get(
-            f"{SERVER_ZOO}/topics/{topic_id}/consume",
-            headers=Util.get_headers(),
-        )
+    def pull_message(queue_id: int):
+        response = requests.get(f"{SERVER_ZOO}/topics/queues/{queue_id}/consume", headers=Util.get_headers())
 
         if response.status_code == 200:
-            return tuple((response.json()["content"], response.json()["id"]))
-        else:
-            pass
+            data = response.json()
+            return list(zip(data["content"], data["ids"])) 
+        
+        return None  

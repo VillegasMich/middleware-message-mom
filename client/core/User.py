@@ -42,12 +42,12 @@ class User:
             return None
 
     @staticmethod
-    def get_user_topics():
+    def get_user_queues():
         response = requests.get(
-            f"{SERVER_ZOO}/users/topics", headers=Util.get_headers()
+            f"{SERVER_ZOO}/user/queues-topics", headers=Util.get_headers()
         )
 
         if response.status_code == 200:
-            return response.json()["topics"]
+            return response.json()["queues"] 
         else:
             return None
