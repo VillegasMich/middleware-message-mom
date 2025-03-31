@@ -17,11 +17,10 @@ class Message(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     content = Column(String(255), nullable=False)
-    queue_id = Column(Integer, ForeignKey("queues.id"), nullable=True)
     topic_id = Column(Integer, ForeignKey("topics.id"), nullable=True)
     status = Column(String(10), default='Pending')
     routing_key = Column(String(100), nullable=False)
     created_at = Column(DateTime, default=func.now()) 
 
-    queue = relationship("Queue",  overlaps="messages")
+    queue_messages = relationship("QueueMessage", back_populates="message", cascade="all, delete-orphan")
     topic = relationship("Topic", overlaps="messages")
