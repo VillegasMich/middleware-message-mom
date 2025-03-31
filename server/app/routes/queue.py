@@ -12,7 +12,7 @@ from app.RoundRobinManager import RoundRobinManager
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
-from zookeeper import ZK_NODE_QUEUES, zk
+from zookeeper import SERVER_IP, SERVER_PORT, ZK_NODE_QUEUES, zk
 
 router = APIRouter()
 
@@ -39,13 +39,19 @@ async def get_queues(
     else:
         query = query.filter(Queue.is_private == False)
 
-    # #TEST
-    # #------------------------------
-    # Client.send_grpc_message(
-    #     "queue", 1, "listando todas las queues", "default", "127.0.0.1:8080")
-    # #------------------------------
-
     queues = query.all()
+
+    # Traemos las queue del zk o mandamos un grpc a cada servidor para que las entreguen ???
+    servers: list[str] = zk.get_children("/servers") or []
+    for server in servers:
+        if server != f"{SERVER_IP}:{SERVER_PORT}":
+            print("Ask for queues")
+            # #TEST
+            # #------------------------------
+            # Client.send_grpc_message(
+            #     "queue", 1, "listando todas las queues", "default", "127.0.0.1:8080")
+            # #------------------------------
+
     return {"message": "Queues listed successfully", "queues": queues}
 
 
@@ -65,36 +71,50 @@ async def create_queue(
     db.commit()
     db.refresh(new_queue)
 
-    zk.ensure_path(f"{ZK_NODE_QUEUES}/{new_queue.id}:{new_queue.name}")
-    round_robin_manager.user_queues_dict[new_queue.name] = deque()
+    zk.ensure_path(f"{ZK_NODE_QUEUES}/{new_queue.id}")
+    round_robin_manager.user_queues_dict[new_queue.id] = deque()
 
     return {"message": "Queue created successfully", "queue_id": new_queue.id}
 
 
-@router.delete("/queues/{queue_name}")
+@router.delete("/queues/{queue_id}")
 async def delete_queue(
-    queue_name: str,
+    queue_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
-    queue = db.query(Queue).filter(Queue.name == queue_name).first()
+    queue = db.query(Queue).filter(Queue.id == queue_id).first()
 
-    if not queue:
-        raise HTTPException(status_code=404, detail="Queue not found.")
+    if queue:
+        if queue.user_id != current_user.id:
+            raise HTTPException(
+                status_code=403,
+                detail="You do not have permission to delete this queue.",
+            )
 
-    if queue.user_id != current_user.id:
-        raise HTTPException(
-            status_code=403, detail="You do not have permission to delete this queue."
-        )
+        db.delete(queue)
+        db.commit()
 
-    db.delete(queue)
-    db.commit()
+        zk.delete(f"{ZK_NODE_QUEUES}/{queue_id}", recursive=True)
+        round_robin_manager.user_queues_dict.pop(queue_id, None)
+        return {"message": "Queue deleted successfully", "queue_id": queue_id}
 
-    zk.delete(f"{ZK_NODE_QUEUES}/{queue.id}:{queue_name}", recursive=True)
-    round_robin_manager.user_queues_dict.pop(queue_name, None)
-
-    return {"message": "Queue deleted successfully", "queue_name": queue_name}
+    else:
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers/{server}/Queues") or []
+                )
+                for queue in server_queues:
+                    if queue == queue_id:
+                        print("send grpc to delete queue")
+                        return {
+                            "message": "Queue deleted successfully",
+                            "queue_id": queue_id,
+                        }
+    raise HTTPException(status_code=404, detail="Queue not found.")
 
 
 @router.post("/queues/{queue_id}/publish")
@@ -106,26 +126,42 @@ async def publish_message(
 ):
     existing_queue = db.query(Queue).filter(Queue.id == queue_id).first()
 
-    if not existing_queue:
-        raise HTTPException(status_code=404, detail="Queue not found")
+    if existing_queue:
+        new_message = Message(
+            content=message.content,
+            routing_key=message.routing_key,
+        )
+        db.add(new_message)
+        db.flush()
 
-    new_message = Message(
-        content=message.content,
-        routing_key=message.routing_key,
-    )
-    db.add(new_message)
-    db.flush()
+        queue_message = QueueMessage(
+            queue_id=existing_queue.id, message_id=new_message.id
+        )
+        db.add(queue_message)
 
-    queue_message = QueueMessage(queue_id=existing_queue.id, message_id=new_message.id)
-    db.add(queue_message)
+        db.commit()
 
-    db.commit()
-
-    return {
-        "message": "Message published successfully",
-        "queue_id": existing_queue.id,
-        "message_id": new_message.id,
-    }
+        return {
+            "message": "Message published successfully",
+            "queue_id": existing_queue.id,
+            "message_id": new_message.id,
+        }
+    else:
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers/{server}/Queues") or []
+                )
+                for queue in server_queues:
+                    if queue == queue_id:
+                        print("send grpc to send message to queue")
+                        return {
+                            "message": "Message published successfully",
+                            "queue_id": existing_queue.id,
+                            "message_id": new_message.id,
+                        }
+    raise HTTPException(status_code=404, detail="Queue not found")
 
 
 @router.get("/queues/{queue_id}/consume")
@@ -137,78 +173,107 @@ async def consume_message(
 ):
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
 
-    if not queue:
-        raise HTTPException(status_code=404, detail="Queue not found")
+    if queue:
+        if not queue:
+            raise HTTPException(status_code=404, detail="Queue not found")
 
-    is_subscribed = (
-        db.query(UserQueue)
-        .filter(UserQueue.queue_id == queue_id, UserQueue.user_id == current_user.id)
-        .first()
-    )
-    if not is_subscribed:
-        raise HTTPException(
-            status_code=403, detail="You are not subscribed to this queue."
-        )
-
-    expected_user_name = round_robin_manager.user_queues_dict[queue.name][-1]
-
-    if expected_user_name == current_user.name:
-        queue_message = (
-            db.query(QueueMessage)
-            .join(Message)
-            .filter(QueueMessage.queue_id == queue_id)
-            .order_by(Message.created_at.asc())
-            .with_for_update(skip_locked=True)
+        is_subscribed = (
+            db.query(UserQueue)
+            .filter(
+                UserQueue.queue_id == queue_id, UserQueue.user_id == current_user.id
+            )
             .first()
         )
-
-        if not queue_message:
-            raise HTTPException(status_code=404, detail="Message not found")
-
-        message_content = queue_message.message.content
-
-        db.delete(queue_message)
-
-        remaining_refs = (
-            db.query(QueueMessage)
-            .filter(QueueMessage.message_id == queue_message.message_id)
-            .count()
-        )
-        if remaining_refs == 0:
-            message_to_delete = (
-                db.query(Message).filter(Message.id == queue_message.message_id).first()
+        if not is_subscribed:
+            raise HTTPException(
+                status_code=403, detail="You are not subscribed to this queue."
             )
-            if message_to_delete:
-                db.delete(message_to_delete)
 
-        db.commit()
+        expected_user_name = round_robin_manager.user_queues_dict[queue.id][-1]
 
-        turn_user = round_robin_manager.user_queues_dict[queue.name].popleft()
-        round_robin_manager.user_queues_dict[queue.name].append(turn_user)
+        if expected_user_name == current_user.name:
+            queue_message = (
+                db.query(QueueMessage)
+                .join(Message)
+                .filter(QueueMessage.queue_id == queue_id)
+                .order_by(Message.created_at.asc())
+                .with_for_update(skip_locked=True)
+                .first()
+            )
 
-        return {
-            "message": "Message consumed successfully",
-            "content": message_content,
-        }
+            if not queue_message:
+                raise HTTPException(status_code=404, detail="Message not found")
+
+            message_content = queue_message.message.content
+
+            db.delete(queue_message)
+
+            remaining_refs = (
+                db.query(QueueMessage)
+                .filter(QueueMessage.message_id == queue_message.message_id)
+                .count()
+            )
+            if remaining_refs == 0:
+                message_to_delete = (
+                    db.query(Message)
+                    .filter(Message.id == queue_message.message_id)
+                    .first()
+                )
+                if message_to_delete:
+                    db.delete(message_to_delete)
+
+            db.commit()
+
+            turn_user = round_robin_manager.user_queues_dict[queue.id].popleft()
+            round_robin_manager.user_queues_dict[queue.id].append(turn_user)
+
+            return {
+                "message": "Message consumed successfully",
+                "content": message_content,
+            }
 
     else:
-        raise HTTPException(status_code=409, detail="Invalid user turn")
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers/{server}/Queues") or []
+                )
+                for queue in server_queues:
+                    if queue == queue_id:
+                        print("send grpc to consume message")
+                        return {
+                            "message": "Message consumed successfully",
+                            "content": "Message content from gRPC",
+                        }
+    raise HTTPException(status_code=409, detail="Invalid user turn")
 
 
 @router.post("/queues/subscribe")
 async def subscribe(
-    queue: QueueCreate,
+    queue_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
-    existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
+    existing_queue = db.query(Queue).filter(Queue.id == queue_id).first()
 
-    if not existing_queue:
-        raise HTTPException(status_code=404, detail="Queue not found")
+    if existing_queue:
+        if existing_queue.is_private:
+            is_invited = (
+                db.query(UserQueue)
+                .filter(
+                    UserQueue.user_id == current_user.id,
+                    UserQueue.queue_id == existing_queue.id,
+                )
+                .first()
+            )
+            if not is_invited:
+                raise HTTPException(
+                    status_code=403, detail="You must be invited to join this queue."
+                )
 
-    if existing_queue.is_private:
-        is_invited = (
+        user_queue_entry = (
             db.query(UserQueue)
             .filter(
                 UserQueue.user_id == current_user.id,
@@ -216,70 +281,87 @@ async def subscribe(
             )
             .first()
         )
-        if not is_invited:
-            raise HTTPException(
-                status_code=403, detail="You must be invited to join this queue."
-            )
 
-    user_queue_entry = (
-        db.query(UserQueue)
-        .filter(
-            UserQueue.user_id == current_user.id,
-            UserQueue.queue_id == existing_queue.id,
+        if user_queue_entry:
+            raise HTTPException(status_code=409, detail="User already subscribed")
+
+        new_subscription = UserQueue(
+            user_id=current_user.id, queue_id=existing_queue.id
         )
-        .first()
-    )
+        db.add(new_subscription)
+        db.commit()
 
-    if user_queue_entry:
-        raise HTTPException(status_code=409, detail="User already subscribed")
+        if queue_id not in round_robin_manager.user_queues_dict:
+            round_robin_manager.user_queues_dict[queue_id] = deque()
 
-    new_subscription = UserQueue(user_id=current_user.id, queue_id=existing_queue.id)
-    db.add(new_subscription)
-    db.commit()
+        round_robin_manager.user_queues_dict[queue_id].append(current_user.name)
 
-    if queue.name not in round_robin_manager.user_queues_dict:
-        round_robin_manager.user_queues_dict[queue.name] = deque()
-
-    round_robin_manager.user_queues_dict[queue.name].append(current_user.name)
-
-    return {"message": "Successfully subscribed to the queue"}
+        return {"message": "Successfully subscribed to the queue"}
+    else:
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers/{server}/Queues") or []
+                )
+                for queue in server_queues:
+                    if queue == queue_id:
+                        print("send grpc to subscribe to queue")
+                        return {
+                            "message": "Successfully subscribed to the queue",
+                            "queue_id": queue_id,
+                        }
+    raise HTTPException(status_code=404, detail="Queue not found")
 
 
 @router.post("/queues/unsubscribe")
 async def unsubscribe(
-    queue: QueueCreate,
+    queue_id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
-    existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
+    existing_queue = db.query(Queue).filter(Queue.id == queue_id).first()
 
-    if not existing_queue:
-        raise HTTPException(status_code=404, detail="Queue not found")
-
-    user_queue_entry = (
-        db.query(UserQueue)
-        .filter(
-            UserQueue.user_id == current_user.id,
-            UserQueue.queue_id == existing_queue.id,
-        )
-        .first()
-    )
-
-    if not user_queue_entry:
-        raise HTTPException(status_code=409, detail="User was not subscribed")
-
-    db.delete(user_queue_entry)
-    db.commit()
-
-    if queue.name in round_robin_manager.user_queues_dict:
-        round_robin_manager.user_queues_dict[queue.name] = deque(
-            user
-            for user in round_robin_manager.user_queues_dict[queue.name]
-            if user != current_user.name
+    if existing_queue:
+        user_queue_entry = (
+            db.query(UserQueue)
+            .filter(
+                UserQueue.user_id == current_user.id,
+                UserQueue.queue_id == existing_queue.id,
+            )
+            .first()
         )
 
-        if not round_robin_manager.user_queues_dict[queue.name]:
-            del round_robin_manager.user_queues_dict[queue.name]
+        if not user_queue_entry:
+            raise HTTPException(status_code=409, detail="User was not subscribed")
 
-    return {"message": "Successfully unsubscribed from the queue"}
+        db.delete(user_queue_entry)
+        db.commit()
+
+        if queue_id in round_robin_manager.user_queues_dict:
+            round_robin_manager.user_queues_dict[queue_id] = deque(
+                user
+                for user in round_robin_manager.user_queues_dict[queue_id]
+                if user != current_user.name
+            )
+
+            if not round_robin_manager.user_queues_dict[queue_id]:
+                del round_robin_manager.user_queues_dict[queue_id]
+
+        return {"message": "Successfully unsubscribed from the queue"}
+    else:
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers/{server}/Queues") or []
+                )
+                for queue in server_queues:
+                    if queue == queue_id:
+                        print("send grpc to unsubscribe from queue")
+                        return {
+                            "message": "Successfully unsubscribed from the queue",
+                            "queue_id": queue_id,
+                        }
+    raise HTTPException(status_code=404, detail="Queue not found")
