@@ -6,12 +6,13 @@ from app.core.rrmanager import get_round_robin_manager
 from app.grpc.Client import Client
 from app.models.message import Message
 from app.models.queue import Queue
-from app.models.user_queue import user_queue as UserQueue
 from app.models.queue_message import QueueMessage
+from app.models.user_queue import user_queue as UserQueue
 from app.RoundRobinManager import RoundRobinManager
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
+from zookeeper import ZK_NODE_QUEUES, zk
 
 router = APIRouter()
 
@@ -37,7 +38,6 @@ async def get_queues(
         query = query.filter(Queue.user_id == current_user.id)
     else:
         query = query.filter(Queue.is_private == False)
-
 
     # #TEST
     # #------------------------------
@@ -65,8 +65,9 @@ async def create_queue(
     db.commit()
     db.refresh(new_queue)
 
+    zk.ensure_path(f"{ZK_NODE_QUEUES}/{new_queue.id}:{new_queue.name}")
     round_robin_manager.user_queues_dict[new_queue.name] = deque()
-    
+
     return {"message": "Queue created successfully", "queue_id": new_queue.id}
 
 
@@ -83,13 +84,16 @@ async def delete_queue(
         raise HTTPException(status_code=404, detail="Queue not found.")
 
     if queue.user_id != current_user.id:
-        raise HTTPException(status_code=403, detail="You do not have permission to delete this queue.")
+        raise HTTPException(
+            status_code=403, detail="You do not have permission to delete this queue."
+        )
 
     db.delete(queue)
     db.commit()
 
+    zk.delete(f"{ZK_NODE_QUEUES}/{queue.id}:{queue_name}", recursive=True)
     round_robin_manager.user_queues_dict.pop(queue_name, None)
-    
+
     return {"message": "Queue deleted successfully", "queue_name": queue_name}
 
 
@@ -142,7 +146,9 @@ async def consume_message(
         .first()
     )
     if not is_subscribed:
-        raise HTTPException(status_code=403, detail="You are not subscribed to this queue.")
+        raise HTTPException(
+            status_code=403, detail="You are not subscribed to this queue."
+        )
 
     expected_user_name = round_robin_manager.user_queues_dict[queue.name][-1]
 
@@ -159,13 +165,19 @@ async def consume_message(
         if not queue_message:
             raise HTTPException(status_code=404, detail="Message not found")
 
-        message_content = queue_message.message.content  
+        message_content = queue_message.message.content
 
         db.delete(queue_message)
 
-        remaining_refs = db.query(QueueMessage).filter(QueueMessage.message_id == queue_message.message_id).count()
+        remaining_refs = (
+            db.query(QueueMessage)
+            .filter(QueueMessage.message_id == queue_message.message_id)
+            .count()
+        )
         if remaining_refs == 0:
-            message_to_delete = db.query(Message).filter(Message.id == queue_message.message_id).first()
+            message_to_delete = (
+                db.query(Message).filter(Message.id == queue_message.message_id).first()
+            )
             if message_to_delete:
                 db.delete(message_to_delete)
 
@@ -176,12 +188,11 @@ async def consume_message(
 
         return {
             "message": "Message consumed successfully",
-            "content": message_content, 
+            "content": message_content,
         }
 
     else:
         raise HTTPException(status_code=409, detail="Invalid user turn")
-
 
 
 @router.post("/queues/subscribe")
@@ -199,15 +210,23 @@ async def subscribe(
     if existing_queue.is_private:
         is_invited = (
             db.query(UserQueue)
-            .filter(UserQueue.user_id == current_user.id, UserQueue.queue_id == existing_queue.id)
+            .filter(
+                UserQueue.user_id == current_user.id,
+                UserQueue.queue_id == existing_queue.id,
+            )
             .first()
         )
         if not is_invited:
-            raise HTTPException(status_code=403, detail="You must be invited to join this queue.")
+            raise HTTPException(
+                status_code=403, detail="You must be invited to join this queue."
+            )
 
     user_queue_entry = (
         db.query(UserQueue)
-        .filter(UserQueue.user_id == current_user.id, UserQueue.queue_id == existing_queue.id)
+        .filter(
+            UserQueue.user_id == current_user.id,
+            UserQueue.queue_id == existing_queue.id,
+        )
         .first()
     )
 
@@ -226,7 +245,6 @@ async def subscribe(
     return {"message": "Successfully subscribed to the queue"}
 
 
-
 @router.post("/queues/unsubscribe")
 async def unsubscribe(
     queue: QueueCreate,
@@ -241,7 +259,10 @@ async def unsubscribe(
 
     user_queue_entry = (
         db.query(UserQueue)
-        .filter(UserQueue.user_id == current_user.id, UserQueue.queue_id == existing_queue.id)
+        .filter(
+            UserQueue.user_id == current_user.id,
+            UserQueue.queue_id == existing_queue.id,
+        )
         .first()
     )
 
@@ -253,11 +274,12 @@ async def unsubscribe(
 
     if queue.name in round_robin_manager.user_queues_dict:
         round_robin_manager.user_queues_dict[queue.name] = deque(
-            user for user in round_robin_manager.user_queues_dict[queue.name] if user != current_user.name
+            user
+            for user in round_robin_manager.user_queues_dict[queue.name]
+            if user != current_user.name
         )
 
         if not round_robin_manager.user_queues_dict[queue.name]:
             del round_robin_manager.user_queues_dict[queue.name]
 
     return {"message": "Successfully unsubscribed from the queue"}
-
