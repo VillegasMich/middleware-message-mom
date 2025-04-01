@@ -112,14 +112,6 @@ class Topic:
 
         topic_id = Prompt.ask("[cyan]Enter topic ID to send a message[/]")
 
-        topic = next((q for q in topics if q["id"] == topic_id), None)
-
-        if topic is None:
-            print(f"[red]Error:[/] Topic '{topic_id}' not found.")
-            return
-
-        topic_id = topic["id"]
-
         message = Prompt.ask("[cyan]Enter message[/]")
         routing_key = Prompt.ask("[cyan]Enter routing key[/]")
 

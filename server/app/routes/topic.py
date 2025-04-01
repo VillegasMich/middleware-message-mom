@@ -22,9 +22,11 @@ class TopicCreate(BaseModel):
     name: str
     routing_key: Optional[str] = None
 
+
 class TopicSubscribe(BaseModel):
     topic_id: int
     routing_key: Optional[str] = None
+
 
 class MessageCreate(BaseModel):
     content: str
@@ -253,6 +255,7 @@ async def publish_message(
     raise HTTPException(status_code=404, detail="Topic not found")
 
 
+# FIX:
 @router.get("/topics/queues/{queue_id}/consume")
 async def consume_message(
     queue_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)
@@ -267,10 +270,9 @@ async def consume_message(
         .first()
     )
 
-    if private_queue:
-        if not private_queue:
-            raise HTTPException(status_code=404, detail="Private queue not found")
+    print("\n", private_queue.id, "\n")
 
+    if private_queue:
         messages = (
             db.query(Message)
             .join(QueueMessage, Message.id == QueueMessage.message_id)
@@ -298,6 +300,7 @@ async def consume_message(
                         "message": "Messages consumed successfully",
                         "queue": queue,
                     }
+    raise HTTPException(status_code=404, detail="Private queue not found")
 
 
 @router.post("/topics/subscribe")

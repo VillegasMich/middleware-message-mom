@@ -144,15 +144,7 @@ class Queue:
         if not queues:
             return
 
-        queue_name = Prompt.ask("[cyan]Enter queue name to send a message[/]")
-
-        queue = next((q for q in queues if q["name"] == queue_name), None)
-
-        if queue is None:
-            print(f"[red]Error:[/] Queue '{queue_name}' not found.")
-            return
-
-        queue_id = queue["id"]
+        queue_id = Prompt.ask("[cyan]Enter queue ID to send a message[/]")
 
         response = requests.post(
             f"{SERVER_ZOO}/queues/{queue_id}/publish",
@@ -177,15 +169,7 @@ class Queue:
         if not queues:
             return
 
-        queue_name = Prompt.ask("[cyan]Enter queue name[/]")
-
-        queue = next((q for q in queues if q["name"] == queue_name), None)
-
-        if queue is None:
-            print(f"[red]Error:[/] Queue '{queue_name}' not found.")
-            return
-
-        queue_id = queue["id"]
+        queue_id = Prompt.ask("[cyan]Enter queue ID to recieve message[/]")
 
         response = requests.get(
             f"{SERVER_ZOO}/queues/{queue_id}/consume",
