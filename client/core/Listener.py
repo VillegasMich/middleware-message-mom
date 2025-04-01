@@ -43,6 +43,6 @@ class Listener:
                                 else:
                                     self.dict[queue["name"]] = {message}
             except Exception as e:
-                print(f"Error al realizar la petición: {e}")
+                # print(f"Error al realizar la petición: {e}")
 
             time.sleep(self.period)

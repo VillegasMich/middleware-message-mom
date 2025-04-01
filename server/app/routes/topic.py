@@ -134,7 +134,7 @@ async def get_user_routingkey_topic(
 async def create_topic(
     topic: TopicCreate,
     db: Session = Depends(get_db),
-    current_user: str = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     existing_topic = db.query(Topic).filter(Topic.name == topic.name).first()
     if existing_topic:
@@ -255,7 +255,6 @@ async def publish_message(
     raise HTTPException(status_code=404, detail="Topic not found")
 
 
-# FIX:
 @router.get("/topics/queues/{queue_id}/consume")
 async def consume_message(
     queue_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)

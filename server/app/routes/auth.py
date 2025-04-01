@@ -53,9 +53,6 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.name == username).first()
 
     if user:
-        if not user or not user.verify_password(password):
-            raise HTTPException(status_code=400, detail="Invalid credentials")
-
         expires_at = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
         access_token = jwt.encode(
@@ -72,3 +69,4 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
                 server_users = zk.get_children(f"servers/{server}/Users") or []
                 for user in server_users:
                     print(f"User {user} found on server {server}")
+    raise HTTPException(status_code=400, detail="Invalid credentials")
