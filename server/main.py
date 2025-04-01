@@ -28,6 +28,10 @@ def get_round_robin_manager():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     zk.ensure_path("/servers")
+    # Check if the node already exists
+    if zk.exists(ZK_NODE):
+        # If it exists, delete it first
+        zk.delete(ZK_NODE, recursive=True)
 
     if not zk.exists(ZK_NODE):
         zk.create(ZK_NODE, f"{SERVER_IP}:{SERVER_PORT}".encode(), ephemeral=False)

@@ -38,13 +38,12 @@ class Listener:
                     for queue in queues:
                         messages = Topic.pull_message(queue.get("id"))
                         # print(f"Messages received for queue {queue.get('id')}:", messages)
-
                         if messages:
                             for message in messages:
                                 if queue["name"] in self.dict:
-                                    self.dict[queue["name"]].append(message)
+                                    self.dict[queue["name"]].add(message)
                                 else:
-                                    self.dict[queue["name"]] = [message]
+                                    self.dict[queue["name"]] = {message}
             except Exception as e:
                 print(f"Error al realizar la petición: {e}")
 
