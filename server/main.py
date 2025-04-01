@@ -22,8 +22,8 @@ zk.start()
 
 # Server identification
 HOSTNAME = socket.gethostname()
-#SERVER_IP = "127.0.0.1"  # LOCAL
-SERVER_IP = os.getenv("SERVER_ELASTIC_IP")  # EC2
+SERVER_IP = "127.0.0.1"  # LOCAL
+# SERVER_IP = os.getenv("SERVER_ELASTIC_IP")  # EC2
 SERVER_PORT = int(os.getenv("SERVER_PORT", 8000))
 ZK_NODE = f"/servers/{SERVER_IP}:{SERVER_PORT}"
 
@@ -44,6 +44,13 @@ def get_round_robin_manager():
 async def lifespan(app: FastAPI):
     # Register server on startup
     zk.ensure_path("/servers")
+    
+    # Check if the node already exists
+    if zk.exists(ZK_NODE):
+        # If it exists, delete it first
+        zk.delete(ZK_NODE, recursive=True)
+        
+    # Create a new node
     zk.create(ZK_NODE, f"{SERVER_IP}:{SERVER_PORT}".encode(), ephemeral=True)
     print(f"Registered: {ZK_NODE}")
 
@@ -51,7 +58,7 @@ async def lifespan(app: FastAPI):
 
     # Deregister server on shutdown
     if zk.exists(ZK_NODE):
-        zk.delete(ZK_NODE)
+        zk.delete(ZK_NODE, recursive=True)
     zk.stop()
     print(f"Deregistered: {ZK_NODE}")
 
