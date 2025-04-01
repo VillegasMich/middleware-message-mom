@@ -149,18 +149,23 @@ async def publish_message(
         }
     else:
         servers: list[str] = zk.get_children("/servers") or []
+        print(servers)
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
                     zk.get_children(f"/servers/{server}/Queues") or []
                 )
+                print(server_queues)
                 for queue in server_queues:
-                    if queue == queue_id:
+                    print('Searching in servers for queues')
+                    if queue == str(queue_id):
                         print("send grpc to send message to queue")
+                        server_ip, _ = server.split(':')
+                        Client.send_grpc_message('queue',queue_id,message.content, message.routing_key,server_ip+':8080')
                         return {
                             "message": "Message published successfully",
-                            "queue_id": existing_queue.id,
-                            "message_id": new_message.id,
+                            "queue_id": '',
+                            "message_id": '',
                         }
     raise HTTPException(status_code=404, detail="Queue not found")
 

@@ -1,14 +1,23 @@
 import os
 import threading
 from concurrent import futures
-
+import socket
 import grpc
 
 from . import Service_pb2, Service_pb2_grpc
 
-GRPC_PORT = int(os.getenv("GRPC_PORT", 8080))  # Change per instance
-HOST = "127.0.0.1:" + str(GRPC_PORT)
+GRPC_PORT = int(os.getenv("GRPC_PORT", 8080))  
 
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+try:
+    s.connect(("8.8.8.8", 80))
+    ip = s.getsockname()[0]
+finally:
+    s.close()
+    
+HOST = f"{ip}:" + str(GRPC_PORT)
+
+print(HOST)
 
 class MessageService(Service_pb2_grpc.MessageServiceServicer):
     """
@@ -45,7 +54,7 @@ class Server:
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         Service_pb2_grpc.add_MessageServiceServicer_to_server(MessageService(), server)
         server.add_insecure_port(HOST)
-        print("Production service started on port 8080")
+        print(f"Production service started on {HOST} ")
         server.start()
         server.wait_for_termination()
 
