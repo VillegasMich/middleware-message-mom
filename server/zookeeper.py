@@ -7,8 +7,8 @@ from app.models.user import User
 from kazoo.client import KazooClient
 from sqlalchemy.orm import Session
 
-ZK_HOST = "localhost:2181"  # LOCAL
-# ZK_HOST = "52.21.11.66:2181"  # EC2
+# ZK_HOST = "localhost:2181"  # LOCAL
+ZK_HOST = "52.21.11.66:2181"  # EC2
 # Server identification
 HOSTNAME = socket.gethostname()
 SERVER_IP = "127.0.0.1"  # LOCAL

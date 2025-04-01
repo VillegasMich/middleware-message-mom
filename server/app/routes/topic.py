@@ -22,6 +22,9 @@ class TopicCreate(BaseModel):
     name: str
     routing_key: Optional[str] = None
 
+class TopicSubscribe(BaseModel):
+    topic_id: int
+    routing_key: Optional[str] = None
 
 class MessageCreate(BaseModel):
     content: str
@@ -299,11 +302,11 @@ async def consume_message(
 
 @router.post("/topics/subscribe")
 async def subscribe(
-    topic: TopicCreate,
+    topic: TopicSubscribe,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    existing_topic = db.query(Topic).filter(Topic.name == topic.name).first()
+    existing_topic = db.query(Topic).filter(Topic.id == topic.topic_id).first()
 
     if existing_topic:
         topic_id = existing_topic.id

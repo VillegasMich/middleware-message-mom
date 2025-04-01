@@ -106,8 +106,7 @@ class Queue:
         queue_id = Prompt.ask("[cyan]Enter queue ID[/]")
 
         response = requests.post(
-            f"{SERVER_ZOO}/queues/subscribe",
-            json={"id": queue_id},
+            f"{SERVER_ZOO}/queues/subscribe?queue_id={queue_id}",
             headers=Util.get_headers(),
         )
 
@@ -125,8 +124,7 @@ class Queue:
         queue_id = Prompt.ask("[cyan]Enter queue ID[/]")
 
         response = requests.post(
-            f"{SERVER_ZOO}/queues/unsubscribe",
-            json={"id": queue_id},
+            f"{SERVER_ZOO}/queues/unsubscribe?queue_id={queue_id}",
             headers=Util.get_headers(),
         )
 

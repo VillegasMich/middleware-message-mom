@@ -154,7 +154,7 @@ class Topic:
         response = requests.post(
             f"{SERVER_ZOO}/topics/subscribe",
             json={
-                "id": topic_id,
+                "topic_id": topic_id,
                 "routing_key": routing_key,
             },
             headers=Util.get_headers(),

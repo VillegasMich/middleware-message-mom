@@ -43,6 +43,7 @@ async def get_queues(
 
     # Traemos las queue del zk o mandamos un grpc a cada servidor para que las entreguen ???
     servers: list[str] = zk.get_children("/servers") or []
+    print(servers)
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             print("Ask for queues")
