@@ -33,19 +33,16 @@ class Listener:
         while True:
             try:
                 queues = User.get_user_queues()
-                # print(f"Retrieved queues: {queues}")
                 if queues and len(queues) > 0:
                     for queue in queues:
                         messages = Topic.pull_message(queue.get("id"))
-                        # print(f"Messages received for queue {queue.get('id')}:", messages)
                         if messages:
-                            for message in messages: 
+                            for message in messages:
                                 if queue["name"] in self.dict:
-                                    self.dict[queue["name"]].add(message)  
+                                    self.dict[queue["name"]].add(message)
                                 else:
-                                    self.dict[queue["name"]] = {message} 
-                            
+                                    self.dict[queue["name"]] = {message}
             except Exception as e:
-                print(f"Error al realizar la petición: {e}")
+                # print(f"Error al realizar la petición: {e}")
 
             time.sleep(self.period)

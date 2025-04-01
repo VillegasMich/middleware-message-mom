@@ -1,5 +1,3 @@
-import os
-import socket
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -11,22 +9,9 @@ from app.routes.queue import router as queue_router
 from app.routes.topic import router as topic_router
 from app.routes.user import router as user_router
 from fastapi import FastAPI
-from kazoo.client import KazooClient
-
-#ZK_HOST = "localhost:2181"  # LOCAL
-ZK_HOST = "52.21.11.66:2181"  # EC2
-
-zk = KazooClient(hosts=ZK_HOST)
-zk.start()
-
-
-# Server identification
-HOSTNAME = socket.gethostname()
-SERVER_IP = "127.0.0.1"  # LOCAL
-# SERVER_IP = os.getenv("SERVER_ELASTIC_IP")  # EC2
-SERVER_PORT = int(os.getenv("SERVER_PORT", 8000))
-ZK_NODE = f"/servers/{SERVER_IP}:{SERVER_PORT}"
-
+from zookeeper import (SERVER_IP, SERVER_PORT, ZK_NODE, ZK_NODE_QUEUES,
+                       ZK_NODE_TOPICS, ZK_NODE_USERS, sync_all_queues,
+                       sync_all_topics, sync_all_users, zk)
 
 db = next(get_db())
 round_robin_manager.sync_users_queues(db)
@@ -42,21 +27,27 @@ def get_round_robin_manager():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Register server on startup
     zk.ensure_path("/servers")
-    
     # Check if the node already exists
     if zk.exists(ZK_NODE):
         # If it exists, delete it first
         zk.delete(ZK_NODE, recursive=True)
-        
-    # Create a new node
-    zk.create(ZK_NODE, f"{SERVER_IP}:{SERVER_PORT}".encode(), ephemeral=True)
-    print(f"Registered: {ZK_NODE}")
+
+    if not zk.exists(ZK_NODE):
+        zk.create(ZK_NODE, f"{SERVER_IP}:{SERVER_PORT}".encode(), ephemeral=False)
+
+    zk.ensure_path(ZK_NODE_QUEUES)
+    zk.ensure_path(ZK_NODE_TOPICS)
+    zk.ensure_path(ZK_NODE_USERS)
+
+    print(f"Registered: {ZK_NODE} with Queues and Topics")
+
+    sync_all_queues(db)
+    sync_all_topics(db)
+    sync_all_users(db)
 
     yield
 
-    # Deregister server on shutdown
     if zk.exists(ZK_NODE):
         zk.delete(ZK_NODE, recursive=True)
     zk.stop()

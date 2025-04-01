@@ -37,7 +37,7 @@ class Topic:
                 tree_root = Tree(f"\n[bold yellow]{message}:[/]")
                 for topic in topics:
                     tree_root.add(
-                        "[bold]#"
+                        "[bold]ID: "
                         + str(topic["id"])
                         + "[/]"
                         + " - "
@@ -88,10 +88,10 @@ class Topic:
             print("[yellow]You don't own any topics to delete.[/]")
             return
 
-        topic_name = Prompt.ask("[cyan]Enter topic name to [bold red]delete[/]")
+        topic_id = Prompt.ask("[cyan]Enter topic ID to [bold red]delete[/]")
 
         delete_response = requests.delete(
-            f"{SERVER_ZOO}/topics/{topic_name}", headers=Util.get_headers()
+            f"{SERVER_ZOO}/topics/{topic_id}", headers=Util.get_headers()
         )
 
         if delete_response.status_code == 200:
@@ -110,15 +110,7 @@ class Topic:
         if not topics:
             return
 
-        topic_name = Prompt.ask("[cyan]Enter topic name to send a message[/]")
-
-        topic = next((q for q in topics if q["name"] == topic_name), None)
-
-        if topic is None:
-            print(f"[red]Error:[/] Topic '{topic_name}' not found.")
-            return
-
-        topic_id = topic["id"]
+        topic_id = Prompt.ask("[cyan]Enter topic ID to send a message[/]")
 
         message = Prompt.ask("[cyan]Enter message[/]")
         routing_key = Prompt.ask("[cyan]Enter routing key[/]")
@@ -148,20 +140,20 @@ class Topic:
     def subscribe():
         Topic.get_all()
 
-        topic_name = Prompt.ask("[cyan]Enter topic name[/]")
+        topic_id = Prompt.ask("[cyan]Enter topic ID[/]")
         routing_key = Prompt.ask("[cyan]Enter routing key[/]")
 
         response = requests.post(
             f"{SERVER_ZOO}/topics/subscribe",
             json={
-                "name": topic_name,
+                "topic_id": topic_id,
                 "routing_key": routing_key,
             },
             headers=Util.get_headers(),
         )
 
         if response.status_code == 200:
-            print(f"[yellow]Subscribed to topic:[/] {topic_name}")
+            print(f"[yellow]Subscribed to topic:[/] {topic_id}")
         else:
             print(
                 f"""[red]Error:[/] {response.json().get("detail", "No topic found")}"""
@@ -169,10 +161,12 @@ class Topic:
 
     @staticmethod
     def pull_message(queue_id: int):
-        response = requests.get(f"{SERVER_ZOO}/topics/queues/{queue_id}/consume", headers=Util.get_headers())
+        response = requests.get(
+            f"{SERVER_ZOO}/topics/queues/{queue_id}/consume", headers=Util.get_headers()
+        )
 
         if response.status_code == 200:
             data = response.json()
-            return list(zip(data["content"], data["ids"])) 
-        
-        return None  
+            return list(zip(data["content"], data["ids"]))
+
+        return None

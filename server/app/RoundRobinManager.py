@@ -12,6 +12,6 @@ class RoundRobinManager:
         queues = db.query(Queue).all()
         for queue in queues:
             if queue not in self.user_queues_dict.keys():
-                self.user_queues_dict[queue.name] = deque()
+                self.user_queues_dict[queue.id] = deque()
             for user in queue.users:
-                self.user_queues_dict[queue.name].append(user.name)
+                self.user_queues_dict[queue.id].append(user.name)

@@ -1,0 +1,57 @@
+import os
+import socket
+
+from app.models.queue import Queue
+from app.models.topic import Topic
+from app.models.user import User
+from kazoo.client import KazooClient
+from sqlalchemy.orm import Session
+
+# ZK_HOST = "localhost:2181"  # LOCAL
+ZK_HOST = "52.21.11.66:2181"  # EC2
+# Server identification
+HOSTNAME = socket.gethostname()
+SERVER_IP = "127.0.0.1"  # LOCAL
+# SERVER_IP = os.getenv("SERVER_ELASTIC_IP")  # EC2
+SERVER_PORT = int(os.getenv("SERVER_PORT", 8000))
+ZK_NODE = f"/servers/{SERVER_IP}:{SERVER_PORT}"
+ZK_NODE_QUEUES = f"{ZK_NODE}/Queues"
+ZK_NODE_TOPICS = f"{ZK_NODE}/Topics"
+ZK_NODE_USERS = f"{ZK_NODE}/Users"
+
+
+zk = KazooClient(hosts=ZK_HOST)
+zk.start()
+
+
+def sync_all_queues(db: Session):
+    queues = db.query(Queue).all()
+    for queue in queues:
+        queue_path = f"{ZK_NODE_QUEUES}/{queue.id}"
+        if not zk.exists(queue_path):
+            zk.create(queue_path, b"", ephemeral=False)
+            print(f"Created ZK node: {queue_path}")
+        else:
+            print(f"ZK node already exists: {queue_path}")
+
+
+def sync_all_topics(db: Session):
+    topics = db.query(Topic).all()
+    for topic in topics:
+        topic_path = f"{ZK_NODE_TOPICS}/{topic.id}"
+        if not zk.exists(topic_path):
+            zk.create(topic_path, b"", ephemeral=False)
+            print(f"Created ZK node: {topic_path}")
+        else:
+            print(f"ZK node already exists: {topic_path}")
+
+
+def sync_all_users(db: Session):
+    users = db.query(User).all()
+    for user in users:
+        user_path = f"{ZK_NODE_USERS}/{user.id}"
+        if not zk.exists(user_path):
+            zk.create(user_path, b"", ephemeral=False)
+            print(f"Created ZK node: {user_path}")
+        else:
+            print(f"ZK node already exists: {user_path}")

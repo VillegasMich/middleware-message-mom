@@ -2,7 +2,7 @@ import random
 
 from kazoo.client import KazooClient
 
-#ZK_HOST = "localhost:2181"  # LOCAL
+# ZK_HOST = "localhost:2181"  # LOCAL
 ZK_HOST = "52.21.11.66:2181"  # EC2
 
 zk = KazooClient(hosts=ZK_HOST)
