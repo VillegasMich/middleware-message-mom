@@ -183,11 +183,9 @@ async def consume_message(
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
-
+    print(queue)
     if queue:
-        if not queue:
-            raise HTTPException(status_code=404, detail="Queue not found")
-
+        
         is_subscribed = (
             db.query(UserQueue)
             .filter(

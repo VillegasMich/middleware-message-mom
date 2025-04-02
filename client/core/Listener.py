@@ -33,9 +33,11 @@ class Listener:
         while True:
             try:
                 queues = User.get_user_queues()
+                print(queues)
                 if queues and len(queues) > 0:
                     for queue in queues:
                         messages = Topic.pull_message(queue.get("id"))
+                        print(messages)
                         if messages:
                             for message in messages:
                                 if queue["name"] in self.dict:
