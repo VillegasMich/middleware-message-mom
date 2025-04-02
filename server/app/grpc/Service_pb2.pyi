@@ -21,3 +21,31 @@ class MessageResponse(_message.Message):
     STATUS_CODE_FIELD_NUMBER: _ClassVar[int]
     status_code: int
     def __init__(self, status_code: _Optional[int] = ...) -> None: ...
+
+class ConsumeMessageRequest(_message.Message):
+    __slots__ = ("id",)
+    ID_FIELD_NUMBER: _ClassVar[int]
+    id: int
+    def __init__(self, id: _Optional[int] = ...) -> None: ...
+
+class ConsumeMessageResponse(_message.Message):
+    __slots__ = ("content",)
+    CONTENT_FIELD_NUMBER: _ClassVar[int]
+    content: str
+    def __init__(self, content: _Optional[str] = ...) -> None: ...
+
+class SubscribeRequest(_message.Message):
+    __slots__ = ("queue_id", "user_id", "user_name")
+    QUEUE_ID_FIELD_NUMBER: _ClassVar[int]
+    USER_ID_FIELD_NUMBER: _ClassVar[int]
+    USER_NAME_FIELD_NUMBER: _ClassVar[int]
+    queue_id: int
+    user_id: int
+    user_name: str
+    def __init__(self, queue_id: _Optional[int] = ..., user_id: _Optional[int] = ..., user_name: _Optional[str] = ...) -> None: ...
+
+class SubscribeResponse(_message.Message):
+    __slots__ = ("status_code",)
+    STATUS_CODE_FIELD_NUMBER: _ClassVar[int]
+    status_code: int
+    def __init__(self, status_code: _Optional[int] = ...) -> None: ...

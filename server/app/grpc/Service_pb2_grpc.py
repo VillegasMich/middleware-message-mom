@@ -5,7 +5,7 @@ import warnings
 
 from . import Service_pb2 as Service__pb2
 
-GRPC_GENERATED_VERSION = '1.71.0'
+GRPC_GENERATED_VERSION = '1.70.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
@@ -39,12 +39,23 @@ class MessageServiceStub(object):
                 request_serializer=Service__pb2.Message.SerializeToString,
                 response_deserializer=Service__pb2.MessageResponse.FromString,
                 _registered_method=True)
+        self.ConsumeMessage = channel.unary_unary(
+                '/MessageService/ConsumeMessage',
+                request_serializer=Service__pb2.ConsumeMessageRequest.SerializeToString,
+                response_deserializer=Service__pb2.ConsumeMessageResponse.FromString,
+                _registered_method=True)
 
 
 class MessageServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def AddMessage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ConsumeMessage(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -57,6 +68,11 @@ def add_MessageServiceServicer_to_server(servicer, server):
                     servicer.AddMessage,
                     request_deserializer=Service__pb2.Message.FromString,
                     response_serializer=Service__pb2.MessageResponse.SerializeToString,
+            ),
+            'ConsumeMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.ConsumeMessage,
+                    request_deserializer=Service__pb2.ConsumeMessageRequest.FromString,
+                    response_serializer=Service__pb2.ConsumeMessageResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -86,6 +102,105 @@ class MessageService(object):
             '/MessageService/AddMessage',
             Service__pb2.Message.SerializeToString,
             Service__pb2.MessageResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ConsumeMessage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/MessageService/ConsumeMessage',
+            Service__pb2.ConsumeMessageRequest.SerializeToString,
+            Service__pb2.ConsumeMessageResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
+class SubscribeQueueServiceStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.Subscribe = channel.unary_unary(
+                '/SubscribeQueueService/Subscribe',
+                request_serializer=Service__pb2.SubscribeRequest.SerializeToString,
+                response_deserializer=Service__pb2.SubscribeResponse.FromString,
+                _registered_method=True)
+
+
+class SubscribeQueueServiceServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def Subscribe(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_SubscribeQueueServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'Subscribe': grpc.unary_unary_rpc_method_handler(
+                    servicer.Subscribe,
+                    request_deserializer=Service__pb2.SubscribeRequest.FromString,
+                    response_serializer=Service__pb2.SubscribeResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'SubscribeQueueService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('SubscribeQueueService', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class SubscribeQueueService(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def Subscribe(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/SubscribeQueueService/Subscribe',
+            Service__pb2.SubscribeRequest.SerializeToString,
+            Service__pb2.SubscribeResponse.FromString,
             options,
             channel_credentials,
             insecure,

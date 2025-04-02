@@ -314,12 +314,17 @@ async def subscribe(
                     zk.get_children(f"/servers/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    if queue == queue_id:
-                        print("send grpc to subscribe to queue")
-                        return {
-                            "message": "Successfully subscribed to the queue",
-                            "queue_id": queue_id,
-                        }
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(':')
+                        response = Client.send_grpc_subscribe(queue_id,current_user.id,current_user.name,server_ip+':8080')
+                        if response == 1: 
+                            return {
+                                "message": "Successfully subscribed to the queue",
+                                "queue_id": queue_id,
+                            }
+                        else:
+                            raise HTTPException(status_code=500, detail="Client wasn't able to save the message")
+                        
     raise HTTPException(status_code=404, detail="Queue not found")
 
 

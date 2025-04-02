@@ -2,6 +2,7 @@ syntax = "proto3";
 
 service MessageService {
     rpc AddMessage (Message) returns (MessageResponse);
+    rpc ConsumeMessage (ConsumeMessageRequest) returns (ConsumeMessageResponse);
 }
 
 message Message {
@@ -13,4 +14,28 @@ message Message {
 
 message MessageResponse {
     int32 status_code = 1; 
+}
+
+message ConsumeMessageRequest {
+    int32 id = 1;
+}
+
+message ConsumeMessageResponse {
+    string content = 1; 
+}
+
+
+
+service SubscribeQueueService {
+    rpc Subscribe (SubscribeRequest) returns (SubscribeResponse);
+}
+
+message SubscribeRequest {
+    int32 queue_id = 1;
+    int32 user_id = 2;
+    string user_name = 3;
+}
+
+message SubscribeResponse {
+    int32 status_code = 1;
 }

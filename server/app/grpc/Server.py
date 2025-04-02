@@ -33,10 +33,21 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
             repo.save_queue_message(request)
         elif request.type == 'topic':
             repo.save_topic_message(request)
-            
+
         db.close()
         print("Request is received: " + str(request))
         return Service_pb2.MessageResponse(status_code=1)
+
+    def ConsumeMessage(self, request, context):
+        print("Request is received: " + str(request))
+        return Service_pb2.ConsumeMessageResponse(status_code=1)
+
+
+class SubscribeQueueService(Service_pb2_grpc.SubscribeQueueServiceServicer):
+
+    def Subscribe(self, request, context):
+        print("Request is received: " + str(request))
+        return Service_pb2.SubscribeResponse(status_code=1)
 
 
 class Server:
@@ -64,6 +75,8 @@ class Server:
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         Service_pb2_grpc.add_MessageServiceServicer_to_server(
             MessageService(), server)
+        Service_pb2_grpc.add_SubscribeQueueServiceServicer_to_server(
+            SubscribeQueueService(), server)
         server.add_insecure_port(HOST)
         print(f"Production service started on {HOST} ")
         server.start()
