@@ -53,11 +53,12 @@ class SubscribeQueueService(Service_pb2_grpc.SubscribeQueueServiceServicer):
 
     def Subscribe(self, request, context):
         db = next(get_db())
-        round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager)
+        round_robin_manager: RoundRobinManager = Depends(
+            get_round_robin_manager)
 
         existing_queue = db.query(Queue).filter(
             Queue.id == request.queue_id).first()
-        
+
         if existing_queue.is_private:
             is_invited = (
                 db.query(UserQueue)
@@ -90,6 +91,12 @@ class SubscribeQueueService(Service_pb2_grpc.SubscribeQueueServiceServicer):
         )
         db.add(new_subscription)
         db.commit()
+
+        if request.queue_id not in round_robin_manager.user_queues_dict:
+                round_robin_manager.user_queues_dict[request.queue_id] = deque()
+
+        round_robin_manager.user_queues_dict[request.queue_id].append(request.user_name)
+        print(round_robin_manager.user_queues_dict)
 
         db.close()
         print("Request is received: " + str(request))

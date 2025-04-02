@@ -45,7 +45,7 @@ class Client:
             try:
                 response = stub.Subscribe(request)
                 print("Response received from remote service:", response)
-                return response.status_code
+                return response
             except grpc.RpcError as e:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
