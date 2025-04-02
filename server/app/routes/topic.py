@@ -248,16 +248,17 @@ async def publish_message(
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_topic = zk.get_children(f"/servers/{server}/Topics") or []
                 for topic in server_topic:
-                    server_ip, _ = server.split(':')
-                    response = Client.send_grpc_message('topic',topic_id,message.content, message.routing_key,server_ip+':8080')
-                    if response == 1: 
-                        return {
-                            "message": "Message published successfully",
-                            "queue_id": '',
-                            "message_id": '',
-                        }
-                    else:
-                        raise HTTPException(status_code=500, detail="Client wasn't able to save the message")
+                    if topic == str(topic_id):
+                        server_ip, _ = server.split(':')
+                        response = Client.send_grpc_message('topic',topic_id,message.content, message.routing_key,server_ip+':8080')
+                        if response == 1: 
+                            return {
+                                "message": "Message published successfully",
+                                "queue_id": '',
+                                "message_id": '',
+                            }
+                        else:
+                            raise HTTPException(status_code=500, detail="Client wasn't able to save the message")
 
     raise HTTPException(status_code=404, detail="Topic not found")
 
