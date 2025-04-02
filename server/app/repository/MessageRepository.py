@@ -50,8 +50,6 @@ class MessageRepository:
                 .all()
         )
 
-        print(all_queues)
-
         matching_queues = [
             queue
             for queue in all_queues
@@ -61,14 +59,10 @@ class MessageRepository:
             )
         ]
 
-        print(matching_queues)
-
         queue_messages = [
             QueueMessage(queue_id=queue.id, message_id=new_message.id)
             for queue in matching_queues
         ]
-        
-        print(queue_messages)
-        
+
         self.db.add_all(queue_messages)
         self.db.commit()
