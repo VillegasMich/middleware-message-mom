@@ -11,7 +11,7 @@ from . import Service_pb2, Service_pb2_grpc
 from ..core.database import get_db
 from ..repository.MessageRepository import MessageRepository
 from ..models.queue import Queue
-from ..models.user_queue import UserQueue
+from ..models.user_queue import user_queue as UserQueue
 from ..RoundRobinManager import RoundRobinManager
 from app.core.rrmanager import get_round_robin_manager
 
@@ -97,7 +97,7 @@ class SubscribeQueueService(Service_pb2_grpc.SubscribeQueueServiceServicer):
         round_robin_manager.user_queues_dict[request.queue_id].append(request.user_name)
 
         print(round_robin_manager.user_queues_dict)
-        
+
         db.close()
         print("Request is received: " + str(request))
         return Service_pb2.SubscribeResponse(status_code=1)
