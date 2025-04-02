@@ -3,12 +3,18 @@ import threading
 from concurrent import futures
 import fnmatch
 
-from fastapi import HTTPException
 import grpc
+from fastapi import Depends, HTTPException
+from collections import deque
 
 from . import Service_pb2, Service_pb2_grpc
 from ..core.database import get_db
 from ..repository.MessageRepository import MessageRepository
+from ..models.queue import Queue
+from ..models.user_queue import UserQueue
+from ..RoundRobinManager import RoundRobinManager
+from app.core.rrmanager import get_round_robin_manager
+
 # os.environ["GRPC_VERBOSITY"] = "debug"
 # os.environ["GRPC_TRACE"] = "all"
 
@@ -46,6 +52,53 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
 class SubscribeQueueService(Service_pb2_grpc.SubscribeQueueServiceServicer):
 
     def Subscribe(self, request, context):
+        db = next(get_db())
+        round_robin_manager = Depends(get_round_robin_manager)
+
+        existing_queue = db.query(Queue).filter(
+            Queue.id == request.queue_id).first()
+        
+        if existing_queue.is_private:
+            is_invited = (
+                db.query(UserQueue)
+                .filter(
+                    UserQueue.user_id == request.user_id,
+                    UserQueue.queue_id == existing_queue.id,
+                )
+                .first()
+            )
+            if not is_invited:
+                raise HTTPException(
+                    status_code=403, detail="You must be invited to join this queue."
+                )
+
+        user_queue_entry = (
+            db.query(UserQueue)
+            .filter(
+                UserQueue.user_id == request.user_id,
+                UserQueue.queue_id == existing_queue.id,
+            )
+            .first()
+        )
+
+        if user_queue_entry:
+            raise HTTPException(
+                status_code=409, detail="User already subscribed")
+
+        new_subscription = UserQueue(
+            user_id=request.user_id, queue_id=existing_queue.id
+        )
+        db.add(new_subscription)
+        db.commit()
+
+        if request.queue_id not in round_robin_manager.user_queues_dict:
+            round_robin_manager.user_queues_dict[request.queue_id] = deque()
+
+        round_robin_manager.user_queues_dict[request.queue_id].append(request.user_name)
+
+        print(round_robin_manager.user_queues_dict)
+        
+        db.close()
         print("Request is received: " + str(request))
         return Service_pb2.SubscribeResponse(status_code=1)
 
