@@ -91,16 +91,9 @@ class SubscribeQueueService(Service_pb2_grpc.SubscribeQueueServiceServicer):
         db.add(new_subscription)
         db.commit()
 
-        if request.queue_id not in round_robin_manager.user_queues_dict:
-            round_robin_manager.user_queues_dict[request.queue_id] = deque()
-
-        round_robin_manager.user_queues_dict[request.queue_id].append(request.user_name)
-
-        print(round_robin_manager.user_queues_dict)
-
         db.close()
         print("Request is received: " + str(request))
-        return Service_pb2.SubscribeResponse(status_code=1)
+        return Service_pb2.SubscribeResponse(status_code=1, user_name=request.user_name)
 
 
 class Server:

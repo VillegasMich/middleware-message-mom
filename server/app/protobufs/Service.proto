@@ -38,4 +38,5 @@ message SubscribeRequest {
 
 message SubscribeResponse {
     int32 status_code = 1;
+    string user_name = 2;
 }

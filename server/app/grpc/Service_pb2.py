@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rService.proto\"I\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x13\n\x0brouting_key\x18\x03 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\"&\n\x0fMessageResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\"#\n\x15\x43onsumeMessageRequest\x12\n\n\x02id\x18\x01 \x01(\x05\")\n\x16\x43onsumeMessageResponse\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\"H\n\x10SubscribeRequest\x12\x10\n\x08queue_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12\x11\n\tuser_name\x18\x03 \x01(\t\"(\n\x11SubscribeResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x32}\n\x0eMessageService\x12(\n\nAddMessage\x12\x08.Message\x1a\x10.MessageResponse\x12\x41\n\x0e\x43onsumeMessage\x12\x16.ConsumeMessageRequest\x1a\x17.ConsumeMessageResponse2K\n\x15SubscribeQueueService\x12\x32\n\tSubscribe\x12\x11.SubscribeRequest\x1a\x12.SubscribeResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rService.proto\"I\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x13\n\x0brouting_key\x18\x03 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\"&\n\x0fMessageResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\"#\n\x15\x43onsumeMessageRequest\x12\n\n\x02id\x18\x01 \x01(\x05\")\n\x16\x43onsumeMessageResponse\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\"H\n\x10SubscribeRequest\x12\x10\n\x08queue_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12\x11\n\tuser_name\x18\x03 \x01(\t\";\n\x11SubscribeResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x11\n\tuser_name\x18\x02 \x01(\t2}\n\x0eMessageService\x12(\n\nAddMessage\x12\x08.Message\x1a\x10.MessageResponse\x12\x41\n\x0e\x43onsumeMessage\x12\x16.ConsumeMessageRequest\x1a\x17.ConsumeMessageResponse2K\n\x15SubscribeQueueService\x12\x32\n\tSubscribe\x12\x11.SubscribeRequest\x1a\x12.SubscribeResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -42,9 +42,9 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_SUBSCRIBEREQUEST']._serialized_start=212
   _globals['_SUBSCRIBEREQUEST']._serialized_end=284
   _globals['_SUBSCRIBERESPONSE']._serialized_start=286
-  _globals['_SUBSCRIBERESPONSE']._serialized_end=326
-  _globals['_MESSAGESERVICE']._serialized_start=328
-  _globals['_MESSAGESERVICE']._serialized_end=453
-  _globals['_SUBSCRIBEQUEUESERVICE']._serialized_start=455
-  _globals['_SUBSCRIBEQUEUESERVICE']._serialized_end=530
+  _globals['_SUBSCRIBERESPONSE']._serialized_end=345
+  _globals['_MESSAGESERVICE']._serialized_start=347
+  _globals['_MESSAGESERVICE']._serialized_end=472
+  _globals['_SUBSCRIBEQUEUESERVICE']._serialized_start=474
+  _globals['_SUBSCRIBEQUEUESERVICE']._serialized_end=549
 # @@protoc_insertion_point(module_scope)

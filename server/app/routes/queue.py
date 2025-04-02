@@ -317,7 +317,11 @@ async def subscribe(
                     if queue == str(queue_id):
                         server_ip, _ = server.split(':')
                         response = Client.send_grpc_subscribe(queue_id,current_user.id,current_user.name,server_ip+':8080')
-                        if response == 1: 
+                        if response.status_code == 1: 
+                            if queue_id not in round_robin_manager.user_queues_dict:
+                                round_robin_manager.user_queues_dict[queue_id] = deque()
+
+                            round_robin_manager.user_queues_dict[queue_id].append(response.user_name)
                             return {
                                 "message": "Successfully subscribed to the queue",
                                 "queue_id": queue_id,

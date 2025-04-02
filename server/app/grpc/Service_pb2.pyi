@@ -45,7 +45,9 @@ class SubscribeRequest(_message.Message):
     def __init__(self, queue_id: _Optional[int] = ..., user_id: _Optional[int] = ..., user_name: _Optional[str] = ...) -> None: ...
 
 class SubscribeResponse(_message.Message):
-    __slots__ = ("status_code",)
+    __slots__ = ("status_code", "user_name")
     STATUS_CODE_FIELD_NUMBER: _ClassVar[int]
+    USER_NAME_FIELD_NUMBER: _ClassVar[int]
     status_code: int
-    def __init__(self, status_code: _Optional[int] = ...) -> None: ...
+    user_name: str
+    def __init__(self, status_code: _Optional[int] = ..., user_name: _Optional[str] = ...) -> None: ...
