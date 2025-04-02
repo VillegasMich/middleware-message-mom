@@ -5,13 +5,16 @@ import socket
 import grpc
 
 from . import Service_pb2, Service_pb2_grpc
+from ..core.database import get_db
+# os.environ["GRPC_VERBOSITY"] = "debug"
+# os.environ["GRPC_TRACE"] = "all"
 
 GRPC_PORT = int(os.getenv("GRPC_PORT", 8080))  
 PUBLIC_IP = os.getenv("PUBLIC_IP")
-
 HOST = f"{PUBLIC_IP}:" + str(GRPC_PORT)
 
 print(HOST)
+
 
 class MessageService(Service_pb2_grpc.MessageServiceServicer):
     """
@@ -19,6 +22,10 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
     """
 
     def AddMessage(self, request, context):
+        
+        db = next(get_db())
+        db.close()
+        
         print("Request is received: " + str(request))
         return Service_pb2.MessageResponse(status_code=1)
 
