@@ -22,11 +22,11 @@ class Client:
 
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.MessageServiceStub(channel)
-            
+            print(dir(stub))
             request = Service_pb2.Message(id=obj_id, type=obj_type, routing_key=routing_key, content=content)
-
             try:
                 response = stub.AddMessage(request)
                 print("Response received from remote service:", response)
+                return response.status_code
             except grpc.RpcError as e:
                 print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")

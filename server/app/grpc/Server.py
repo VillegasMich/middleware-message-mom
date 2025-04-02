@@ -1,13 +1,17 @@
 import os
 import threading
 from concurrent import futures
-import socket
+import fnmatch
+
+from fastapi import HTTPException
 import grpc
 
 from . import Service_pb2, Service_pb2_grpc
 from ..core.database import get_db
 from ..models.message import Message
 from ..models.queue_message import QueueMessage
+from ..models.queue import Queue
+from ..models.queue_routing_key import QueueRoutingKey
 # os.environ["GRPC_VERBOSITY"] = "debug"
 # os.environ["GRPC_TRACE"] = "all"
 
@@ -27,23 +31,61 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
         
         db = next(get_db())
         
-        new_message = Message(
-            content=request.content,
-            routing_key=request.routing_key,
-        )
+        if request.type == 'queue':
+            new_message = Message(
+                content=request.content,
+                routing_key=request.routing_key,
+            )
 
-        db.add(new_message)
-        db.flush()
+            db.add(new_message)
+            db.flush()
 
-        queue_message = QueueMessage(
-            queue_id=request.id, message_id=new_message.id
-        )
-        
-        db.add(queue_message)
-        db.commit() 
+            queue_message = QueueMessage(
+                queue_id=request.id, message_id=new_message.id
+            )
+
+            db.add(queue_message)
+            db.commit() 
+
+        elif request.type == 'topic':
+            routing_key = request.routing_key
+
+            new_message = Message(
+                content=request.content,
+                routing_key=routing_key,
+                topic_id=request.id,
+            )
+
+            db.add(new_message)
+            db.flush()
+
+            if not new_message.id:
+                raise HTTPException(status_code=500, detail="Failed to create message.")
+
+            all_queues = (
+                db.query(Queue)
+                .join(QueueRoutingKey, Queue.id == QueueRoutingKey.queue_id)
+                .filter(Queue.topic_id == request.id)
+                .all()
+            )
+
+            matching_queues = [
+                queue
+                for queue in all_queues
+                if any(
+                    fnmatch.fnmatch(routing_key, qr.routing_key)
+                    for qr in queue.routing_keys
+                )
+            ]
+
+            queue_messages = [
+                QueueMessage(queue_id=queue.id, message_id=new_message.id)
+                for queue in matching_queues
+            ]
+            db.add_all(queue_messages)
+            db.commit()
 
         db.close()
-        
         print("Request is received: " + str(request))
         return Service_pb2.MessageResponse(status_code=1)
 

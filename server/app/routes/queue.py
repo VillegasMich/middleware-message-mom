@@ -46,6 +46,7 @@ async def get_queues(
     print(servers)
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
+            
             print("Ask for queues")
             # #TEST
             # #------------------------------
@@ -161,12 +162,16 @@ async def publish_message(
                     if queue == str(queue_id):
                         print("send grpc to send message to queue")
                         server_ip, _ = server.split(':')
-                        Client.send_grpc_message('queue',queue_id,message.content, message.routing_key,server_ip+':8080')
-                        return {
-                            "message": "Message published successfully",
-                            "queue_id": '',
-                            "message_id": '',
-                        }
+                        response = Client.send_grpc_message('queue',queue_id,message.content, message.routing_key,server_ip+':8080')
+                        if response == 1: 
+                            return {
+                                "message": "Message published successfully",
+                                "queue_id": '',
+                                "message_id": '',
+                            }
+                        else:
+                            raise HTTPException(status_code=500, detail="Client wasn't able to save the message")
+                            
     raise HTTPException(status_code=404, detail="Queue not found")
 
 
