@@ -31,60 +31,9 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
 
         if request.type == 'queue':
             repo.save_queue_message(request)
-            # new_message = Message(
-            #     content=request.content,
-            #     routing_key=request.routing_key,
-            # )
-
-            # db.add(new_message)
-            # db.flush()
-
-            # queue_message = QueueMessage(
-            #     queue_id=request.id, message_id=new_message.id
-            # )
-
-            # db.add(queue_message)
-            # db.commit()
-
         elif request.type == 'topic':
             repo.save_topic_message(request)
-            # routing_key = request.routing_key
-
-            # new_message = Message(
-            #     content=request.content,
-            #     routing_key=routing_key,
-            #     topic_id=request.id,
-            # )
-
-            # db.add(new_message)
-            # db.flush()
-
-            # if not new_message.id:
-            #     raise HTTPException(status_code=500, detail="Failed to create message.")
-
-            # all_queues = (
-            #     db.query(Queue)
-            #     .join(QueueRoutingKey, Queue.id == QueueRoutingKey.queue_id)
-            #     .filter(Queue.topic_id == request.id)
-            #     .all()
-            # )
-
-            # matching_queues = [
-            #     queue
-            #     for queue in all_queues
-            #     if any(
-            #         fnmatch.fnmatch(routing_key, qr.routing_key)
-            #         for qr in queue.routing_keys
-            #     )
-            # ]
-
-            # queue_messages = [
-            #     QueueMessage(queue_id=queue.id, message_id=new_message.id)
-            #     for queue in matching_queues
-            # ]
-            # db.add_all(queue_messages)
-            # db.commit()
-
+            
         db.close()
         print("Request is received: " + str(request))
         return Service_pb2.MessageResponse(status_code=1)
