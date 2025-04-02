@@ -7,15 +7,9 @@ import grpc
 from . import Service_pb2, Service_pb2_grpc
 
 GRPC_PORT = int(os.getenv("GRPC_PORT", 8080))  
+PUBLIC_IP = os.getenv("PUBLIC_IP")
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-try:
-    s.connect(("8.8.8.8", 80))
-    ip = s.getsockname()[0]
-finally:
-    s.close()
-    
-HOST = f"{ip}:" + str(GRPC_PORT)
+HOST = f"{PUBLIC_IP}:" + str(GRPC_PORT)
 
 print(HOST)
 
