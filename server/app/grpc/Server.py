@@ -6,6 +6,8 @@ import grpc
 
 from . import Service_pb2, Service_pb2_grpc
 from ..core.database import get_db
+from ..models.message import Message
+from ..models.queue_message import QueueMessage
 # os.environ["GRPC_VERBOSITY"] = "debug"
 # os.environ["GRPC_TRACE"] = "all"
 
@@ -24,6 +26,22 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
     def AddMessage(self, request, context):
         
         db = next(get_db())
+        
+        new_message = Message(
+            content=request.content,
+            routing_key=request.routing_key,
+        )
+
+        db.add(new_message)
+        db.flush()
+
+        queue_message = QueueMessage(
+            queue_id=request.id, message_id=new_message.id
+        )
+        
+        db.add(queue_message)
+        db.commit() 
+
         db.close()
         
         print("Request is received: " + str(request))
