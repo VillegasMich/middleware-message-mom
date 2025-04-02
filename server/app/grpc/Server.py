@@ -53,8 +53,7 @@ class SubscribeQueueService(Service_pb2_grpc.SubscribeQueueServiceServicer):
 
     def Subscribe(self, request, context):
         db = next(get_db())
-        round_robin_manager: RoundRobinManager = Depends(
-            get_round_robin_manager)
+        round_robin_manager: RoundRobinManager = get_round_robin_manager()
 
         existing_queue = db.query(Queue).filter(
             Queue.id == request.queue_id).first()
