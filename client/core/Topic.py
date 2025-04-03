@@ -1,5 +1,5 @@
 import requests
-from config import SERVER_ZOO
+from config import get_server_zoo
 from rich import print
 from rich.prompt import Prompt
 from rich.tree import Tree
@@ -23,6 +23,7 @@ class Topic:
             ]"
         }
         """
+        SERVER_ZOO = get_server_zoo()
         response = requests.get(
             f"{SERVER_ZOO}/topics?{only_owned}", headers=Util.get_headers()
         )
@@ -65,6 +66,7 @@ class Topic:
             "id": "topic_id"
         }
         """
+        SERVER_ZOO = get_server_zoo()
         name = Prompt.ask("[cyan]Enter topic name[/]")
 
         response = requests.post(
@@ -81,6 +83,7 @@ class Topic:
     @staticmethod
     def delete():
         """Deletes a topic"""
+        SERVER_ZOO = get_server_zoo()
 
         topics = Topic.get_all("Your Topics", only_owned=True)
 
@@ -105,6 +108,7 @@ class Topic:
     def send_message():
         """Sends a message to a topic"""
 
+        SERVER_ZOO = get_server_zoo()
         topics = Topic.get_all()
 
         if not topics:
@@ -138,6 +142,7 @@ class Topic:
 
     @staticmethod
     def subscribe():
+        SERVER_ZOO = get_server_zoo()
         Topic.get_all()
 
         topic_id = Prompt.ask("[cyan]Enter topic ID[/]")
@@ -161,6 +166,7 @@ class Topic:
 
     @staticmethod
     def pull_message(queue_id: int):
+        SERVER_ZOO = get_server_zoo()
         response = requests.get(
             f"{SERVER_ZOO}/topics/queues/{queue_id}/consume", headers=Util.get_headers()
         )

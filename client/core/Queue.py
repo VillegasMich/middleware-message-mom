@@ -1,5 +1,5 @@
 import requests
-from config import SERVER_ZOO
+from config import get_server_zoo
 from rich import print
 from rich.prompt import Prompt
 from rich.tree import Tree
@@ -23,6 +23,7 @@ class Queue:
             ]"
         }
         """
+        SERVER_ZOO = get_server_zoo()
         response = requests.get(
             f"{SERVER_ZOO}/queues?{only_owned}", headers=Util.get_headers()
         )
@@ -65,6 +66,7 @@ class Queue:
             "id": "queue_id"
         }
         """
+        SERVER_ZOO = get_server_zoo()
         name = Prompt.ask("[cyan]Enter queue name[/]")
 
         response = requests.post(
@@ -80,6 +82,7 @@ class Queue:
     def delete():
         """Deletes a queue"""
 
+        SERVER_ZOO = get_server_zoo()
         queues = Queue.get_all("Your Queues", only_owned=True)
 
         if not queues:
@@ -101,6 +104,7 @@ class Queue:
 
     @staticmethod
     def subscribe():
+        SERVER_ZOO = get_server_zoo()
         Queue.get_all()
 
         queue_id = Prompt.ask("[cyan]Enter queue ID[/]")
@@ -119,6 +123,7 @@ class Queue:
 
     @staticmethod
     def unsubscribe():
+        SERVER_ZOO = get_server_zoo()
         Queue.get_all()
 
         queue_id = Prompt.ask("[cyan]Enter queue ID[/]")
@@ -138,6 +143,7 @@ class Queue:
     @staticmethod
     def send_message():
         """Sends a message to a queue"""
+        SERVER_ZOO = get_server_zoo()
 
         queues = Queue.get_all()
 
@@ -164,6 +170,7 @@ class Queue:
     def receive_message():
         """Receives a message from a queue"""
 
+        SERVER_ZOO = get_server_zoo()
         queues = Queue.get_all()
 
         if not queues:

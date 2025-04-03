@@ -1,4 +1,4 @@
-from config import SERVER_IP_PORT
+import config
 from core.Listener import Listener
 from core.Queue import Queue
 from core.Topic import Topic
@@ -49,7 +49,9 @@ def show_menu():
 
 
 def main():
-    if SERVER_IP_PORT:
+    new_server = get_server()
+    config.update_server_zoo(new_server)
+    if config.SERVER_IP_PORT:
         try:
             """Main interactive loop"""
             global TOKEN
@@ -128,7 +130,8 @@ def main():
                 else:
                     print("\033c", end="")
                     print("[red]Invalid option, try again.[/]")
-                get_server()
+                new_server = get_server()
+                config.update_server_zoo(new_server)
         except KeyboardInterrupt:
             print("[bold red]\nDisconnecting...[/]")
 
