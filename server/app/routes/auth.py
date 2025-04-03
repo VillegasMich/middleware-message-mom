@@ -1,9 +1,12 @@
 from datetime import datetime, timedelta
 
+from app.core.auth_helpers import get_current_user
 from app.core.config import ALGORITHM, SECRET_KEY
 from app.core.database import get_db
 from app.models.user import User
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from zookeeper import SERVER_IP, SERVER_PORT, ZK_NODE_USERS, zk
