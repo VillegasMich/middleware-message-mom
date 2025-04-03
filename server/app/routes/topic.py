@@ -150,13 +150,12 @@ async def create_topic(
     new_id = 1
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
-        if server != f"{SERVER_IP}:{SERVER_PORT}":
-            server_topics: list[str] = (
-                zk.get_children(f"/servers-metadata/{server}/Topics") or []
-            )
-            for topic_id in server_topics:
-                if int(topic_id) >= new_id:
-                    new_id = int(topic_id) + 1
+        server_topics: list[str] = (
+            zk.get_children(f"/servers-metadata/{server}/Topics") or []
+        )
+        for topic_id in server_topics:
+            if int(topic_id) >= new_id:
+                new_id = int(topic_id) + 1
 
     new_topic = Topic(id=new_id, name=topic.name, user_id=current_user.id)
     db.add(new_topic)
