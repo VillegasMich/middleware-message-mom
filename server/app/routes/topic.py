@@ -51,12 +51,14 @@ async def get_topics(
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
-            print("Ask for topics")
-            # #TEST
-            # #------------------------------
-            # Client.send_grpc_message(
-            #     "queue", 1, "listando todas las queues", "default", "127.0.0.1:8080")
-            # #------------------------------
+            server_topics = zk.get_children(f"/servers-metadata/{server}/Topics") or []
+            for topics in server_topics:
+                print("Ask for topics")
+                # #TEST
+                # #------------------------------
+                # Client.send_grpc_message(
+                #     "queue", 1, "listando todas las queues", "default", "127.0.0.1:8080")
+                # #------------------------------
 
     return {"message": "Topics listed successfully", "topics": topics}
 
@@ -79,7 +81,9 @@ async def get_user_queue_topic(
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_queue = zk.get_children(f"/servers/{server}/Queues") or []
+                server_queue = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
                 for queue in server_queue:
                     return {"message": "Queue listed successfully", "queue": queue}
 
@@ -101,7 +105,9 @@ async def get_user_queues_topics(
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_queue = zk.get_children(f"/servers/{server}/Queues") or []
+                server_queue = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
                 for queue in server_queue:
                     return {"message": "Queue listed successfully", "queue": queue}
     return {"message": "No queues found for subscribed topics", "queues": []}
@@ -146,7 +152,7 @@ async def create_topic(
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_topics: list[str] = (
-                zk.get_children(f"/servers/{server}/Topics") or []
+                zk.get_children(f"/servers-metadata/{server}/Topics") or []
             )
             for topic_id in server_topics:
                 if int(topic_id) >= new_id:
@@ -193,7 +199,9 @@ async def delete_topic(
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_topic = zk.get_children(f"/servers/{server}/Topics") or []
+                server_topic = (
+                    zk.get_children(f"/servers-metadata/{server}/Topics") or []
+                )
                 for topic in server_topic:
                     print("Send grcp to delete topic")
                     return {
@@ -257,7 +265,9 @@ async def publish_message(
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_topic = zk.get_children(f"/servers/{server}/Topics") or []
+                server_topic = (
+                    zk.get_children(f"/servers-metadata/{server}/Topics") or []
+                )
                 for topic in server_topic:
                     if topic == str(topic_id):
                         server_ip, _ = server.split(":")
@@ -320,7 +330,9 @@ async def consume_message(
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_queue = zk.get_children(f"/servers/{server}/Queues") or []
+                server_queue = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
                 for queue in server_queue:
                     print("Send grpc to consume message")
                     return {
@@ -382,7 +394,9 @@ async def subscribe(
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_topic = zk.get_children(f"/servers/{server}/Topics") or []
+                server_topic = (
+                    zk.get_children(f"/servers-metadata/{server}/Topics") or []
+                )
                 for topic in server_topic:
                     print("Send grpc to subscribe")
                     return {

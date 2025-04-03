@@ -9,9 +9,10 @@ from app.routes.queue import router as queue_router
 from app.routes.topic import router as topic_router
 from app.routes.user import router as user_router
 from fastapi import FastAPI
-from zookeeper import (SERVER_IP, SERVER_PORT, ZK_NODE, ZK_NODE_QUEUES,
-                       ZK_NODE_TOPICS, ZK_NODE_USERS, sync_all_queues,
-                       sync_all_topics, sync_all_users, zk)
+from zookeeper import (SERVER_IP, SERVER_PORT, ZK_NODE_EPHEMERAL,
+                       ZK_NODE_METADATA, ZK_NODE_QUEUES, ZK_NODE_TOPICS,
+                       ZK_NODE_USERS, sync_all_queues, sync_all_topics,
+                       sync_all_users, zk)
 
 db = next(get_db())
 round_robin_manager.sync_users_queues(db)
@@ -28,19 +29,22 @@ def get_round_robin_manager():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     zk.ensure_path("/servers")
-    # Check if the node already exists
-    if zk.exists(ZK_NODE):
-        # If it exists, delete it first
-        zk.delete(ZK_NODE, recursive=True)
+    zk.ensure_path("/servers-metadata")
+    # if zk.exists(ZK_NODE_METADATA):
+    #     zk.delete(ZK_NODE_METADATA, recursive=True)
 
-    if not zk.exists(ZK_NODE):
-        zk.create(ZK_NODE, f"{SERVER_IP}:{SERVER_PORT}".encode(), ephemeral=False)
+    zk.create(ZK_NODE_EPHEMERAL, f"{SERVER_IP}:{SERVER_PORT}".encode(), ephemeral=True)
+
+    if not zk.exists(ZK_NODE_METADATA):
+        zk.create(
+            ZK_NODE_METADATA, f"{SERVER_IP}:{SERVER_PORT}".encode(), ephemeral=False
+        )
 
     zk.ensure_path(ZK_NODE_QUEUES)
     zk.ensure_path(ZK_NODE_TOPICS)
     zk.ensure_path(ZK_NODE_USERS)
 
-    print(f"Registered: {ZK_NODE} with Queues and Topics")
+    print(f"Registered: {ZK_NODE_METADATA} with Queues and Topics")
 
     sync_all_queues(db)
     sync_all_topics(db)
@@ -48,10 +52,11 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    if zk.exists(ZK_NODE):
-        zk.delete(ZK_NODE, recursive=True)
+    if zk.exists(ZK_NODE_METADATA):
+        zk.delete(ZK_NODE_METADATA, recursive=True)
+
     zk.stop()
-    print(f"Deregistered: {ZK_NODE}")
+    print(f"Deregistered: {ZK_NODE_METADATA}")
 
 
 app = FastAPI(lifespan=lifespan)

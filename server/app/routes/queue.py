@@ -73,7 +73,7 @@ async def create_queue(
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_queues: list[str] = (
-                zk.get_children(f"/servers/{server}/Queues") or []
+                zk.get_children(f"/servers-metadata/{server}/Queues") or []
             )
             for queue_id in server_queues:
                 if int(queue_id) >= new_id:
@@ -120,7 +120,7 @@ async def delete_queue(
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
-                    zk.get_children(f"/servers/{server}/Queues") or []
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
                     if queue == queue_id:
@@ -167,7 +167,7 @@ async def publish_message(
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
-                    zk.get_children(f"/servers/{server}/Queues") or []
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 print(server_queues)
                 for queue in server_queues:
@@ -267,7 +267,7 @@ async def consume_message(
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
-                    zk.get_children(f"/servers/{server}/Queues") or []
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
                     if queue == queue_id:
@@ -332,7 +332,7 @@ async def subscribe(
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
-                    zk.get_children(f"/servers/{server}/Queues") or []
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
                     if queue == str(queue_id):
@@ -398,7 +398,7 @@ async def unsubscribe(
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
-                    zk.get_children(f"/servers/{server}/Queues") or []
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
                     if queue == queue_id:
