@@ -3,13 +3,13 @@ from typing import Optional
 
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
+from app.grpc.Client import Client
 from app.models.message import Message
 from app.models.queue import Queue
 from app.models.queue_message import QueueMessage
 from app.models.queue_routing_key import QueueRoutingKey
 from app.models.topic import Topic
 from app.models.user import User
-from app.grpc.Client import Client
 from app.models.user_queue import user_queue as UserQueue
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -141,7 +141,18 @@ async def create_topic(
     if existing_topic:
         raise HTTPException(status_code=400, detail="Topic already exists")
 
-    new_topic = Topic(name=topic.name, user_id=current_user.id)
+    new_id = 1
+    servers: list[str] = zk.get_children("/servers") or []
+    for server in servers:
+        if server != f"{SERVER_IP}:{SERVER_PORT}":
+            server_topics: list[str] = (
+                zk.get_children(f"/servers/{server}/Topics") or []
+            )
+            for topic_id in server_topics:
+                if int(topic_id) >= new_id:
+                    new_id = int(topic_id) + 1
+
+    new_topic = Topic(id=new_id, name=topic.name, user_id=current_user.id)
     db.add(new_topic)
     db.commit()
     db.refresh(new_topic)
@@ -249,16 +260,25 @@ async def publish_message(
                 server_topic = zk.get_children(f"/servers/{server}/Topics") or []
                 for topic in server_topic:
                     if topic == str(topic_id):
-                        server_ip, _ = server.split(':')
-                        response = Client.send_grpc_message('topic',topic_id,message.content, message.routing_key,server_ip+':8080')
-                        if response == 1: 
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_message(
+                            "topic",
+                            topic_id,
+                            message.content,
+                            message.routing_key,
+                            server_ip + ":8080",
+                        )
+                        if response == 1:
                             return {
                                 "message": "Message published successfully",
-                                "queue_id": '',
-                                "message_id": '',
+                                "queue_id": "",
+                                "message_id": "",
                             }
                         else:
-                            raise HTTPException(status_code=500, detail="Client wasn't able to save the message")
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to save the message",
+                            )
 
     raise HTTPException(status_code=404, detail="Topic not found")
 

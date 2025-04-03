@@ -46,7 +46,6 @@ async def get_queues(
     print(servers)
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
-            
             print("Ask for queues")
             # #TEST
             # #------------------------------
@@ -64,11 +63,25 @@ async def create_queue(
     current_user=Depends(get_current_user),
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
+    # Check if in the current server the queue exists
     existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
     if existing_queue:
         raise HTTPException(status_code=400, detail="Queue already exists")
 
-    new_queue = Queue(name=queue.name, is_private=False, user_id=current_user.id)
+    new_id = 1
+    servers: list[str] = zk.get_children("/servers") or []
+    for server in servers:
+        if server != f"{SERVER_IP}:{SERVER_PORT}":
+            server_queues: list[str] = (
+                zk.get_children(f"/servers/{server}/Queues") or []
+            )
+            for queue_id in server_queues:
+                if int(queue_id) >= new_id:
+                    new_id = int(queue_id) + 1
+
+    new_queue = Queue(
+        id=new_id, name=queue.name, is_private=False, user_id=current_user.id
+    )
     db.add(new_queue)
     db.commit()
     db.refresh(new_queue)
@@ -158,20 +171,29 @@ async def publish_message(
                 )
                 print(server_queues)
                 for queue in server_queues:
-                    print('Searching in servers for queues')
+                    print("Searching in servers for queues")
                     if queue == str(queue_id):
                         print("send grpc to send message to queue")
-                        server_ip, _ = server.split(':')
-                        response = Client.send_grpc_message('queue',queue_id,message.content, message.routing_key,server_ip+':8080')
-                        if response == 1: 
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_message(
+                            "queue",
+                            queue_id,
+                            message.content,
+                            message.routing_key,
+                            server_ip + ":8080",
+                        )
+                        if response == 1:
                             return {
                                 "message": "Message published successfully",
-                                "queue_id": '',
-                                "message_id": '',
+                                "queue_id": "",
+                                "message_id": "",
                             }
                         else:
-                            raise HTTPException(status_code=500, detail="Client wasn't able to save the message")
-                            
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to save the message",
+                            )
+
     raise HTTPException(status_code=404, detail="Queue not found")
 
 
@@ -185,7 +207,6 @@ async def consume_message(
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
     print(queue)
     if queue:
-        
         is_subscribed = (
             db.query(UserQueue)
             .filter(
@@ -315,16 +336,24 @@ async def subscribe(
                 )
                 for queue in server_queues:
                     if queue == str(queue_id):
-                        server_ip, _ = server.split(':')
-                        response = Client.send_grpc_subscribe(queue_id,current_user.id,current_user.name,server_ip+':8080')
-                        if response.status_code == 1: 
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_subscribe(
+                            queue_id,
+                            current_user.id,
+                            current_user.name,
+                            server_ip + ":8080",
+                        )
+                        if response.status_code == 1:
                             return {
                                 "message": "Successfully subscribed to the queue",
                                 "queue_id": queue_id,
                             }
                         else:
-                            raise HTTPException(status_code=500, detail="Client wasn't able to save the message")
-                        
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to save the message",
+                            )
+
     raise HTTPException(status_code=404, detail="Queue not found")
 
 

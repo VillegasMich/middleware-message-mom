@@ -40,6 +40,7 @@ def main():
 
             # Main menu after successful login
             while True:
+                print("\033", end="")
                 print("\n[bold cyan]Middleware MOM Client[/]")
                 print("1. List all the Queues")
                 print("2. Create Queue")
