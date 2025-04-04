@@ -6,8 +6,9 @@ import grpc
 from . import Service_pb2, Service_pb2_grpc
 from ..core.database import get_db
 from .services.MessageService import MessageService
-from ..repository.QueueRepository import QueueRepository
-from ..repository.UserRepository import UserRepository
+from .services.QueueService import QueueService
+from .services.TopicService import TopicService
+from .services.UserService import UserService
 
 # os.environ["GRPC_VERBOSITY"] = "debug"
 # os.environ["GRPC_TRACE"] = "all"
@@ -15,74 +16,6 @@ from ..repository.UserRepository import UserRepository
 GRPC_PORT = int(os.getenv("GRPC_PORT", 8080))
 PUBLIC_IP = os.getenv("PUBLIC_IP")
 HOST = f"{PUBLIC_IP}:" + str(GRPC_PORT)
-
-print(HOST)    
-class QueueService(Service_pb2_grpc.QueueServiceServicer):
-    
-    def GetQueues(self, request, context):
-        db = next(get_db())
-        repo = QueueRepository(db)
-        queues = repo.all()
-        db.close()
-        
-        response = Service_pb2.GetQueuesResponse()
-
-        print(queues)
-
-        for queue in queues:
-            queue_item = response.queues.add()
-            queue_item.id = queue.id
-            queue_item.name = queue.name
-        
-        print("Request is received: " + str(request))
-        return response
-    
-    def Delete(self, request, context):
-
-        print("Request is received: " + str(request))
-        return Service_pb2.CRUDResponse(status_code=1)
-    
-    def Subscribe(self, request, context):
-        
-        db = next(get_db())
-        
-        repo = QueueRepository(db)
-        repo.subscribe_queue(request)
-        
-        db.close()
-        print("Request is received: " + str(request))
-        return Service_pb2.SubscribeResponse(status_code=1)
-    
-    def UnSubscribe(self, request, context):
-
-        print("Request is received: " + str(request))
-        return Service_pb2.SubscribeResponse(status_code=1)
-
-
-class TopicService(Service_pb2_grpc.TopicServiceServicer):
-    def GetTopics(self, request, context):
-        return super().GetTopics(request, context)
-    
-    def Subscribe(self, request, context):
-        return super().Subscribe(request, context)
-    
-    def UnSubscribe(self, request, context):
-        return super().UnSubscribe(request, context)
-    
-    def Delete(self, request, context):
-        return super().Delete(request, context)
-
-class UserService(Service_pb2_grpc.UserServiceServicer):
-
-    def Register(self, request, context):
-        db = next(get_db())
-        
-        repo = UserRepository(db)
-        repo.register(request)
-
-        db.close()
-        print("Request is received: " + str(request))
-        return Service_pb2.RegisterResponse(status_code=1)
 
 class Server:
     def __init__(self):
@@ -113,6 +46,8 @@ class Server:
             QueueService(), server)
         Service_pb2_grpc.add_UserServiceServicer_to_server(
             UserService(), server)
+        Service_pb2_grpc.add_TopicServiceServicer_to_server(
+            TopicService(), server)
         server.add_insecure_port(HOST)
         print(f"Production service started on {HOST} ")
         server.start()
