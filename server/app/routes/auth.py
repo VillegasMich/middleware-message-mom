@@ -23,7 +23,7 @@ class LoginRequest(BaseModel):
     password: str
 
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 7
+ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
 router = APIRouter()
 
