@@ -86,6 +86,11 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
         print("Request is received: " + str(request))
         return Service_pb2.SubscribeResponse(status_code=1)
 
+class UserService(Service_pb2_grpc.add_UserServiceServicer_to_server):
+
+    def Register(self, request, context):
+        print("Request is received: " + str(request))
+        return Service_pb2.RegisterResponse(status_code=1)
 
 class Server:
     def __init__(self):
@@ -114,6 +119,8 @@ class Server:
             MessageService(), server)
         Service_pb2_grpc.add_QueueServiceServicer_to_server(
             QueueService(), server)
+        Service_pb2_grpc.add_UserServiceServicer_to_server(
+            UserService(), server)
         server.add_insecure_port(HOST)
         print(f"Production service started on {HOST} ")
         server.start()

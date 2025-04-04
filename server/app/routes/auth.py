@@ -4,6 +4,7 @@ from app.core.auth_helpers import get_current_user
 from app.core.config import ALGORITHM, SECRET_KEY
 from app.core.database import get_db
 from app.models.user import User
+from ..grpc.Client import Client
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -52,6 +53,12 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     db.commit()
 
     zk.ensure_path(f"{ZK_NODE_USERS}/{new_user.id}")
+
+    servers: list[str] = zk.get_children("/servers") or []
+    for server in servers:
+        if server != f"{SERVER_IP}:{SERVER_PORT}":
+            response = Client.send_grpc_register(username,password)
+
     return {"message": "User registered successfully"}
 
 
@@ -76,7 +83,8 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         servers = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_users = zk.get_children(f"servers-metadata/{server}/Users") or []
+                server_users = zk.get_children(
+                    f"servers-metadata/{server}/Users") or []
                 for user in server_users:
                     print(f"User {user} found on server {server}")
     raise HTTPException(status_code=400, detail="Invalid credentials")

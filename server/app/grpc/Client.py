@@ -83,3 +83,18 @@ class Client:
             except grpc.RpcError as e:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+    
+    @staticmethod
+    def send_grpc_register(user_name: str, user_password:str, remote_host:str):
+         with grpc.insecure_channel(remote_host) as channel:
+            stub = Service_pb2_grpc.UserServiceStub(channel)
+            print(dir(stub))
+            request = Service_pb2.RegisterRequest(user_name=user_name, user_password=user_password)
+            try:
+                response = stub.Register(request)
+                print("Response received from remote service:", response)
+                return response
+            except grpc.RpcError as e:
+                print(
+                    f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+    

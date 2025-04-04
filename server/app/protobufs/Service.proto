@@ -67,3 +67,17 @@ message DeleteRequest {
 message CRUDResponse {
     int32 status_code = 1;
 }
+
+
+service UserService {
+    rpc Register (RegisterRequest) returns (RegisterResponse);
+}
+
+message RegisterRequest {
+    string user_name = 1;
+    string user_password = 2;
+}
+
+message RegisterResponse {
+    int32 status_code = 1;
+}
