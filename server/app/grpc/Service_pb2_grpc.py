@@ -341,6 +341,207 @@ class QueueService(object):
             _registered_method=True)
 
 
+class TopicServiceStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.Subscribe = channel.unary_unary(
+                '/TopicService/Subscribe',
+                request_serializer=Service__pb2.SubscribeTopicRequest.SerializeToString,
+                response_deserializer=Service__pb2.SubscribeResponse.FromString,
+                _registered_method=True)
+        self.UnSubscribe = channel.unary_unary(
+                '/TopicService/UnSubscribe',
+                request_serializer=Service__pb2.SubscribeTopicRequest.SerializeToString,
+                response_deserializer=Service__pb2.SubscribeResponse.FromString,
+                _registered_method=True)
+        self.Delete = channel.unary_unary(
+                '/TopicService/Delete',
+                request_serializer=Service__pb2.DeleteRequest.SerializeToString,
+                response_deserializer=Service__pb2.CRUDResponse.FromString,
+                _registered_method=True)
+        self.GetTopics = channel.unary_unary(
+                '/TopicService/GetTopics',
+                request_serializer=Service__pb2.GetTopicsRequest.SerializeToString,
+                response_deserializer=Service__pb2.GetTopicsResponse.FromString,
+                _registered_method=True)
+
+
+class TopicServiceServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def Subscribe(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def UnSubscribe(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Delete(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetTopics(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_TopicServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'Subscribe': grpc.unary_unary_rpc_method_handler(
+                    servicer.Subscribe,
+                    request_deserializer=Service__pb2.SubscribeTopicRequest.FromString,
+                    response_serializer=Service__pb2.SubscribeResponse.SerializeToString,
+            ),
+            'UnSubscribe': grpc.unary_unary_rpc_method_handler(
+                    servicer.UnSubscribe,
+                    request_deserializer=Service__pb2.SubscribeTopicRequest.FromString,
+                    response_serializer=Service__pb2.SubscribeResponse.SerializeToString,
+            ),
+            'Delete': grpc.unary_unary_rpc_method_handler(
+                    servicer.Delete,
+                    request_deserializer=Service__pb2.DeleteRequest.FromString,
+                    response_serializer=Service__pb2.CRUDResponse.SerializeToString,
+            ),
+            'GetTopics': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetTopics,
+                    request_deserializer=Service__pb2.GetTopicsRequest.FromString,
+                    response_serializer=Service__pb2.GetTopicsResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'TopicService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('TopicService', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class TopicService(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def Subscribe(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/TopicService/Subscribe',
+            Service__pb2.SubscribeTopicRequest.SerializeToString,
+            Service__pb2.SubscribeResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UnSubscribe(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/TopicService/UnSubscribe',
+            Service__pb2.SubscribeTopicRequest.SerializeToString,
+            Service__pb2.SubscribeResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Delete(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/TopicService/Delete',
+            Service__pb2.DeleteRequest.SerializeToString,
+            Service__pb2.CRUDResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetTopics(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/TopicService/GetTopics',
+            Service__pb2.GetTopicsRequest.SerializeToString,
+            Service__pb2.GetTopicsResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+
 class UserServiceStub(object):
     """Missing associated documentation comment in .proto file."""
 

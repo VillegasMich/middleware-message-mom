@@ -5,7 +5,7 @@ import grpc
 
 from . import Service_pb2, Service_pb2_grpc
 from ..core.database import get_db
-from ..repository.MessageRepository import MessageRepository
+from .services.MessageService import MessageService
 from ..repository.QueueRepository import QueueRepository
 from ..repository.UserRepository import UserRepository
 
@@ -16,36 +16,7 @@ GRPC_PORT = int(os.getenv("GRPC_PORT", 8080))
 PUBLIC_IP = os.getenv("PUBLIC_IP")
 HOST = f"{PUBLIC_IP}:" + str(GRPC_PORT)
 
-print(HOST)
-
-
-class MessageService(Service_pb2_grpc.MessageServiceServicer):
-    """
-    Here the message should be saved in the queue or topic received.
-    """
-
-    def AddMessage(self, request, context):
-
-        db = next(get_db())
-        repo = MessageRepository(db)
-
-        if request.type == 'queue':
-            repo.save_queue_message(request)
-        elif request.type == 'topic':
-            repo.save_topic_message(request)
-
-        db.close()
-        print("Request is received: " + str(request))
-        return Service_pb2.MessageResponse(status_code=1)
-
-    def ConsumeMessage(self, request, context):
-        db = next(get_db())
-        repo = MessageRepository(db)
-        content = repo.consume_message(request)
-        db.close()
-        print("Request is received: " + str(request))
-        return Service_pb2.ConsumeMessageResponse(status_code=1, content=content)
-    
+print(HOST)    
 class QueueService(Service_pb2_grpc.QueueServiceServicer):
     
     def GetQueues(self, request, context):
@@ -86,6 +57,20 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
 
         print("Request is received: " + str(request))
         return Service_pb2.SubscribeResponse(status_code=1)
+
+
+class TopicService(Service_pb2_grpc.TopicServiceServicer):
+    def GetTopics(self, request, context):
+        return super().GetTopics(request, context)
+    
+    def Subscribe(self, request, context):
+        return super().Subscribe(request, context)
+    
+    def UnSubscribe(self, request, context):
+        return super().UnSubscribe(request, context)
+    
+    def Delete(self, request, context):
+        return super().Delete(request, context)
 
 class UserService(Service_pb2_grpc.UserServiceServicer):
 

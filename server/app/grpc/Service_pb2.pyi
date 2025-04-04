@@ -78,18 +78,50 @@ class SubscribeResponse(_message.Message):
     def __init__(self, status_code: _Optional[int] = ...) -> None: ...
 
 class DeleteRequest(_message.Message):
-    __slots__ = ("queue_id", "user_id")
-    QUEUE_ID_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("id", "user_id")
+    ID_FIELD_NUMBER: _ClassVar[int]
     USER_ID_FIELD_NUMBER: _ClassVar[int]
-    queue_id: int
+    id: int
     user_id: int
-    def __init__(self, queue_id: _Optional[int] = ..., user_id: _Optional[int] = ...) -> None: ...
+    def __init__(self, id: _Optional[int] = ..., user_id: _Optional[int] = ...) -> None: ...
 
 class CRUDResponse(_message.Message):
     __slots__ = ("status_code",)
     STATUS_CODE_FIELD_NUMBER: _ClassVar[int]
     status_code: int
     def __init__(self, status_code: _Optional[int] = ...) -> None: ...
+
+class Topic(_message.Message):
+    __slots__ = ("id", "name")
+    ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    id: int
+    name: str
+    def __init__(self, id: _Optional[int] = ..., name: _Optional[str] = ...) -> None: ...
+
+class SubscribeTopicRequest(_message.Message):
+    __slots__ = ("topic_id", "user_id", "user_name", "routing_key")
+    TOPIC_ID_FIELD_NUMBER: _ClassVar[int]
+    USER_ID_FIELD_NUMBER: _ClassVar[int]
+    USER_NAME_FIELD_NUMBER: _ClassVar[int]
+    ROUTING_KEY_FIELD_NUMBER: _ClassVar[int]
+    topic_id: int
+    user_id: int
+    user_name: str
+    routing_key: str
+    def __init__(self, topic_id: _Optional[int] = ..., user_id: _Optional[int] = ..., user_name: _Optional[str] = ..., routing_key: _Optional[str] = ...) -> None: ...
+
+class GetTopicsRequest(_message.Message):
+    __slots__ = ("allTopics",)
+    ALLTOPICS_FIELD_NUMBER: _ClassVar[int]
+    allTopics: int
+    def __init__(self, allTopics: _Optional[int] = ...) -> None: ...
+
+class GetTopicsResponse(_message.Message):
+    __slots__ = ("topic",)
+    TOPIC_FIELD_NUMBER: _ClassVar[int]
+    topic: _containers.RepeatedCompositeFieldContainer[Topic]
+    def __init__(self, topic: _Optional[_Iterable[_Union[Topic, _Mapping]]] = ...) -> None: ...
 
 class RegisterRequest(_message.Message):
     __slots__ = ("user_name", "user_password", "user_id")

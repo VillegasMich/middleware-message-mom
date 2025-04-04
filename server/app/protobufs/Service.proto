@@ -60,13 +60,42 @@ message SubscribeResponse {
 }
 
 message DeleteRequest {
-    int32 queue_id = 1;
+    int32 id = 1;
     int32 user_id = 2;
 }
 
 message CRUDResponse {
     int32 status_code = 1;
 }
+
+
+service TopicService {
+    rpc Subscribe (SubscribeTopicRequest) returns (SubscribeResponse);
+    rpc UnSubscribe (SubscribeTopicRequest) returns (SubscribeResponse);
+    rpc Delete (DeleteRequest) returns (CRUDResponse); 
+    rpc GetTopics (GetTopicsRequest) returns (GetTopicsResponse);
+}
+
+message Topic {
+    int32 id = 1;
+    string name = 2;
+}
+
+message SubscribeTopicRequest {
+    int32 topic_id = 1;
+    int32 user_id = 2;
+    string user_name = 3;
+    string routing_key = 4;
+}
+
+message GetTopicsRequest {
+    int32 allTopics = 1;
+}
+
+message GetTopicsResponse {
+    repeated Topic topic = 1;
+}
+
 
 
 service UserService {
@@ -82,3 +111,4 @@ message RegisterRequest {
 message RegisterResponse {
     int32 status_code = 1;
 }
+
