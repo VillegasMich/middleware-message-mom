@@ -76,6 +76,7 @@ service UserService {
 message RegisterRequest {
     string user_name = 1;
     string user_password = 2;
+    int32 user_id = 3;
 }
 
 message RegisterResponse {

@@ -15,17 +15,7 @@ class UserRepository:
         if self.db.query(User).filter(User.name == username).first():
             raise HTTPException(status_code=400, detail="User already exists")
 
-        new_id = 1
-        servers: list[str] = zk.get_children("/servers") or []
-        for server in servers:
-            server_users: list[str] = (
-                zk.get_children(f"/servers-metadata/{server}/Users") or []
-            )
-            for users_id in server_users:
-                if int(users_id) >= new_id:
-                    new_id = int(users_id) + 1
-
-        new_user = User(id=new_id, name=username)
+        new_user = User(id=request.user_id, name=username)
         new_user.set_password(password)
 
         self.db.add(new_user)

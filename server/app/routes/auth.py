@@ -58,7 +58,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
-            response = Client.send_grpc_register(username,password,server_ip + ":8080")
+            response = Client.send_grpc_register(username,password,new_id,server_ip + ":8080")
 
     return {"message": "User registered successfully"}
 

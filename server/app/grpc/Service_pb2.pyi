@@ -92,12 +92,14 @@ class CRUDResponse(_message.Message):
     def __init__(self, status_code: _Optional[int] = ...) -> None: ...
 
 class RegisterRequest(_message.Message):
-    __slots__ = ("user_name", "user_password")
+    __slots__ = ("user_name", "user_password", "user_id")
     USER_NAME_FIELD_NUMBER: _ClassVar[int]
     USER_PASSWORD_FIELD_NUMBER: _ClassVar[int]
+    USER_ID_FIELD_NUMBER: _ClassVar[int]
     user_name: str
     user_password: str
-    def __init__(self, user_name: _Optional[str] = ..., user_password: _Optional[str] = ...) -> None: ...
+    user_id: int
+    def __init__(self, user_name: _Optional[str] = ..., user_password: _Optional[str] = ..., user_id: _Optional[int] = ...) -> None: ...
 
 class RegisterResponse(_message.Message):
     __slots__ = ("status_code",)
