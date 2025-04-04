@@ -48,7 +48,8 @@ async def get_queues(
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
             remote_queues = Client.send_grpc_get_all_queues(server_ip + ":8080")
-            queues.extend(remote_queues)
+            remote_queues_list = [{'id': q.id, 'name': q.name} for q in remote_queues.queues]
+            queues.extend(remote_queues_list)
 
     return {"message": "Queues listed successfully", "queues": queues}
 
