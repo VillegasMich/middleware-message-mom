@@ -40,10 +40,10 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
     def ConsumeMessage(self, request, context):
         db = next(get_db())
         repo = MessageRepository(db)
-        repo.consume_message(request)
+        content = repo.consume_message(request)
         db.close()
         print("Request is received: " + str(request))
-        return Service_pb2.ConsumeMessageResponse(status_code=1)
+        return Service_pb2.ConsumeMessageResponse(status_code=1, content=content)
     
 class QueueService(Service_pb2_grpc.QueueServiceServicer):
     
