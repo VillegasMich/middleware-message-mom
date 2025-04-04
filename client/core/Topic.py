@@ -31,7 +31,8 @@ class Topic:
         topics = response.json().get("topics", [])
 
         if response.status_code == 200:
-            if not topics or topics == []:
+            print(topics)
+            if not topics:
                 print("[yellow]There aren't any topics yet.[/]")
                 return
             else:

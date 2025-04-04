@@ -1,4 +1,5 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+
 from fastapi import HTTPException
 from collections import deque
 
@@ -12,6 +13,13 @@ class QueueRepository:
     def __init__(self, db: Session):
         self.db = db
 
+    def all(self):
+        query = self.db.query(Queue).options(joinedload(Queue.owner))  
+        query = query.filter(Queue.is_private == False)
+        queues = query.all()
+
+        return queues
+    
     def subscribe_queue(self, request):
         round_robin_manager: RoundRobinManager = get_round_robin_manager()
 

@@ -32,18 +32,32 @@ class Client:
             except grpc.RpcError as e:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
-                
+
     '''
         Sends the protobuf Queue subscribeRequest to the remote_host (ipv4).
     '''
     @staticmethod
-    def send_grpc_queue_subscribe(queue_id: int, user_id: int, user_name: str, remote_host:str):
+    def send_grpc_queue_subscribe(queue_id: int, user_id: int, user_name: str, remote_host: str):
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.QueueServiceStub(channel)
             print(dir(stub))
-            request = Service_pb2.SubscribeRequest(queue_id=queue_id, user_id=user_id, user_name=user_name)
+            request = Service_pb2.SubscribeRequest(
+                queue_id=queue_id, user_id=user_id, user_name=user_name)
             try:
                 response = stub.Subscribe(request)
+                print("Response received from remote service:", response)
+                return response
+            except grpc.RpcError as e:
+                print(
+                    f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+
+    def send_grpc_get_all_queues(remote_host: str):
+        with grpc.insecure_channel(remote_host) as channel:
+            stub = Service_pb2_grpc.QueueServiceStub(channel)
+            print(dir(stub))
+            request = Service_pb2.GetQueuesRequest(allQueues=1)
+            try:
+                response = stub.GetQueues(request)
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:

@@ -32,8 +32,21 @@ message ConsumeMessageResponse {
 service QueueService {
     rpc Subscribe (SubscribeRequest) returns (SubscribeResponse);
     rpc UnSubscribe (SubscribeRequest) returns (SubscribeResponse);
-    rpc Create (CreateRequest) returns (CRUDResponse);
     rpc Delete (DeleteRequest) returns (CRUDResponse); 
+    rpc GetQueues (GetQueuesRequest) returns (GetQueuesResponse);
+}
+
+message Queue {
+    string id = 1;
+    string name = 2;
+}
+
+message GetQueuesRequest {
+    int32 allQueues = 1;
+}
+
+message GetQueuesResponse {
+    repeated Queue queues = 1;
 }
 
 message SubscribeRequest {
@@ -44,11 +57,6 @@ message SubscribeRequest {
 
 message SubscribeResponse {
     int32 status_code = 1;
-}
-
-message CreateRequest {
-    string name = 1;
-    int32 user_id = 2;
 }
 
 message DeleteRequest {

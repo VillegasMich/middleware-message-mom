@@ -159,15 +159,15 @@ class QueueServiceStub(object):
                 request_serializer=Service__pb2.SubscribeRequest.SerializeToString,
                 response_deserializer=Service__pb2.SubscribeResponse.FromString,
                 _registered_method=True)
-        self.Create = channel.unary_unary(
-                '/QueueService/Create',
-                request_serializer=Service__pb2.CreateRequest.SerializeToString,
-                response_deserializer=Service__pb2.CRUDResponse.FromString,
-                _registered_method=True)
         self.Delete = channel.unary_unary(
                 '/QueueService/Delete',
                 request_serializer=Service__pb2.DeleteRequest.SerializeToString,
                 response_deserializer=Service__pb2.CRUDResponse.FromString,
+                _registered_method=True)
+        self.GetQueues = channel.unary_unary(
+                '/QueueService/GetQueues',
+                request_serializer=Service__pb2.GetQueuesRequest.SerializeToString,
+                response_deserializer=Service__pb2.GetQueuesResponse.FromString,
                 _registered_method=True)
 
 
@@ -186,13 +186,13 @@ class QueueServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Create(self, request, context):
+    def Delete(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def Delete(self, request, context):
+    def GetQueues(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -211,15 +211,15 @@ def add_QueueServiceServicer_to_server(servicer, server):
                     request_deserializer=Service__pb2.SubscribeRequest.FromString,
                     response_serializer=Service__pb2.SubscribeResponse.SerializeToString,
             ),
-            'Create': grpc.unary_unary_rpc_method_handler(
-                    servicer.Create,
-                    request_deserializer=Service__pb2.CreateRequest.FromString,
-                    response_serializer=Service__pb2.CRUDResponse.SerializeToString,
-            ),
             'Delete': grpc.unary_unary_rpc_method_handler(
                     servicer.Delete,
                     request_deserializer=Service__pb2.DeleteRequest.FromString,
                     response_serializer=Service__pb2.CRUDResponse.SerializeToString,
+            ),
+            'GetQueues': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetQueues,
+                    request_deserializer=Service__pb2.GetQueuesRequest.FromString,
+                    response_serializer=Service__pb2.GetQueuesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -287,33 +287,6 @@ class QueueService(object):
             _registered_method=True)
 
     @staticmethod
-    def Create(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/QueueService/Create',
-            Service__pb2.CreateRequest.SerializeToString,
-            Service__pb2.CRUDResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
-
-    @staticmethod
     def Delete(request,
             target,
             options=(),
@@ -330,6 +303,33 @@ class QueueService(object):
             '/QueueService/Delete',
             Service__pb2.DeleteRequest.SerializeToString,
             Service__pb2.CRUDResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetQueues(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/QueueService/GetQueues',
+            Service__pb2.GetQueuesRequest.SerializeToString,
+            Service__pb2.GetQueuesResponse.FromString,
             options,
             channel_credentials,
             insecure,

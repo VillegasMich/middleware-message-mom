@@ -42,11 +42,22 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
         return Service_pb2.ConsumeMessageResponse(status_code=1)
     
 class QueueService(Service_pb2_grpc.QueueServiceServicer):
+    
+    def GetQueues(self, request, context):
+        db = next(get_db())
+        repo = QueueRepository(db)
+        queues = repo.all()
+        db.close()
+        
+        response = Service_pb2.GetQueuesResponse()
 
-    def Create(self, request, context):
-
+        for queue in queues:
+            queue_item = response.queues.add()
+            queue_item.id = queue.id
+            queue_item.name = queue.name
+        
         print("Request is received: " + str(request))
-        return Service_pb2.CRUDResponse(status_code=1)
+        return response
     
     def Delete(self, request, context):
 
