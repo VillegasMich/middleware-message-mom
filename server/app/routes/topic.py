@@ -52,7 +52,7 @@ async def get_topics(
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_topics = zk.get_children(f"/servers-metadata/{server}/Topics") or []
-            for topics in server_topics:
+            for topic in server_topics:
                 print("Ask for topics")
                 # #TEST
                 # #------------------------------
