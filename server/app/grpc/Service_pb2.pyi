@@ -45,9 +45,9 @@ class Queue(_message.Message):
     __slots__ = ("id", "name")
     ID_FIELD_NUMBER: _ClassVar[int]
     NAME_FIELD_NUMBER: _ClassVar[int]
-    id: str
+    id: int
     name: str
-    def __init__(self, id: _Optional[str] = ..., name: _Optional[str] = ...) -> None: ...
+    def __init__(self, id: _Optional[int] = ..., name: _Optional[str] = ...) -> None: ...
 
 class GetQueuesRequest(_message.Message):
     __slots__ = ("allQueues",)
