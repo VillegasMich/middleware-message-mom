@@ -87,6 +87,8 @@ class MessageRepository:
 
         expected_user_name = round_robin_manager.user_queues_dict[request.id][-1]
 
+        print(expected_user_name)
+        print(request.user_name)
         if expected_user_name == request.user_name:
             queue_message = (
                 self.db.query(QueueMessage)
@@ -123,5 +125,6 @@ class MessageRepository:
             turn_user = round_robin_manager.user_queues_dict[request.id].popleft()
             round_robin_manager.user_queues_dict[request.id].append(turn_user)
 
+            print(message_content)
             return message_content
     
