@@ -38,6 +38,10 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
         return Service_pb2.MessageResponse(status_code=1)
 
     def ConsumeMessage(self, request, context):
+        db = next(get_db())
+        repo = MessageRepository()
+        repo.consume_message(request)
+        db.close()
         print("Request is received: " + str(request))
         return Service_pb2.ConsumeMessageResponse(status_code=1)
     

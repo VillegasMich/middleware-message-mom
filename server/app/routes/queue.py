@@ -41,15 +41,13 @@ async def get_queues(
 
     queues = query.all()
 
-    # Traemos las queue del zk o mandamos un grpc a cada servidor para que las entreguen ???
     servers: list[str] = zk.get_children("/servers") or []
     print(servers)
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
             remote_queues = Client.send_grpc_get_all_queues(server_ip + ":8080")
-            remote_queues_list = [{'id': q.id, 'name': q.name} for q in remote_queues.queues]
-            queues.extend(remote_queues_list)
+            queues.extend(remote_queues)
 
     return {"message": "Queues listed successfully", "queues": queues}
 
@@ -267,11 +265,13 @@ async def consume_message(
                     zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    if queue == queue_id:
+                    if queue == str(queue_id):
                         print("send grpc to consume message")
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_consume_queue(queue_id,current_user.id,current_user.name,server_ip + ":8080")
                         return {
                             "message": "Message consumed successfully",
-                            "content": "Message content from gRPC",
+                            "content": response.content,
                         }
     raise HTTPException(status_code=409, detail="Invalid user turn")
 
