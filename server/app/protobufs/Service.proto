@@ -18,16 +18,22 @@ message MessageResponse {
 
 message ConsumeMessageRequest {
     int32 id = 1;
+    string user_name = 2;
+    string user_id = 3;
 }
 
 message ConsumeMessageResponse {
-    string content = 1; 
+    int32 status_code = 1;
+    string content = 2; 
 }
 
 
 
-service SubscribeQueueService {
+service QueueService {
     rpc Subscribe (SubscribeRequest) returns (SubscribeResponse);
+    rpc UnSubscribe (SubscribeRequest) returns (SubscribeResponse);
+    rpc Create (CreateRequest) returns (CRUDResponse);
+    rpc Delete (DeleteRequest) returns (CRUDResponse); 
 }
 
 message SubscribeRequest {
@@ -38,5 +44,18 @@ message SubscribeRequest {
 
 message SubscribeResponse {
     int32 status_code = 1;
-    string user_name = 2;
+}
+
+message CreateRequest {
+    string name = 1;
+    int32 user_id = 2;
+}
+
+message DeleteRequest {
+    int32 queue_id = 1;
+    int32 user_id = 2;
+}
+
+message CRUDResponse {
+    int32 status_code = 1;
 }

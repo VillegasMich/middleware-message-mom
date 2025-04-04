@@ -6,7 +6,7 @@ import grpc
 from . import Service_pb2, Service_pb2_grpc
 from ..core.database import get_db
 from ..repository.MessageRepository import MessageRepository
-from ..repository.UserRepository import UserRepository
+from ..repository.QueueRepository import QueueRepository
 
 # os.environ["GRPC_VERBOSITY"] = "debug"
 # os.environ["GRPC_TRACE"] = "all"
@@ -40,19 +40,34 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
     def ConsumeMessage(self, request, context):
         print("Request is received: " + str(request))
         return Service_pb2.ConsumeMessageResponse(status_code=1)
+    
+class QueueService(Service_pb2_grpc.QueueServiceServicer):
 
+    def Create(self, request, context):
 
-class SubscribeQueueService(Service_pb2_grpc.SubscribeQueueServiceServicer):
+        print("Request is received: " + str(request))
+        return Service_pb2.CRUDResponse(status_code=1)
+    
+    def Delete(self, request, context):
 
+        print("Request is received: " + str(request))
+        return Service_pb2.CRUDResponse(status_code=1)
+    
     def Subscribe(self, request, context):
+        
         db = next(get_db())
         
-        repo = UserRepository(db)
+        repo = QueueRepository(db)
         repo.subscribe_queue(request)
-
+        
         db.close()
         print("Request is received: " + str(request))
-        return Service_pb2.SubscribeResponse(status_code=1, user_name=request.user_name)
+        return Service_pb2.SubscribeResponse(status_code=1)
+    
+    def UnSubscribe(self, request, context):
+
+        print("Request is received: " + str(request))
+        return Service_pb2.SubscribeResponse(status_code=1)
 
 
 class Server:
@@ -80,8 +95,8 @@ class Server:
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         Service_pb2_grpc.add_MessageServiceServicer_to_server(
             MessageService(), server)
-        Service_pb2_grpc.add_SubscribeQueueServiceServicer_to_server(
-            SubscribeQueueService(), server)
+        Service_pb2_grpc.add_QueueServiceServicer_to_server(
+            QueueService(), server)
         server.add_insecure_port(HOST)
         print(f"Production service started on {HOST} ")
         server.start()

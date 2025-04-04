@@ -336,7 +336,7 @@ async def subscribe(
                 for queue in server_queues:
                     if queue == str(queue_id):
                         server_ip, _ = server.split(":")
-                        response = Client.send_grpc_subscribe(
+                        response = Client.send_grpc_queue_subscribe(
                             queue_id,
                             current_user.id,
                             current_user.name,

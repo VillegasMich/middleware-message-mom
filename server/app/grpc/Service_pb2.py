@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rService.proto\"I\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x13\n\x0brouting_key\x18\x03 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\"&\n\x0fMessageResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\"#\n\x15\x43onsumeMessageRequest\x12\n\n\x02id\x18\x01 \x01(\x05\")\n\x16\x43onsumeMessageResponse\x12\x0f\n\x07\x63ontent\x18\x01 \x01(\t\"H\n\x10SubscribeRequest\x12\x10\n\x08queue_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12\x11\n\tuser_name\x18\x03 \x01(\t\";\n\x11SubscribeResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x11\n\tuser_name\x18\x02 \x01(\t2}\n\x0eMessageService\x12(\n\nAddMessage\x12\x08.Message\x1a\x10.MessageResponse\x12\x41\n\x0e\x43onsumeMessage\x12\x16.ConsumeMessageRequest\x1a\x17.ConsumeMessageResponse2K\n\x15SubscribeQueueService\x12\x32\n\tSubscribe\x12\x11.SubscribeRequest\x1a\x12.SubscribeResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rService.proto\"I\n\x07Message\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x13\n\x0brouting_key\x18\x03 \x01(\t\x12\x0f\n\x07\x63ontent\x18\x04 \x01(\t\"&\n\x0fMessageResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\"G\n\x15\x43onsumeMessageRequest\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x11\n\tuser_name\x18\x02 \x01(\t\x12\x0f\n\x07user_id\x18\x03 \x01(\t\">\n\x16\x43onsumeMessageResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x12\x0f\n\x07\x63ontent\x18\x02 \x01(\t\"H\n\x10SubscribeRequest\x12\x10\n\x08queue_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\x12\x11\n\tuser_name\x18\x03 \x01(\t\"(\n\x11SubscribeResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\".\n\rCreateRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\"2\n\rDeleteRequest\x12\x10\n\x08queue_id\x18\x01 \x01(\x05\x12\x0f\n\x07user_id\x18\x02 \x01(\x05\"#\n\x0c\x43RUDResponse\x12\x13\n\x0bstatus_code\x18\x01 \x01(\x05\x32}\n\x0eMessageService\x12(\n\nAddMessage\x12\x08.Message\x1a\x10.MessageResponse\x12\x41\n\x0e\x43onsumeMessage\x12\x16.ConsumeMessageRequest\x1a\x17.ConsumeMessageResponse2\xca\x01\n\x0cQueueService\x12\x32\n\tSubscribe\x12\x11.SubscribeRequest\x1a\x12.SubscribeResponse\x12\x34\n\x0bUnSubscribe\x12\x11.SubscribeRequest\x1a\x12.SubscribeResponse\x12\'\n\x06\x43reate\x12\x0e.CreateRequest\x1a\r.CRUDResponse\x12\'\n\x06\x44\x65lete\x12\x0e.DeleteRequest\x1a\r.CRUDResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,15 +36,21 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_MESSAGERESPONSE']._serialized_start=92
   _globals['_MESSAGERESPONSE']._serialized_end=130
   _globals['_CONSUMEMESSAGEREQUEST']._serialized_start=132
-  _globals['_CONSUMEMESSAGEREQUEST']._serialized_end=167
-  _globals['_CONSUMEMESSAGERESPONSE']._serialized_start=169
-  _globals['_CONSUMEMESSAGERESPONSE']._serialized_end=210
-  _globals['_SUBSCRIBEREQUEST']._serialized_start=212
-  _globals['_SUBSCRIBEREQUEST']._serialized_end=284
-  _globals['_SUBSCRIBERESPONSE']._serialized_start=286
-  _globals['_SUBSCRIBERESPONSE']._serialized_end=345
-  _globals['_MESSAGESERVICE']._serialized_start=347
-  _globals['_MESSAGESERVICE']._serialized_end=472
-  _globals['_SUBSCRIBEQUEUESERVICE']._serialized_start=474
-  _globals['_SUBSCRIBEQUEUESERVICE']._serialized_end=549
+  _globals['_CONSUMEMESSAGEREQUEST']._serialized_end=203
+  _globals['_CONSUMEMESSAGERESPONSE']._serialized_start=205
+  _globals['_CONSUMEMESSAGERESPONSE']._serialized_end=267
+  _globals['_SUBSCRIBEREQUEST']._serialized_start=269
+  _globals['_SUBSCRIBEREQUEST']._serialized_end=341
+  _globals['_SUBSCRIBERESPONSE']._serialized_start=343
+  _globals['_SUBSCRIBERESPONSE']._serialized_end=383
+  _globals['_CREATEREQUEST']._serialized_start=385
+  _globals['_CREATEREQUEST']._serialized_end=431
+  _globals['_DELETEREQUEST']._serialized_start=433
+  _globals['_DELETEREQUEST']._serialized_end=483
+  _globals['_CRUDRESPONSE']._serialized_start=485
+  _globals['_CRUDRESPONSE']._serialized_end=520
+  _globals['_MESSAGESERVICE']._serialized_start=522
+  _globals['_MESSAGESERVICE']._serialized_end=647
+  _globals['_QUEUESERVICE']._serialized_start=650
+  _globals['_QUEUESERVICE']._serialized_end=852
 # @@protoc_insertion_point(module_scope)

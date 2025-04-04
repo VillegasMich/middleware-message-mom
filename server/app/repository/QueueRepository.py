@@ -8,7 +8,7 @@ from ..RoundRobinManager import RoundRobinManager
 from app.core.rrmanager import get_round_robin_manager
 
 
-class UserRepository:
+class QueueRepository:
     def __init__(self, db: Session):
         self.db = db
 

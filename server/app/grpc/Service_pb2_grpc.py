@@ -140,7 +140,7 @@ class MessageService(object):
             _registered_method=True)
 
 
-class SubscribeQueueServiceStub(object):
+class QueueServiceStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -150,13 +150,28 @@ class SubscribeQueueServiceStub(object):
             channel: A grpc.Channel.
         """
         self.Subscribe = channel.unary_unary(
-                '/SubscribeQueueService/Subscribe',
+                '/QueueService/Subscribe',
                 request_serializer=Service__pb2.SubscribeRequest.SerializeToString,
                 response_deserializer=Service__pb2.SubscribeResponse.FromString,
                 _registered_method=True)
+        self.UnSubscribe = channel.unary_unary(
+                '/QueueService/UnSubscribe',
+                request_serializer=Service__pb2.SubscribeRequest.SerializeToString,
+                response_deserializer=Service__pb2.SubscribeResponse.FromString,
+                _registered_method=True)
+        self.Create = channel.unary_unary(
+                '/QueueService/Create',
+                request_serializer=Service__pb2.CreateRequest.SerializeToString,
+                response_deserializer=Service__pb2.CRUDResponse.FromString,
+                _registered_method=True)
+        self.Delete = channel.unary_unary(
+                '/QueueService/Delete',
+                request_serializer=Service__pb2.DeleteRequest.SerializeToString,
+                response_deserializer=Service__pb2.CRUDResponse.FromString,
+                _registered_method=True)
 
 
-class SubscribeQueueServiceServicer(object):
+class QueueServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Subscribe(self, request, context):
@@ -165,23 +180,56 @@ class SubscribeQueueServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def UnSubscribe(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
-def add_SubscribeQueueServiceServicer_to_server(servicer, server):
+    def Create(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Delete(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_QueueServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Subscribe': grpc.unary_unary_rpc_method_handler(
                     servicer.Subscribe,
                     request_deserializer=Service__pb2.SubscribeRequest.FromString,
                     response_serializer=Service__pb2.SubscribeResponse.SerializeToString,
             ),
+            'UnSubscribe': grpc.unary_unary_rpc_method_handler(
+                    servicer.UnSubscribe,
+                    request_deserializer=Service__pb2.SubscribeRequest.FromString,
+                    response_serializer=Service__pb2.SubscribeResponse.SerializeToString,
+            ),
+            'Create': grpc.unary_unary_rpc_method_handler(
+                    servicer.Create,
+                    request_deserializer=Service__pb2.CreateRequest.FromString,
+                    response_serializer=Service__pb2.CRUDResponse.SerializeToString,
+            ),
+            'Delete': grpc.unary_unary_rpc_method_handler(
+                    servicer.Delete,
+                    request_deserializer=Service__pb2.DeleteRequest.FromString,
+                    response_serializer=Service__pb2.CRUDResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'SubscribeQueueService', rpc_method_handlers)
+            'QueueService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('SubscribeQueueService', rpc_method_handlers)
+    server.add_registered_method_handlers('QueueService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
-class SubscribeQueueService(object):
+class QueueService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -198,9 +246,90 @@ class SubscribeQueueService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/SubscribeQueueService/Subscribe',
+            '/QueueService/Subscribe',
             Service__pb2.SubscribeRequest.SerializeToString,
             Service__pb2.SubscribeResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def UnSubscribe(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/QueueService/UnSubscribe',
+            Service__pb2.SubscribeRequest.SerializeToString,
+            Service__pb2.SubscribeResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Create(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/QueueService/Create',
+            Service__pb2.CreateRequest.SerializeToString,
+            Service__pb2.CRUDResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def Delete(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/QueueService/Delete',
+            Service__pb2.DeleteRequest.SerializeToString,
+            Service__pb2.CRUDResponse.FromString,
             options,
             channel_credentials,
             insecure,
