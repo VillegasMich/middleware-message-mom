@@ -86,7 +86,7 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
         print("Request is received: " + str(request))
         return Service_pb2.SubscribeResponse(status_code=1)
 
-class UserService(Service_pb2_grpc.add_UserServiceServicer_to_server):
+class UserService(Service_pb2_grpc.UserServiceServicer):
 
     def Register(self, request, context):
         print("Request is received: " + str(request))
