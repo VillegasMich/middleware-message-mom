@@ -39,7 +39,7 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
 
     def ConsumeMessage(self, request, context):
         db = next(get_db())
-        repo = MessageRepository()
+        repo = MessageRepository(db)
         repo.consume_message(request)
         db.close()
         print("Request is received: " + str(request))
