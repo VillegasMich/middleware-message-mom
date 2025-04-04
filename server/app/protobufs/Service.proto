@@ -19,7 +19,7 @@ message MessageResponse {
 message ConsumeMessageRequest {
     int32 id = 1;
     string user_name = 2;
-    string user_id = 3;
+    int32 user_id = 3;
 }
 
 message ConsumeMessageResponse {

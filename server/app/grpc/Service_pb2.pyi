@@ -30,8 +30,8 @@ class ConsumeMessageRequest(_message.Message):
     USER_ID_FIELD_NUMBER: _ClassVar[int]
     id: int
     user_name: str
-    user_id: str
-    def __init__(self, id: _Optional[int] = ..., user_name: _Optional[str] = ..., user_id: _Optional[str] = ...) -> None: ...
+    user_id: int
+    def __init__(self, id: _Optional[int] = ..., user_name: _Optional[str] = ..., user_id: _Optional[int] = ...) -> None: ...
 
 class ConsumeMessageResponse(_message.Message):
     __slots__ = ("status_code", "content")
