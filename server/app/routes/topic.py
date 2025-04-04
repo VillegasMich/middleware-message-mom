@@ -60,6 +60,7 @@ async def get_topics(
                 #     "queue", 1, "listando todas las queues", "default", "127.0.0.1:8080")
                 # #------------------------------
 
+    print(topics)
     return {"message": "Topics listed successfully", "topics": topics}
 
 
