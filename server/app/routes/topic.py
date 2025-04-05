@@ -394,7 +394,7 @@ async def subscribe(
                     if topic_zk == str(topic.topic_id):
                         server_ip, _ = server.split(":")
                         response = Client.send_grpc_topic_subscribe(
-                            topic_id,
+                            topic.topic_id,
                             current_user.id,
                             current_user.name,
                             topic.routing_key,
@@ -403,7 +403,7 @@ async def subscribe(
                         if response.status_code == 1:
                             return {
                                 "message": "Successfully subscribed to the queue",
-                                "topic_id": topic_id,
+                                "topic_id": topic.topic_id,
                             }
                         else:
                             raise HTTPException(
