@@ -230,23 +230,26 @@ async def consume_message(
                 raise HTTPException(status_code=404, detail="Message not found")
 
             message_content = queue_message.message.content
-
+            message_id = queue_message.message_id
+            
             db.delete(queue_message)
+            db.flush()
 
             remaining_refs = (
                 db.query(QueueMessage)
-                .filter(QueueMessage.message_id == queue_message.message_id)
+                .filter(QueueMessage.message_id == message_id)
                 .count()
             )
             if remaining_refs == 0:
                 message_to_delete = (
                     db.query(Message)
-                    .filter(Message.id == queue_message.message_id)
+                    .filter(Message.id == message_id)
                     .first()
                 )
                 if message_to_delete:
                     db.delete(message_to_delete)
 
+            db.flush()
             db.commit()
 
             turn_user = round_robin_manager.user_queues_dict[queue.id].popleft()
