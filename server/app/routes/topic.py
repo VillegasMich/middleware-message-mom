@@ -51,15 +51,10 @@ async def get_topics(
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
-            server_topics = zk.get_children(f"/servers-metadata/{server}/Topics") or []
-            for topic in server_topics:
-                print("Ask for topics")
-                # #TEST
-                # #------------------------------
-                # Client.send_grpc_message(
-                #     "queue", 1, "listando todas las queues", "default", "127.0.0.1:8080")
-                # #------------------------------
-
+            server_ip, _ = server.split(":")
+            remote_queues = Client.send_grpc_get_all_topics(server_ip + ":8080")
+            topics.extend(remote_queues)
+  
     print(topics)
     return {"message": "Topics listed successfully", "topics": topics}
 

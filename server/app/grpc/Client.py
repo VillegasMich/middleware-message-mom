@@ -98,3 +98,17 @@ class Client:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
     
+    @staticmethod
+    def send_grpc_get_all_topics(remote_host:str):
+        with grpc.insecure_channel(remote_host) as channel:
+            stub = Service_pb2_grpc.TopicServiceStub(channel)
+            print(dir(stub))
+            request = Service_pb2.GetTopicsRequest(allTopics=1)
+            try:
+                response = stub.GetTopics(request)
+                print("Response received from remote service:", response)
+                remote_topics_list = [{'id': t.id, 'name': t.name} for t in response.topic]
+                return remote_topics_list
+            except grpc.RpcError as e:
+                print(
+                    f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
