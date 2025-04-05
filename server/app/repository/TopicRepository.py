@@ -18,8 +18,9 @@ class TopicRepository:
         return topics
     
     def subscribe(self, request):
+        print('\n'+ request.topic_id)
         existing_topic = self.db.query(Topic).filter(Topic.id == request.topic_id).first()
-
+        print('\n'+ existing_topic.name)
         if existing_topic:
             topic_id = existing_topic.id
 
@@ -58,5 +59,7 @@ class TopicRepository:
                 raise HTTPException(
                     status_code=400, detail="Routing key already exists for this queue"
                 )
-
-        return {"message": "Successfully subscribed to the topic"}
+            
+            return {"message": "Successfully subscribed to the topic"}
+        else:
+            return {"message": "Your subscription failed"}
