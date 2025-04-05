@@ -51,8 +51,7 @@ async def get_topics(
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
-            remote_queues = Client.send_grpc_get_all_topics(
-                server_ip + ":8080")
+            remote_queues = Client.send_grpc_get_all_topics(server_ip + ":8080")
             topics.extend(remote_queues)
 
     return {"message": "Topics listed successfully", "topics": topics}
@@ -94,17 +93,18 @@ async def get_user_queues_topics(
         .all()
     )
 
-    if user_queues:
+    servers: list[str] = zk.get_children("/servers") or []
+    for server in servers:
+        if server != f"{SERVER_IP}:{SERVER_PORT}":
+            server_queue = zk.get_children(f"/servers-metadata/{server}/Queues") or []
+            for queue in server_queue:
+                user_queues.append(
+                    queue
+                )  # TODO: Use grpc to check if user is suscribed
+
+    if len(user_queues) > 0:
         return {"message": "Queues listed successfully", "queues": user_queues}
-    else:
-        servers: list[str] = zk.get_children("/servers") or []
-        for server in servers:
-            if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_queue = (
-                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
-                )
-                for queue in server_queue:
-                    return {"message": "Queue listed successfully", "queue": queue}
+
     return {"message": "No queues found for subscribed topics", "queues": []}
 
 
@@ -180,8 +180,7 @@ async def delete_topic(
         bound_queues = db.query(Queue).filter(Queue.topic_id == topic.id).all()
 
         for queue in bound_queues:
-            db.query(QueueMessage).filter(
-                QueueMessage.queue_id == queue.id).delete()
+            db.query(QueueMessage).filter(QueueMessage.queue_id == queue.id).delete()
             db.delete(queue)
 
         db.delete(topic)
@@ -225,8 +224,7 @@ async def publish_message(
         db.flush()
 
         if not new_message.id:
-            raise HTTPException(
-                status_code=500, detail="Failed to create message.")
+            raise HTTPException(status_code=500, detail="Failed to create message.")
 
         all_queues = (
             db.query(Queue)
@@ -333,7 +331,11 @@ async def consume_message(
                     if queue == str(queue_id):
                         server_ip, _ = server.split(":")
                         messages = Client.send_grpc_consume_topic(
-                            queue_id, current_user.id, current_user.name, server_ip + ":8080")
+                            queue_id,
+                            current_user.id,
+                            current_user.name,
+                            server_ip + ":8080",
+                        )
                         return {
                             "message": "Message consumed successfully",
                             "content": [message.content for message in messages],
@@ -355,8 +357,7 @@ async def subscribe(
 
         queue_name = f"{existing_topic.name}_{existing_topic.id}_{current_user.name}_{current_user.id}"
 
-        private_queue = db.query(Queue).filter(
-            Queue.name == queue_name).first()
+        private_queue = db.query(Queue).filter(Queue.name == queue_name).first()
 
         if not private_queue:
             private_queue = Queue(
