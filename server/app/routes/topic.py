@@ -46,7 +46,6 @@ async def get_topics(
         query = query.filter(Topic.user_id == current_user.id)
 
     topics = query.all()
-    print(topics)
     # Traemos los topicos del zk o mandamos un grpc a cada servidor para que las entreguen ???
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
@@ -55,7 +54,6 @@ async def get_topics(
             remote_queues = Client.send_grpc_get_all_topics(server_ip + ":8080")
             topics.extend(remote_queues)
   
-    print(topics)
     return {"message": "Topics listed successfully", "topics": topics}
 
 
