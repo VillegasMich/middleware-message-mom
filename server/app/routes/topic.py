@@ -391,9 +391,23 @@ async def subscribe(
                     zk.get_children(f"/servers-metadata/{server}/Topics") or []
                 )
                 for topic in server_topic:
-                    print("Send grpc to subscribe")
-                    return {
-                        "message": "Successfully subscribed to the topic",
-                        "topic_name": topic,
-                    }
+                    if topic == str(topic_id):
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_topic_subscribe(
+                            topic_id,
+                            current_user.id,
+                            current_user.name,
+                            topic.routing_key,
+                            server_ip + ":8080",
+                        )
+                        if response.status_code == 1:
+                            return {
+                                "message": "Successfully subscribed to the queue",
+                                "queue_id": topic_id,
+                            }
+                        else:
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to subscribe",
+                            )
     raise HTTPException(status_code=404, detail="Topic not found")

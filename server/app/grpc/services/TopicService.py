@@ -21,6 +21,12 @@ class TopicService(Service_pb2_grpc.TopicServiceServicer):
         return response
     
     def Subscribe(self, request, context):
+        db = next(get_db())
+        repo = TopicRepository(db)
+        
+        repo.subscribe(request)
+        
+        db.close()
         return Service_pb2.SubscribeResponse(status_code=1)
     
     def UnSubscribe(self, request, context):

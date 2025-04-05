@@ -50,8 +50,22 @@ class Client:
             except grpc.RpcError as e:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
-                
-    
+
+    @staticmethod
+    def send_grpc_topic_subscribe(topic_id: int, user_id: int, user_name: str, routing_key: str, remote_host:str):
+         with grpc.insecure_channel(remote_host) as channel:
+            stub = Service_pb2_grpc.TopicServiceStub(channel)
+            print(dir(stub))
+            request = Service_pb2.SubscribeTopicRequest(
+                topic_id=topic_id, user_id=user_id, user_name=user_name, routing_key=routing_key)
+            try:
+                response = stub.Subscribe(request)
+                print("Response received from remote service:", response)
+                return response
+            except grpc.RpcError as e:
+                print(
+                    f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+
     '''
         Gets all queues from the remote_host, the queues should be parsed to dict after they are returned
     '''
@@ -64,18 +78,20 @@ class Client:
             try:
                 response = stub.GetQueues(request)
                 print("Response received from remote service:", response)
-                remote_queues_list = [{'id': q.id, 'name': q.name} for q in response.queues]
+                remote_queues_list = [{'id': q.id, 'name': q.name}
+                                      for q in response.queues]
                 return remote_queues_list
             except grpc.RpcError as e:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
-                
+
     @staticmethod
     def send_grpc_consume_queue(queue_id: int, user_id: int, user_name: str, remote_host: str):
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.MessageServiceStub(channel)
             print(dir(stub))
-            request = Service_pb2.ConsumeMessageRequest(id=queue_id,user_name=user_name,user_id=user_id)
+            request = Service_pb2.ConsumeMessageRequest(
+                id=queue_id, user_name=user_name, user_id=user_id)
             try:
                 response = stub.ConsumeMessage(request)
                 print("Response received from remote service:", response)
@@ -83,13 +99,14 @@ class Client:
             except grpc.RpcError as e:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
-    
+
     @staticmethod
-    def send_grpc_register(user_name: str, user_password:str, user_id:int, remote_host:str):
-         with grpc.insecure_channel(remote_host) as channel:
+    def send_grpc_register(user_name: str, user_password: str, user_id: int, remote_host: str):
+        with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.UserServiceStub(channel)
             print(dir(stub))
-            request = Service_pb2.RegisterRequest(user_name=user_name, user_password=user_password, user_id=user_id)
+            request = Service_pb2.RegisterRequest(
+                user_name=user_name, user_password=user_password, user_id=user_id)
             try:
                 response = stub.Register(request)
                 print("Response received from remote service:", response)
@@ -97,9 +114,9 @@ class Client:
             except grpc.RpcError as e:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
-    
+
     @staticmethod
-    def send_grpc_get_all_topics(remote_host:str):
+    def send_grpc_get_all_topics(remote_host: str):
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.TopicServiceStub(channel)
             print(dir(stub))
@@ -107,7 +124,8 @@ class Client:
             try:
                 response = stub.GetTopics(request)
                 print("Response received from remote service:", response)
-                remote_topics_list = [{'id': t.id, 'name': t.name} for t in response.topic]
+                remote_topics_list = [{'id': t.id, 'name': t.name}
+                                      for t in response.topic]
                 return remote_topics_list
             except grpc.RpcError as e:
                 print(

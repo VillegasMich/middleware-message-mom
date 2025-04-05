@@ -351,7 +351,7 @@ async def subscribe(
                         else:
                             raise HTTPException(
                                 status_code=500,
-                                detail="Client wasn't able to save the message",
+                                detail="Client wasn't able to subscribe",
                             )
 
     raise HTTPException(status_code=404, detail="Queue not found")
