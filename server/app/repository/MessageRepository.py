@@ -112,6 +112,8 @@ class MessageRepository:
                 .filter(QueueMessage.message_id == queue_message.message_id)
                 .count()
             )
+            print(remaining_refs)
+            
             if remaining_refs == 0:
                 message_to_delete = (
                     self.db.query(Message)
