@@ -101,6 +101,25 @@ class Client:
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
 
     @staticmethod
+    def send_grpc_consume_topic(topic_id: int, user_id: int, user_name: str, remote_host: str):
+        with grpc.insecure_channel(remote_host) as channel:
+            stub = Service_pb2_grpc.MessageServiceStub(channel)
+            print(dir(stub))
+            request = Service_pb2.ConsumeMessageRequest(
+                id=topic_id, user_name=user_name, user_id=user_id)
+            try:
+                response = stub.ConsumeTopicMessage(request)
+                print("Response received from remote service:", response)
+                remote_messages_list = [m for m in response.messages]
+                remote_ids_list = [i for i in response.ids]
+                result = [{"content": m, "id": i} for m, i in zip(remote_messages_list, remote_ids_list)]
+                
+                return result
+            except grpc.RpcError as e:
+                print(
+                    f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+
+    @staticmethod
     def send_grpc_register(user_name: str, user_password: str, user_id: int, remote_host: str):
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.UserServiceStub(channel)

@@ -100,7 +100,8 @@ class MessageRepository:
             )
 
             if not queue_message:
-                raise HTTPException(status_code=404, detail="Message not found")
+                raise HTTPException(
+                    status_code=404, detail="Message not found")
 
             message_content = queue_message.message.content
             message_id = queue_message.message_id
@@ -114,7 +115,7 @@ class MessageRepository:
                 .count()
             )
             print(remaining_refs)
-            
+
             if remaining_refs == 0:
                 message_to_delete = (
                     self.db.query(Message)
@@ -128,10 +129,48 @@ class MessageRepository:
             self.db.flush()
             self.db.commit()
 
-            turn_user = round_robin_manager.user_queues_dict[request.id].popleft()
+            turn_user = round_robin_manager.user_queues_dict[request.id].popleft(
+            )
             round_robin_manager.user_queues_dict[request.id].append(turn_user)
 
             print(message_content)
             return message_content
         else:
             return "It is not your turn!"
+
+    def consume_topic_message(self, request):
+        private_queue = (
+            self.db.query(Queue)
+            .filter(
+                Queue.id == request.id,
+                Queue.user_id == request.user_id,
+                Queue.is_private == True,
+            )
+            .first()
+        )
+
+        print("\n", private_queue.id, "\n")
+
+        if private_queue:
+            messages = (
+                self.db.query(Message)
+                .join(QueueMessage, Message.id == QueueMessage.message_id)
+                .filter(QueueMessage.queue_id == private_queue.id)
+                .order_by(Message.created_at.asc())
+                .all()
+            )
+
+            if not messages:
+                raise HTTPException(status_code=404, detail="No messages found")
+
+            return {
+                "content": [message.content for message in messages],
+                "ids": [message.id for message in messages],
+            }
+        else:
+            return {
+                "message": "No private queue found",
+                "content": [],
+                "ids": [],
+            }
+

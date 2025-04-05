@@ -28,6 +28,12 @@ message ConsumeMessageResponse {
     string content = 2; 
 }
 
+message ConsumeMessagesResponse {
+    int32 status_code = 1;
+    repeated string messages = 2;
+    repeated int32 ids = 3; 
+}
+
 
 
 service QueueService {

@@ -51,9 +51,10 @@ async def get_topics(
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
-            remote_queues = Client.send_grpc_get_all_topics(server_ip + ":8080")
+            remote_queues = Client.send_grpc_get_all_topics(
+                server_ip + ":8080")
             topics.extend(remote_queues)
-  
+
     return {"message": "Topics listed successfully", "topics": topics}
 
 
@@ -179,7 +180,8 @@ async def delete_topic(
         bound_queues = db.query(Queue).filter(Queue.topic_id == topic.id).all()
 
         for queue in bound_queues:
-            db.query(QueueMessage).filter(QueueMessage.queue_id == queue.id).delete()
+            db.query(QueueMessage).filter(
+                QueueMessage.queue_id == queue.id).delete()
             db.delete(queue)
 
         db.delete(topic)
@@ -223,7 +225,8 @@ async def publish_message(
         db.flush()
 
         if not new_message.id:
-            raise HTTPException(status_code=500, detail="Failed to create message.")
+            raise HTTPException(
+                status_code=500, detail="Failed to create message.")
 
         all_queues = (
             db.query(Queue)
@@ -327,11 +330,15 @@ async def consume_message(
                     zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queue:
-                    print("Send grpc to consume message")
-                    return {
-                        "message": "Messages consumed successfully",
-                        "queue": queue,
-                    }
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        messages = Client.send_grpc_consume_topic(
+                            queue_id, current_user.id, current_user.name, server_ip + ":8080")
+                        return {
+                            "message": "Message consumed successfully",
+                            "content": [message.content for message in messages],
+                            "ids": [message.id for message in messages],
+                        }
     raise HTTPException(status_code=404, detail="Private queue not found")
 
 
@@ -348,7 +355,8 @@ async def subscribe(
 
         queue_name = f"{existing_topic.name}_{existing_topic.id}_{current_user.name}_{current_user.id}"
 
-        private_queue = db.query(Queue).filter(Queue.name == queue_name).first()
+        private_queue = db.query(Queue).filter(
+            Queue.name == queue_name).first()
 
         if not private_queue:
             private_queue = Queue(

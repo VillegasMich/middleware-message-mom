@@ -41,6 +41,16 @@ class ConsumeMessageResponse(_message.Message):
     content: str
     def __init__(self, status_code: _Optional[int] = ..., content: _Optional[str] = ...) -> None: ...
 
+class ConsumeMessagesResponse(_message.Message):
+    __slots__ = ("status_code", "messages", "ids")
+    STATUS_CODE_FIELD_NUMBER: _ClassVar[int]
+    MESSAGES_FIELD_NUMBER: _ClassVar[int]
+    IDS_FIELD_NUMBER: _ClassVar[int]
+    status_code: int
+    messages: _containers.RepeatedScalarFieldContainer[str]
+    ids: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, status_code: _Optional[int] = ..., messages: _Optional[_Iterable[str]] = ..., ids: _Optional[_Iterable[int]] = ...) -> None: ...
+
 class Queue(_message.Message):
     __slots__ = ("id", "name")
     ID_FIELD_NUMBER: _ClassVar[int]
