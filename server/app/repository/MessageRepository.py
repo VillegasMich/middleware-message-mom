@@ -105,7 +105,8 @@ class MessageRepository:
             message_content = queue_message.message.content
 
             self.db.delete(queue_message)
-
+            self.db.flush()
+            
             remaining_refs = (
                 self.db.query(QueueMessage)
                 .filter(QueueMessage.message_id == queue_message.message_id)
