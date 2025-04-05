@@ -18,7 +18,7 @@ class TopicRepository:
         return topics
     
     def subscribe(self, request):
-        print('\n'+ request.topic_id)
+        print('\n'+ str(request.topic_id))
         existing_topic = self.db.query(Topic).filter(Topic.id == request.topic_id).first()
         print('\n'+ existing_topic.name)
         if existing_topic:
