@@ -2,7 +2,8 @@ syntax = "proto3";
 
 service MessageService {
     rpc AddMessage (Message) returns (MessageResponse);
-    rpc ConsumeMessage (ConsumeMessageRequest) returns (ConsumeMessageResponse);
+    rpc ConsumeQueueMessage (ConsumeMessageRequest) returns (ConsumeMessageResponse);
+    rpc ConsumeTopicMessage (ConsumeMessageRequest) returns (ConsumeMessageResponse);
 }
 
 message Message {

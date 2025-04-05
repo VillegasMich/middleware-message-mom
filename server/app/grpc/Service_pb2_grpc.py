@@ -39,8 +39,13 @@ class MessageServiceStub(object):
                 request_serializer=Service__pb2.Message.SerializeToString,
                 response_deserializer=Service__pb2.MessageResponse.FromString,
                 _registered_method=True)
-        self.ConsumeMessage = channel.unary_unary(
-                '/MessageService/ConsumeMessage',
+        self.ConsumeQueueMessage = channel.unary_unary(
+                '/MessageService/ConsumeQueueMessage',
+                request_serializer=Service__pb2.ConsumeMessageRequest.SerializeToString,
+                response_deserializer=Service__pb2.ConsumeMessageResponse.FromString,
+                _registered_method=True)
+        self.ConsumeTopicMessage = channel.unary_unary(
+                '/MessageService/ConsumeTopicMessage',
                 request_serializer=Service__pb2.ConsumeMessageRequest.SerializeToString,
                 response_deserializer=Service__pb2.ConsumeMessageResponse.FromString,
                 _registered_method=True)
@@ -55,7 +60,13 @@ class MessageServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ConsumeMessage(self, request, context):
+    def ConsumeQueueMessage(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ConsumeTopicMessage(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -69,8 +80,13 @@ def add_MessageServiceServicer_to_server(servicer, server):
                     request_deserializer=Service__pb2.Message.FromString,
                     response_serializer=Service__pb2.MessageResponse.SerializeToString,
             ),
-            'ConsumeMessage': grpc.unary_unary_rpc_method_handler(
-                    servicer.ConsumeMessage,
+            'ConsumeQueueMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.ConsumeQueueMessage,
+                    request_deserializer=Service__pb2.ConsumeMessageRequest.FromString,
+                    response_serializer=Service__pb2.ConsumeMessageResponse.SerializeToString,
+            ),
+            'ConsumeTopicMessage': grpc.unary_unary_rpc_method_handler(
+                    servicer.ConsumeTopicMessage,
                     request_deserializer=Service__pb2.ConsumeMessageRequest.FromString,
                     response_serializer=Service__pb2.ConsumeMessageResponse.SerializeToString,
             ),
@@ -113,7 +129,7 @@ class MessageService(object):
             _registered_method=True)
 
     @staticmethod
-    def ConsumeMessage(request,
+    def ConsumeQueueMessage(request,
             target,
             options=(),
             channel_credentials=None,
@@ -126,7 +142,34 @@ class MessageService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/MessageService/ConsumeMessage',
+            '/MessageService/ConsumeQueueMessage',
+            Service__pb2.ConsumeMessageRequest.SerializeToString,
+            Service__pb2.ConsumeMessageResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ConsumeTopicMessage(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/MessageService/ConsumeTopicMessage',
             Service__pb2.ConsumeMessageRequest.SerializeToString,
             Service__pb2.ConsumeMessageResponse.FromString,
             options,

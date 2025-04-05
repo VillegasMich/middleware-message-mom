@@ -93,7 +93,7 @@ class Client:
             request = Service_pb2.ConsumeMessageRequest(
                 id=queue_id, user_name=user_name, user_id=user_id)
             try:
-                response = stub.ConsumeMessage(request)
+                response = stub.ConsumeQueueMessage(request)
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:

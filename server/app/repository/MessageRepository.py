@@ -69,7 +69,7 @@ class MessageRepository:
         self.db.add_all(queue_messages)
         self.db.commit()
 
-    def consume_message(self, request):
+    def consume_queue_message(self, request):
         round_robin_manager: RoundRobinManager = get_round_robin_manager()
 
         is_subscribed = (
