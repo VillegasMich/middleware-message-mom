@@ -103,13 +103,14 @@ class MessageRepository:
                 raise HTTPException(status_code=404, detail="Message not found")
 
             message_content = queue_message.message.content
+            message_id = queue_message.message_id
 
             self.db.delete(queue_message)
             self.db.flush()
 
             remaining_refs = (
                 self.db.query(QueueMessage)
-                .filter(QueueMessage.message_id == queue_message.message_id)
+                .filter(QueueMessage.message_id == message_id)
                 .count()
             )
             print(remaining_refs)
@@ -117,7 +118,7 @@ class MessageRepository:
             if remaining_refs == 0:
                 message_to_delete = (
                     self.db.query(Message)
-                    .filter(Message.id == queue_message.message_id)
+                    .filter(Message.id == message_id)
                     .first()
                 )
                 print(message_to_delete)
