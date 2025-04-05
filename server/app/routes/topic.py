@@ -390,8 +390,8 @@ async def subscribe(
                 server_topic = (
                     zk.get_children(f"/servers-metadata/{server}/Topics") or []
                 )
-                for topic in server_topic:
-                    if topic == str(topic.topic_id):
+                for topic_zk in server_topic:
+                    if topic_zk == str(topic.topic_id):
                         server_ip, _ = server.split(":")
                         response = Client.send_grpc_topic_subscribe(
                             topic_id,
