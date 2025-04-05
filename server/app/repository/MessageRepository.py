@@ -106,7 +106,7 @@ class MessageRepository:
 
             self.db.delete(queue_message)
             self.db.flush()
-            
+
             remaining_refs = (
                 self.db.query(QueueMessage)
                 .filter(QueueMessage.message_id == queue_message.message_id)
@@ -118,6 +118,7 @@ class MessageRepository:
                     .filter(Message.id == queue_message.message_id)
                     .first()
                 )
+                print(message_to_delete)
                 if message_to_delete:
                     self.db.delete(message_to_delete)
 
