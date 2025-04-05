@@ -120,6 +120,7 @@ class MessageRepository:
                 if message_to_delete:
                     self.db.delete(message_to_delete)
 
+            self.db.flush()
             self.db.commit()
 
             turn_user = round_robin_manager.user_queues_dict[request.id].popleft()
