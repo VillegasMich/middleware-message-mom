@@ -14,7 +14,7 @@ from app.models.user_queue import user_queue as UserQueue
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from zookeeper import SERVER_IP, SERVER_PORT, ZK_NODE_TOPICS, zk
+from zookeeper import SERVER_IP, SERVER_PORT, ZK_NODE_TOPICS, zk, ZK_NODE_QUEUES
 
 router = APIRouter()
 
@@ -384,6 +384,7 @@ async def subscribe(
             db.add(private_queue)
             db.commit()
             db.refresh(private_queue)
+            zk.ensure_path(f"{ZK_NODE_QUEUES}/{private_queue.id}")
 
         existing_routing_key = (
             db.query(QueueRoutingKey)

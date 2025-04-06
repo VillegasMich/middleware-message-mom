@@ -6,7 +6,8 @@ from collections import deque
 from ..models.topic import Topic
 from ..models.queue import Queue
 from ..models.queue_routing_key import QueueRoutingKey
-from zookeeper import zk
+from zookeeper import zk, ZK_NODE_QUEUES
+
 
 
 class TopicRepository:
@@ -53,6 +54,8 @@ class TopicRepository:
                 self.db.add(private_queue)
                 self.db.commit()
                 self.db.refresh(private_queue)
+                zk.ensure_path(f"{ZK_NODE_QUEUES}/{private_queue.id}")
+
 
             existing_routing_key = (
                 self.db.query(QueueRoutingKey)
