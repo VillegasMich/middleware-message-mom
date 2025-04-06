@@ -149,3 +149,20 @@ class Client:
             except grpc.RpcError as e:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                
+    @staticmethod
+    def send_grpc_get_all_topic_queues(user_id:int,remote_host:str):
+        with grpc.insecure_channel(remote_host) as channel:
+            stub = Service_pb2_grpc.UserServiceStub(channel)
+            print(dir(stub))
+            request = Service_pb2.GetUserTopicQueuesRequest(user_id=user_id)
+            try:
+                response = stub.GetUserTopicQueues(request)
+                print("Response received from remote service:", response)
+                remote_queues_list = [{'id': q.id, 'name': q.name}
+                                      for q in response.queues]
+                return remote_queues_list
+            except grpc.RpcError as e:
+                print(
+                    f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+

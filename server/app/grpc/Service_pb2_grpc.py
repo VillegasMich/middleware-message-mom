@@ -599,12 +599,23 @@ class UserServiceStub(object):
                 request_serializer=Service__pb2.RegisterRequest.SerializeToString,
                 response_deserializer=Service__pb2.RegisterResponse.FromString,
                 _registered_method=True)
+        self.GetUserTopicQueues = channel.unary_unary(
+                '/UserService/GetUserTopicQueues',
+                request_serializer=Service__pb2.GetUserTopicQueuesRequest.SerializeToString,
+                response_deserializer=Service__pb2.GetQueuesResponse.FromString,
+                _registered_method=True)
 
 
 class UserServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def Register(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetUserTopicQueues(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -617,6 +628,11 @@ def add_UserServiceServicer_to_server(servicer, server):
                     servicer.Register,
                     request_deserializer=Service__pb2.RegisterRequest.FromString,
                     response_serializer=Service__pb2.RegisterResponse.SerializeToString,
+            ),
+            'GetUserTopicQueues': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetUserTopicQueues,
+                    request_deserializer=Service__pb2.GetUserTopicQueuesRequest.FromString,
+                    response_serializer=Service__pb2.GetQueuesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -646,6 +662,33 @@ class UserService(object):
             '/UserService/Register',
             Service__pb2.RegisterRequest.SerializeToString,
             Service__pb2.RegisterResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetUserTopicQueues(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/UserService/GetUserTopicQueues',
+            Service__pb2.GetUserTopicQueuesRequest.SerializeToString,
+            Service__pb2.GetQueuesResponse.FromString,
             options,
             channel_credentials,
             insecure,

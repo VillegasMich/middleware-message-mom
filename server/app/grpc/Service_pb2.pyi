@@ -148,3 +148,9 @@ class RegisterResponse(_message.Message):
     STATUS_CODE_FIELD_NUMBER: _ClassVar[int]
     status_code: int
     def __init__(self, status_code: _Optional[int] = ...) -> None: ...
+
+class GetUserTopicQueuesRequest(_message.Message):
+    __slots__ = ("user_id",)
+    USER_ID_FIELD_NUMBER: _ClassVar[int]
+    user_id: int
+    def __init__(self, user_id: _Optional[int] = ...) -> None: ...

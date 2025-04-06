@@ -96,11 +96,9 @@ async def get_user_queues_topics(
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
-            server_queue = zk.get_children(f"/servers-metadata/{server}/Queues") or []
-            for queue in server_queue:
-                user_queues.append(
-                    queue
-                )  # TODO: Use grpc to check if user is suscribed
+            server_ip, _ = server.split(":")
+            remote_queues = Client.send_grpc_get_all_topic_queues(current_user.id, server_ip + ":8080")
+            user_queues.extend(remote_queues)
 
     if len(user_queues) > 0:
         return {"message": "Queues listed successfully", "queues": user_queues}

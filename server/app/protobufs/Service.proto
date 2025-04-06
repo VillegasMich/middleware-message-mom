@@ -107,6 +107,7 @@ message GetTopicsResponse {
 
 service UserService {
     rpc Register (RegisterRequest) returns (RegisterResponse);
+    rpc GetUserTopicQueues (GetUserTopicQueuesRequest) returns (GetQueuesResponse);
 }
 
 message RegisterRequest {
@@ -119,3 +120,6 @@ message RegisterResponse {
     int32 status_code = 1;
 }
 
+message GetUserTopicQueuesRequest {
+    int32 user_id = 1;    
+}
