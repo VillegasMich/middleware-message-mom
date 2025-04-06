@@ -30,6 +30,10 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
         return Service_pb2.ConsumeMessageResponse(status_code=1, content=content)
     
     def ConsumeTopicMessage(self, request, context):
+        print('--------Consume topic request------')
+        print(request)
+        print('-----------------------------------')
+        
         db = next(get_db())
         repo = MessageRepository(db)
         repo_response = repo.consume_topic_message(request)

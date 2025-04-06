@@ -139,6 +139,7 @@ class MessageRepository:
             return "It is not your turn!"
 
     def consume_topic_message(self, request):
+        
         private_queue = (
             self.db.query(Queue)
             .filter(
