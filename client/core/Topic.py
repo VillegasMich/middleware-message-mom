@@ -167,6 +167,7 @@ class Topic:
     @staticmethod
     def pull_message(queue_id: int):
         SERVER_ZOO = get_server_zoo()
+        print(queue_id)
         response = requests.get(
             f"{SERVER_ZOO}/topics/queues/{queue_id}/consume", headers=Util.get_headers()
         )

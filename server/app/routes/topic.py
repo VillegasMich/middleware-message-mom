@@ -360,7 +360,19 @@ async def subscribe(
         private_queue = db.query(Queue).filter(Queue.name == queue_name).first()
 
         if not private_queue:
+            
+            new_id = 1
+            servers: list[str] = zk.get_children("/servers") or []
+            for server in servers:
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
+                for queue_id in server_queues:
+                    if int(queue_id) >= new_id:
+                        new_id = int(queue_id) + 1
+
             private_queue = Queue(
+                id=new_id,
                 name=queue_name,
                 user_id=current_user.id,
                 topic_id=topic_id,
