@@ -109,7 +109,7 @@ class Client:
                 id=topic_id, user_name=user_name, user_id=user_id)
             try:
                 response = stub.ConsumeTopicMessage(request)
-                print("Response received from remote service:", response)
+                print("Consume Response received from remote service:", response)
                 remote_messages_list = [m for m in response.messages]
                 result = [{"content": m.content, "id": m.id} for m in remote_messages_list]
                 return result

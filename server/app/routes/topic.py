@@ -300,6 +300,10 @@ async def consume_message(
         )
         .first()
     )
+
+    print('-------------------Private queue local')
+    print(private_queue)
+    print('-------------------Private queue local')
     
     if private_queue:
         messages = (
