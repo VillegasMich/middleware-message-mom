@@ -22,8 +22,6 @@ class UserService(Service_pb2_grpc.UserServiceServicer):
         
         response = Service_pb2.GetQueuesResponse()
 
-        print(queues)
-
         for queue in queues:
             queue_item = response.queues.add()
             queue_item.id = queue.id

@@ -158,17 +158,14 @@ async def publish_message(
         }
     else:
         servers: list[str] = zk.get_children("/servers") or []
-        print(servers)
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
                     zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
-                print(server_queues)
                 for queue in server_queues:
                     print("Searching in servers for queues")
                     if queue == str(queue_id):
-                        print("send grpc to send message to queue")
                         server_ip, _ = server.split(":")
                         response = Client.send_grpc_message(
                             "queue",
@@ -200,7 +197,6 @@ async def consume_message(
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
-    print(queue)
     if queue:
         is_subscribed = (
             db.query(UserQueue)
@@ -269,7 +265,6 @@ async def consume_message(
                 )
                 for queue in server_queues:
                     if queue == str(queue_id):
-                        print("send grpc to consume message")
                         server_ip, _ = server.split(":")
                         response = Client.send_grpc_consume_queue(queue_id,current_user.id,current_user.name,server_ip + ":8080")
                         return {

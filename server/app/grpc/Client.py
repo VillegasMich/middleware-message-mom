@@ -159,9 +159,6 @@ class Client:
                 print("Response received from remote service:", response)
                 remote_queues_list = [{'id': q.id, 'name': q.name}
                                       for q in response.queues]
-                print('-------------------------------------')
-                print(remote_queues_list)
-                print('-------------------------------------')
                 return remote_queues_list
             except grpc.RpcError as e:
                 print(
