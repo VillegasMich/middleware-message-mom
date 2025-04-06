@@ -99,7 +99,8 @@ async def get_user_queues_topics(
             server_ip, _ = server.split(":")
             remote_queues = Client.send_grpc_get_all_topic_queues(current_user.id, server_ip + ":8080")
             user_queues.extend(remote_queues)
-
+    
+    print(user_queues)
     if len(user_queues) > 0:
         return {"message": "Queues listed successfully", "queues": user_queues}
 
