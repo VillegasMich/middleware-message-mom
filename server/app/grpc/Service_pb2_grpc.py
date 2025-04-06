@@ -47,7 +47,7 @@ class MessageServiceStub(object):
         self.ConsumeTopicMessage = channel.unary_unary(
                 '/MessageService/ConsumeTopicMessage',
                 request_serializer=Service__pb2.ConsumeMessageRequest.SerializeToString,
-                response_deserializer=Service__pb2.ConsumeMessageResponse.FromString,
+                response_deserializer=Service__pb2.ConsumeMessagesResponse.FromString,
                 _registered_method=True)
 
 
@@ -88,7 +88,7 @@ def add_MessageServiceServicer_to_server(servicer, server):
             'ConsumeTopicMessage': grpc.unary_unary_rpc_method_handler(
                     servicer.ConsumeTopicMessage,
                     request_deserializer=Service__pb2.ConsumeMessageRequest.FromString,
-                    response_serializer=Service__pb2.ConsumeMessageResponse.SerializeToString,
+                    response_serializer=Service__pb2.ConsumeMessagesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -171,7 +171,7 @@ class MessageService(object):
             target,
             '/MessageService/ConsumeTopicMessage',
             Service__pb2.ConsumeMessageRequest.SerializeToString,
-            Service__pb2.ConsumeMessageResponse.FromString,
+            Service__pb2.ConsumeMessagesResponse.FromString,
             options,
             channel_credentials,
             insecure,
