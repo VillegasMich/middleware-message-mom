@@ -36,10 +36,10 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
 
         response = Service_pb2.ConsumeMessagesResponse()
 
-        for content in repo_response.content:
+        for content in repo_response['content']:
             response.messages.append(content)
 
-        for id in repo_response.ids:
+        for id in repo_response['ids']:
             response.ids.append(id)
 
         db.close()

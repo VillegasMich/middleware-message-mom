@@ -149,8 +149,6 @@ class MessageRepository:
             .first()
         )
 
-        print("\n", private_queue.id, "\n")
-
         if private_queue:
             messages = (
                 self.db.query(Message)
