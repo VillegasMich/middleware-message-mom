@@ -300,9 +300,7 @@ async def consume_message(
         )
         .first()
     )
-
-    print("\n", private_queue.id, "\n")
-
+    
     if private_queue:
         messages = (
             db.query(Message)
