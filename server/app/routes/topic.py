@@ -336,8 +336,8 @@ async def consume_message(
                         )
                         return {
                             "message": "Message consumed successfully",
-                            "content": [message.content for message in messages],
-                            "ids": [message.id for message in messages],
+                            "content": [message['content'] for message in messages],
+                            "ids": [message['id'] for message in messages],
                         }
     raise HTTPException(status_code=404, detail="Private queue not found")
 
