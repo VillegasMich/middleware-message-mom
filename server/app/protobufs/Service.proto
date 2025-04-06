@@ -17,6 +17,11 @@ message MessageResponse {
     int32 status_code = 1; 
 }
 
+message ConsumedMessage {
+    string content = 1;
+    int32 id = 2;
+}
+
 message ConsumeMessageRequest {
     int32 id = 1;
     string user_name = 2;
@@ -30,8 +35,7 @@ message ConsumeMessageResponse {
 
 message ConsumeMessagesResponse {
     int32 status_code = 1;
-    repeated string messages = 2;
-    repeated int32 ids = 3; 
+    repeated ConsumedMessage messages = 2; 
 }
 
 

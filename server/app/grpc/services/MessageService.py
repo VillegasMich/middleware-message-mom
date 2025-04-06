@@ -36,14 +36,10 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
 
         response = Service_pb2.ConsumeMessagesResponse()
 
-        print("MIRAAAR")
-        print(repo_response)
-
-        for content in repo_response['content']:
-            response.messages.append(content)
-
-        for id in repo_response['ids']:
-            response.ids.append(id)
+        for content, id in zip(repo_response['content'], repo_response['ids']):
+            message_item = response.messages.add() 
+            message_item.content = content
+            message_item.id = id
 
         print(response)
 

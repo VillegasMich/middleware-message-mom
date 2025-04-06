@@ -111,9 +111,7 @@ class Client:
                 response = stub.ConsumeTopicMessage(request)
                 print("Response received from remote service:", response)
                 remote_messages_list = [m for m in response.messages]
-                remote_ids_list = [i for i in response.ids]
-                result = [{"content": m, "id": i} for m, i in zip(remote_messages_list, remote_ids_list)]
-                
+                result = [{"content": m.content, "id": m.id} for m in remote_messages_list]
                 return result
             except grpc.RpcError as e:
                 print(
