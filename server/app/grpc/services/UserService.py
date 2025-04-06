@@ -17,7 +17,7 @@ class UserService(Service_pb2_grpc.UserServiceServicer):
     def GetUserTopicQueues(self, request, context):
         db = next(get_db())
         repo = UserRepository(db)
-        queues = repo.get_topic_queues()
+        queues = repo.get_topic_queues(request)
         db.close()
         
         response = Service_pb2.GetQueuesResponse()
