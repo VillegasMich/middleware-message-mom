@@ -149,6 +149,9 @@ class MessageRepository:
             .first()
         )
 
+        print('-------------Private queue------------------')
+        print(private_queue)
+        print('-------------------------------')
         if private_queue:
             messages = (
                 self.db.query(Message)
@@ -157,6 +160,10 @@ class MessageRepository:
                 .order_by(Message.created_at.asc())
                 .all()
             )
+
+            print('-------------------------------')
+            print(messages)
+            print('-------------------------------')
 
             if not messages:
                 raise HTTPException(status_code=404, detail="No messages found")
