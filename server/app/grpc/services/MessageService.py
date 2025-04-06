@@ -36,6 +36,8 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
 
         response = Service_pb2.ConsumeMessagesResponse()
 
+        print(repo_response)
+        
         for content in repo_response['content']:
             response.messages.append(content)
 
