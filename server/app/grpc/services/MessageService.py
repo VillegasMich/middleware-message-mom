@@ -36,12 +36,18 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
 
         response = Service_pb2.ConsumeMessagesResponse()
 
+        print('---------------------------------------')
+        print(repo_response)
+        print('---------------------------------------')
+
         for content, id in zip(repo_response['content'], repo_response['ids']):
             message_item = response.messages.add() 
             message_item.content = content
             message_item.id = id
 
+        print('---------------------------------------')
         print(response)
+        print('---------------------------------------')
 
         db.close()
         print("Request is received: " + str(request))
