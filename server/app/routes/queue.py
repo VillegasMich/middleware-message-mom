@@ -390,6 +390,7 @@ async def unsubscribe(
 
         return {"message": "Successfully unsubscribed from the queue"}
     else:
+        print('INSIDE ELSE----------------------------')
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
