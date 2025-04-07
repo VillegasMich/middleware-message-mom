@@ -118,8 +118,9 @@ async def delete_queue(
                     zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    if queue == queue_id:
-                        print("send grpc to delete queue")
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        Client.send_grpc_queue_delete(queue_id,current_user.id,server_ip+":8080")
                         return {
                             "message": "Queue deleted successfully",
                             "queue_id": queue_id,

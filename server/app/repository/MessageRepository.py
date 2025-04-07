@@ -114,7 +114,6 @@ class MessageRepository:
                 .filter(QueueMessage.message_id == message_id)
                 .count()
             )
-            print(remaining_refs)
 
             if remaining_refs == 0:
                 message_to_delete = (
@@ -161,10 +160,6 @@ class MessageRepository:
                 .order_by(Message.created_at.asc())
                 .all()
             )
-
-            print('-------------------------------')
-            print(messages)
-            print('-------------------------------')
 
             if not messages:
                 raise HTTPException(status_code=404, detail="No messages found")

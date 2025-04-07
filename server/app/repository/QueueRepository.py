@@ -7,6 +7,7 @@ from ..models.queue import Queue
 from ..models.user_queue import user_queue as UserQueue
 from ..RoundRobinManager import RoundRobinManager
 from app.core.rrmanager import get_round_robin_manager
+from zookeeper import zk, ZK_NODE_QUEUES
 
 
 class QueueRepository:
@@ -66,3 +67,20 @@ class QueueRepository:
             request.user_name)
         
         print(round_robin_manager.user_queues_dict)
+
+    def delete(self, request):
+        round_robin_manager: RoundRobinManager = get_round_robin_manager()
+        queue = self.db.query(Queue).filter(Queue.id == request.id).first()
+        if queue:
+            if queue.user_id != request.user_id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="You do not have permission to delete this queue.",
+                )
+
+            self.db.delete(queue)
+            self.db.commit()
+
+            zk.delete(f"{ZK_NODE_QUEUES}/{request.id}", recursive=True)
+            round_robin_manager.user_queues_dict.pop(request.id, None)
+            return {"message": "Queue deleted successfully", "queue_id": request.id}
