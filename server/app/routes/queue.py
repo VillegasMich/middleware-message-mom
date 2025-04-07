@@ -398,8 +398,7 @@ async def unsubscribe(
                     zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    if queue == queue_id:
-                        print(queue_id)
+                    if queue == str(queue_id):
                         server_ip, _ = server.split(":")
                         response = Client.send_grpc_queue_unsubscribe(
                             queue_id,
