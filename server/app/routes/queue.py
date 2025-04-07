@@ -398,9 +398,16 @@ async def unsubscribe(
                 )
                 for queue in server_queues:
                     if queue == queue_id:
-                        print("send grpc to unsubscribe from queue")
-                        return {
-                            "message": "Successfully unsubscribed from the queue",
-                            "queue_id": queue_id,
-                        }
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_queue_unsubscribe(
+                            queue_id,
+                            current_user.id,
+                            current_user.name,
+                            server_ip + ":8080",
+                        )
+                        if response.status_code == 1:
+                            return {
+                                "message": "Successfully unsubscribed to the queue",
+                                "queue_id": queue_id,
+                            }
     raise HTTPException(status_code=404, detail="Queue not found")

@@ -21,7 +21,7 @@ class QueueRepository:
 
         return queues
     
-    def subscribe_queue(self, request):
+    def subscribe(self, request):
         round_robin_manager: RoundRobinManager = get_round_robin_manager()
 
         existing_queue = self.db.query(Queue).filter(
@@ -84,3 +84,35 @@ class QueueRepository:
             zk.delete(f"{ZK_NODE_QUEUES}/{request.id}", recursive=True)
             round_robin_manager.user_queues_dict.pop(request.id, None)
             return {"message": "Queue deleted successfully", "queue_id": request.id}
+        
+    def unsubscribe(self, request):
+        round_robin_manager: RoundRobinManager = get_round_robin_manager()
+        existing_queue = self.db.query(Queue).filter(Queue.id == request.queue_id).first()
+        
+        if existing_queue:
+            user_queue_entry = (
+                self.db.query(UserQueue)
+                .filter(
+                    UserQueue.user_id == request.user_id,
+                    UserQueue.queue_id == existing_queue.id,
+                )
+                .first()
+            )
+
+            if not user_queue_entry:
+                raise HTTPException(status_code=409, detail="User was not subscribed")
+
+            self.db.delete(user_queue_entry)
+            self.db.commit()
+
+            if request.queue_id in round_robin_manager.user_queues_dict:
+                round_robin_manager.user_queues_dict[request.queue_id] = deque(
+                    user
+                    for user in round_robin_manager.user_queues_dict[request.queue_id]
+                    if user != request.user_name
+                )
+
+                if not round_robin_manager.user_queues_dict[request.queue_id]:
+                    del round_robin_manager.user_queues_dict[request.queue_id]
+
+            return {"message": "Successfully unsubscribed from the queue"}

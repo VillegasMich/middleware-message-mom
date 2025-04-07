@@ -37,14 +37,19 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
         db = next(get_db())
         
         repo = QueueRepository(db)
-        repo.subscribe_queue(request)
+        repo.subscribe(request)
         
         db.close()
         print("Request is received: " + str(request))
         return Service_pb2.SubscribeResponse(status_code=1)
     
     def UnSubscribe(self, request, context):
-
+        db = next(get_db())
+        
+        repo = QueueRepository(db)
+        repo.unsubscribe(request)
+        
+        db.close()
         print("Request is received: " + str(request))
         return Service_pb2.SubscribeResponse(status_code=1)
 

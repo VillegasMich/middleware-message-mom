@@ -50,7 +50,22 @@ class Client:
             except grpc.RpcError as e:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
-
+    
+    @staticmethod
+    def send_grpc_queue_unsubscribe(queue_id: int, user_id: int, user_name: str, remote_host: str):
+        with grpc.insecure_channel(remote_host) as channel:
+            stub = Service_pb2_grpc.QueueServiceStub(channel)
+            print(dir(stub))
+            request = Service_pb2.SubscribeRequest(
+                queue_id=queue_id, user_id=user_id, user_name=user_name)
+            try:
+                response = stub.UnSubscribe(request)
+                print("Response received from remote service:", response)
+                return response
+            except grpc.RpcError as e:
+                print(
+                    f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+    
     @staticmethod
     def send_grpc_topic_subscribe(topic_id: int, user_id: int, user_name: str, routing_key: str, remote_host:str):
          with grpc.insecure_channel(remote_host) as channel:
@@ -177,3 +192,4 @@ class Client:
             except grpc.RpcError as e:
                 print(
                     f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+    
