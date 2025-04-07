@@ -6,7 +6,8 @@ from collections import deque
 from ..models.topic import Topic
 from ..models.queue import Queue
 from ..models.queue_routing_key import QueueRoutingKey
-from zookeeper import zk, ZK_NODE_QUEUES
+from ..models.queue_message import QueueMessage
+from zookeeper import zk, ZK_NODE_QUEUES, ZK_NODE_TOPICS
 
 
 
@@ -19,6 +20,26 @@ class TopicRepository:
         topics = query.all()
         
         return topics
+    
+    def delete(self, request):
+        topic = self.db.query(Topic).filter(Topic.id == request.id).first()
+        if topic:
+            if topic.user_id != request.user_id:
+                raise HTTPException(
+                    status_code=403,
+                    detail="You do not have permission to delete this topic",
+                )
+
+            bound_queues = self.db.query(Queue).filter(Queue.topic_id == topic.id).all()
+
+            for queue in bound_queues:
+                self.db.query(QueueMessage).filter(QueueMessage.queue_id == queue.id).delete()
+                self.db.delete(queue)
+
+            self.db.delete(topic)
+            self.db.commit()
+
+            zk.delete(f"{ZK_NODE_TOPICS}/{topic.id}", recursive=True)
     
     def subscribe(self, request):
         print('\n'+ str(request.topic_id))

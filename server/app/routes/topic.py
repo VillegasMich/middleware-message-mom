@@ -195,11 +195,14 @@ async def delete_topic(
                     zk.get_children(f"/servers-metadata/{server}/Topics") or []
                 )
                 for topic in server_topic:
-                    print("Send grcp to delete topic")
-                    return {
-                        "message": "Topic deleted successfully",
-                        "topic_name": topic,
-                    }
+                    if topic == str(topic_id):
+                        server_ip, _ = server.split(":")
+                        Client.send_grpc_topic_delete(topic_id,current_user.id,server_ip+":8080")
+                        return {
+                            "message": "Topic deleted successfully",
+                            "topic_name": topic,
+                        }
+                    
     raise HTTPException(status_code=404, detail="Topic not found")
 
 
