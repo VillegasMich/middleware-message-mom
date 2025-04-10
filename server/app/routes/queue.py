@@ -163,6 +163,21 @@ async def delete_queue(
 
         zk.delete(f"{ZK_NODE_QUEUES}/{queue_id}", recursive=True)
         round_robin_manager.user_queues_dict.pop(queue_id, None)
+
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
+                for queue in server_queues:
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        Client.send_grpc_queue_delete(
+                            queue_id, current_user.id, server_ip + ":8080"
+                        )
+                        break
+
         return {"message": "Queue deleted successfully", "queue_id": queue_id}
 
     else:
@@ -178,10 +193,11 @@ async def delete_queue(
                         Client.send_grpc_queue_delete(
                             queue_id, current_user.id, server_ip + ":8080"
                         )
-                        return {
-                            "message": "Queue deleted successfully",
-                            "queue_id": queue_id,
-                        }
+                        break
+                return {
+                    "message": "Queue deleted successfully",
+                    "queue_id": queue_id,
+                }
     raise HTTPException(status_code=404, detail="Queue not found.")
 
 
@@ -196,10 +212,6 @@ async def publish_message(
     node_info = None
 
     if existing_queue:
-        data, _ = zk.get(f"{ZK_NODE_QUEUES}/{existing_queue.id}")
-        node_info = json.loads(data.decode())
-
-    if existing_queue and node_info.get("leader"):
         new_message = Message(
             content=message.content,
             routing_key=message.routing_key,
@@ -228,10 +240,7 @@ async def publish_message(
                 )
                 for queue in server_queues:
                     print("Searching in servers for queues")
-                    # Extract dato to know if it is the leader
-                    data, _ = zk.get(f"/servers-metadata/{server}/Queues/{queue}")
-                    node_info = json.loads(data.decode())
-                    if queue == str(queue_id) and node_info.get("leader"):
+                    if queue == str(queue_id):
                         server_ip, _ = server.split(":")
                         response = Client.send_grpc_message(
                             "queue",
