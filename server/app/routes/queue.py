@@ -83,7 +83,7 @@ async def create_queue(
     db.refresh(new_queue)
 
     # Choose leader and follower servers
-    if len(servers) > 2:
+    if len(servers) >= 2:
         servers.remove(SERVER_ADDR)
         follower_ip = sample(servers, 1)
         leader_path = f"{ZK_NODE_QUEUES}/{new_queue.id}"
