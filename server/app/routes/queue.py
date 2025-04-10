@@ -52,9 +52,9 @@ async def get_queues(
     seen_ids = set()
     unique_queues = []
     for queue in queues:
-        if queue.id not in seen_ids:
+        if queue["id"] not in seen_ids:
             unique_queues.append(queue)
-            seen_ids.add(queue.id)
+            seen_ids.add(queue["id"])
 
     return {"message": "Queues listed successfully", "queues": unique_queues}
 
