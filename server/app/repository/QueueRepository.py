@@ -120,17 +120,15 @@ class QueueRepository:
 
     def create(self, request):
         # Check if in the current server the queue exists
-        existing_queue = (
-            self.db.query(Queue).filter(Queue.name == request.queue_name).first()
-        )
+        existing_queue = self.db.query(Queue).filter(Queue.name == request.name).first()
         if existing_queue:
             raise HTTPException(status_code=400, detail="Queue already exists")
 
-        new_id = request.new_id
+        new_id = request.id
 
         new_queue = Queue(
             id=new_id,
-            name=request.queue_name,
+            name=request.name,
             is_private=False,
             user_id=request.user_id,
         )

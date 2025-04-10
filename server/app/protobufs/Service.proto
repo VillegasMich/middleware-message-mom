@@ -53,6 +53,12 @@ message Queue {
     string name = 2;
 }
 
+message CreateQueueRequest {
+    int32 id = 1;
+    string name = 2;
+    int32 user_id = 3;
+}
+
 message GetQueuesRequest {
     int32 allQueues = 1;
 }

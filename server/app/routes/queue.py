@@ -109,6 +109,7 @@ async def create_queue(
         Client.send_grpc_queue_create(
             new_id,
             queue.name,
+            current_user.id,
             server_ip,
         )
 
