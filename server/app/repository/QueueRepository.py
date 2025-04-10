@@ -15,17 +15,18 @@ class QueueRepository:
         self.db = db
 
     def all(self):
-        query = self.db.query(Queue).options(joinedload(Queue.owner))  
+        query = self.db.query(Queue).options(joinedload(Queue.owner))
         query = query.filter(Queue.is_private == False)
         queues = query.all()
 
         return queues
-    
+
     def subscribe(self, request):
         round_robin_manager: RoundRobinManager = get_round_robin_manager()
 
-        existing_queue = self.db.query(Queue).filter(
-            Queue.id == request.queue_id).first()
+        existing_queue = (
+            self.db.query(Queue).filter(Queue.id == request.queue_id).first()
+        )
 
         if existing_queue.is_private:
             is_invited = (
@@ -51,8 +52,7 @@ class QueueRepository:
         )
 
         if user_queue_entry:
-            raise HTTPException(
-                status_code=409, detail="User already subscribed")
+            raise HTTPException(status_code=409, detail="User already subscribed")
 
         new_subscription = UserQueue(
             user_id=request.user_id, queue_id=existing_queue.id
@@ -63,9 +63,8 @@ class QueueRepository:
         if request.queue_id not in round_robin_manager.user_queues_dict:
             round_robin_manager.user_queues_dict[request.queue_id] = deque()
 
-        round_robin_manager.user_queues_dict[request.queue_id].append(
-            request.user_name)
-        
+        round_robin_manager.user_queues_dict[request.queue_id].append(request.user_name)
+
         print(round_robin_manager.user_queues_dict)
 
     def delete(self, request):
@@ -84,11 +83,13 @@ class QueueRepository:
             zk.delete(f"{ZK_NODE_QUEUES}/{request.id}", recursive=True)
             round_robin_manager.user_queues_dict.pop(request.id, None)
             return {"message": "Queue deleted successfully", "queue_id": request.id}
-        
+
     def unsubscribe(self, request):
         round_robin_manager: RoundRobinManager = get_round_robin_manager()
-        existing_queue = self.db.query(Queue).filter(Queue.id == request.queue_id).first()
-        
+        existing_queue = (
+            self.db.query(Queue).filter(Queue.id == request.queue_id).first()
+        )
+
         if existing_queue:
             user_queue_entry = (
                 self.db.query(UserQueue)
@@ -116,3 +117,23 @@ class QueueRepository:
                     del round_robin_manager.user_queues_dict[request.queue_id]
 
             return {"message": "Successfully unsubscribed from the queue"}
+
+    def create(self, request):
+        # Check if in the current server the queue exists
+        existing_queue = self.db.query(Queue).filter(Queue.name == request.name).first()
+        if existing_queue:
+            raise HTTPException(status_code=400, detail="Queue already exists")
+
+        new_id = request.id
+
+        new_queue = Queue(
+            id=new_id,
+            name=request.name,
+            is_private=False,
+            user_id=request.user_id,
+        )
+        self.db.add(new_queue)
+        self.db.commit()
+        self.db.refresh(new_queue)
+
+        print("\n QUEUE REPLICATED \n")

@@ -1,6 +1,7 @@
 import fnmatch
 from typing import Optional
-
+import json
+from random import sample
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
 from app.grpc.Client import Client
@@ -14,7 +15,14 @@ from app.models.user_queue import user_queue as UserQueue
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from zookeeper import SERVER_IP, SERVER_PORT, ZK_NODE_TOPICS, zk, ZK_NODE_QUEUES
+from zookeeper import (
+    SERVER_ADDR,
+    SERVER_IP,
+    SERVER_PORT,
+    ZK_NODE_TOPICS,
+    zk,
+    ZK_NODE_QUEUES,
+)
 
 router = APIRouter()
 
@@ -46,15 +54,27 @@ async def get_topics(
         query = query.filter(Topic.user_id == current_user.id)
 
     topics = query.all()
-    # Traemos los topicos del zk o mandamos un grpc a cada servidor para que las entreguen ???
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
-            remote_queues = Client.send_grpc_get_all_topics(server_ip + ":8080")
-            topics.extend(remote_queues)
+            remote_topics = Client.send_grpc_get_all_topics(server_ip + ":8080") or []
+            for remote_topic in remote_topics:
+                topics.append(
+                    Topic(id=remote_topic.get("id"), name=remote_topic.get("name"))
+                )
+            # topics.extend(remote_queues)
 
-    return {"message": "Topics listed successfully", "topics": topics}
+    seen_ids = set()
+    unique_topics = []
+    for topic in topics:
+        if topic.id not in seen_ids:
+            unique_topics.append(topic)
+            seen_ids.add(topic.id)
+
+    unique_topics.sort(key=lambda q: q.id)
+
+    return {"message": "Topics listed successfully", "topics": unique_topics}
 
 
 # Get the queue related to a topic (not taking into account routing key)
@@ -97,7 +117,9 @@ async def get_user_queues_topics(
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
-            remote_queues = Client.send_grpc_get_all_topic_queues(current_user.id, server_ip + ":8080")
+            remote_queues = Client.send_grpc_get_all_topic_queues(
+                current_user.id, server_ip + ":8080"
+            )
             user_queues.extend(remote_queues)
 
     if len(user_queues) > 0:
@@ -155,7 +177,44 @@ async def create_topic(
     db.commit()
     db.refresh(new_topic)
 
-    zk.ensure_path(f"{ZK_NODE_TOPICS}/{new_topic.id}")
+    if len(servers) >= 2:
+        print("\n REPLICATION \n")
+        servers.remove(SERVER_ADDR)
+        follower_ip = sample(servers, 1)[0]
+        leader_path = f"{ZK_NODE_TOPICS}/{new_topic.id}"
+        follower_path = f"/servers-metadata/{follower_ip}/Topics/{new_topic.id}"
+        print("\n FOLLOWER PATH: " + str(follower_path) + "\n")
+        zk.ensure_path(ZK_NODE_TOPICS)
+        zk.ensure_path(f"/servers-metadata/{follower_ip}/Topics")
+        # Data to store in ZooKeeper
+        payload_leader = json.dumps(
+            {
+                "leader": True,
+            }
+        ).encode()
+
+        payload_follower = json.dumps(
+            {
+                "leader": False,
+            }
+        ).encode()
+
+        server_ip, _ = follower_ip.split(":")
+        response = Client.send_grpc_topic_create(
+            new_id, topic.name, current_user.id, server_ip + ":8080"
+        )
+
+        # Create ZooKeeper entries
+        zk.create(leader_path, payload_leader)
+        zk.create(follower_path, payload_follower)
+        return {"message": "Topic created successfully", "topic_id": new_topic.id}
+
+    payload_leader = json.dumps(
+        {
+            "leader": True,
+        }
+    ).encode()
+    zk.create(f"{ZK_NODE_TOPICS}/{new_topic.id}", payload_leader)
 
     return {"message": "Topic created successfully", "topic_id": new_topic.id}
 
@@ -186,8 +245,23 @@ async def delete_topic(
 
         zk.delete(f"{ZK_NODE_TOPICS}/{topic.id}", recursive=True)
 
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_topic = (
+                    zk.get_children(f"/servers-metadata/{server}/Topics") or []
+                )
+                for topic_zk_id in server_topic:
+                    if topic_zk_id == str(topic_id):
+                        server_ip, _ = server.split(":")
+                        Client.send_grpc_topic_delete(
+                            topic_id, current_user.id, server_ip + ":8080"
+                        )
+
         return {"message": "Topic deleted successfully", "topic_name": topic.name}
+
     else:
+        was_deleted = False
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -197,12 +271,15 @@ async def delete_topic(
                 for topic in server_topic:
                     if topic == str(topic_id):
                         server_ip, _ = server.split(":")
-                        Client.send_grpc_topic_delete(topic_id,current_user.id,server_ip+":8080")
-                        return {
-                            "message": "Topic deleted successfully",
-                            "topic_name": topic,
-                        }
-                    
+                        Client.send_grpc_topic_delete(
+                            topic_id, current_user.id, server_ip + ":8080"
+                        )
+                    was_deleted = True
+        if was_deleted:
+            return {
+                "message": "Topic deleted successfully",
+                "topic_name": topic,
+            }
     raise HTTPException(status_code=404, detail="Topic not found")
 
 
@@ -248,15 +325,8 @@ async def publish_message(
             for queue in matching_queues
         ]
         db.add_all(queue_messages)
-
         db.commit()
 
-        return {
-            "message": "Message published successfully",
-            "topic_id": existing_topic.id,
-            "message_id": new_message.id,
-        }
-    else:
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -273,17 +343,47 @@ async def publish_message(
                             message.routing_key,
                             server_ip + ":8080",
                         )
-                        if response == 1:
-                            return {
-                                "message": "Message published successfully",
-                                "queue_id": "",
-                                "message_id": "",
-                            }
-                        else:
+                        if response != 1:
                             raise HTTPException(
                                 status_code=500,
                                 detail="Client wasn't able to save the message",
                             )
+
+        return {
+            "message": "Message published successfully",
+            "topic_id": existing_topic.id,
+            "message_id": new_message.id,
+        }
+    else:
+        was_message_sended = False
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_topic = (
+                    zk.get_children(f"/servers-metadata/{server}/Topics") or []
+                )
+                for topic in server_topic:
+                    if topic == str(topic_id):
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_message(
+                            "topic",
+                            topic_id,
+                            message.content,
+                            message.routing_key,
+                            server_ip + ":8080",
+                        )
+                        if response != 1:
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to save the message",
+                            )
+                        was_message_sended = True
+        if was_message_sended:
+            return {
+                "message": "Message published successfully",
+                "queue_id": "",
+                "message_id": "",
+            }
 
     raise HTTPException(status_code=404, detail="Topic not found")
 
@@ -314,12 +414,6 @@ async def consume_message(
         if not messages:
             raise HTTPException(status_code=404, detail="No messages found")
 
-        return {
-            "message": "Messages consumed successfully",
-            "content": [message.content for message in messages],
-            "ids": [message.id for message in messages],
-        }
-    else:
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -329,17 +423,46 @@ async def consume_message(
                 for queue in server_queue:
                     if queue == str(queue_id):
                         server_ip, _ = server.split(":")
-                        messages = Client.send_grpc_consume_topic(
+                        messages_zk = Client.send_grpc_consume_topic(
                             queue_id,
                             current_user.id,
                             current_user.name,
                             server_ip + ":8080",
                         )
-                        return {
-                            "message": "Message consumed successfully",
-                            "content": [message['content'] for message in messages],
-                            "ids": [message['id'] for message in messages],
-                        }
+
+        return {
+            "message": "Messages consumed successfully",
+            "content": [message.content for message in messages],
+            "ids": [message.id for message in messages],
+        }
+    else:
+        was_message_consumed = False
+        messages = []
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queue = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
+                for queue in server_queue:
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        messages = (
+                            Client.send_grpc_consume_topic(
+                                queue_id,
+                                current_user.id,
+                                current_user.name,
+                                server_ip + ":8080",
+                            )
+                            or []
+                        )
+                        was_message_consumed = True
+        if was_message_consumed:
+            return {
+                "message": "Message consumed successfully",
+                "content": [message["content"] for message in messages],
+                "ids": [message["id"] for message in messages],
+            }
     raise HTTPException(status_code=404, detail="Private queue not found")
 
 
@@ -359,7 +482,6 @@ async def subscribe(
         private_queue = db.query(Queue).filter(Queue.name == queue_name).first()
 
         if not private_queue:
-            
             new_id = 1
             servers: list[str] = zk.get_children("/servers") or []
             for server in servers:
@@ -403,8 +525,6 @@ async def subscribe(
                 status_code=400, detail="Routing key already exists for this queue"
             )
 
-        return {"message": "Successfully subscribed to the topic"}
-    else:
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -421,14 +541,44 @@ async def subscribe(
                             topic.routing_key,
                             server_ip + ":8080",
                         )
-                        if response.status_code == 1:
-                            return {
-                                "message": "Successfully subscribed to the queue",
-                                "topic_id": topic.topic_id,
-                            }
-                        else:
+                        if response.status_code != 1:
                             raise HTTPException(
                                 status_code=500,
                                 detail="Client wasn't able to subscribe",
                             )
+        return {"message": "Successfully subscribed to the topic"}
+    else:
+        was_subscribed = False
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_topic = (
+                    zk.get_children(f"/servers-metadata/{server}/Topics") or []
+                )
+                for topic_zk in server_topic:
+                    if topic_zk == str(topic.topic_id):
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_topic_subscribe(
+                            topic.topic_id,
+                            current_user.id,
+                            current_user.name,
+                            topic.routing_key,
+                            server_ip + ":8080",
+                        )
+                        if response.status_code != 1:
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to subscribe",
+                            )
+                        was_subscribed = True
+        if was_subscribed:
+            return {
+                "message": "Successfully subscribed to the queue",
+                "topic_id": topic.topic_id,
+            }
     raise HTTPException(status_code=404, detail="Topic not found")
+
+
+# TODO: Añadir el unsubscribe
+# Revisar la misma estructura del subcribe de los topicos
+# y la estructura de el unsubscribe de las colas
