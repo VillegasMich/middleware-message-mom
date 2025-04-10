@@ -106,7 +106,7 @@ async def create_queue(
         ).encode()
 
         server_ip, _ = follower_ip.split(":")
-        Client.send_grpc_queue_create(
+        response = Client.send_grpc_queue_create(
             new_id,
             queue.name,
             current_user.id,

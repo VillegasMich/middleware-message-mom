@@ -135,3 +135,5 @@ class QueueRepository:
         self.db.add(new_queue)
         self.db.commit()
         self.db.refresh(new_queue)
+
+        print("\n QUEUE REPLICATED \n")
