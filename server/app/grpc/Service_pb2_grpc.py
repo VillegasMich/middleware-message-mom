@@ -299,7 +299,7 @@ def add_QueueServiceServicer_to_server(servicer, server):
         ),
         "CreateQueues": grpc.unary_unary_rpc_method_handler(
             servicer.CreateQueues,
-            request_deserializer=Service__pb2.Queue.FromString,
+            request_deserializer=Service__pb2.CreateQueueRequest.FromString,
             response_serializer=Service__pb2.CRUDResponse.SerializeToString,
         ),
     }
@@ -451,7 +451,7 @@ class QueueService(object):
             request,
             target,
             "/QueueService/CreateQueues",
-            Service__pb2.Queue.SerializeToString,
+            Service__pb2.CreateQueueRequest.SerializeToString,
             Service__pb2.CRUDResponse.FromString,
             options,
             channel_credentials,
