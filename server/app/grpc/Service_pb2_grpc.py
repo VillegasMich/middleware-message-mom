@@ -235,7 +235,7 @@ class QueueServiceStub(object):
         )
         self.CreateQueues = channel.unary_unary(
             "/QueueService/CreateQueues",
-            request_serializer=Service__pb2.Queue.SerializeToString,
+            request_serializer=Service__pb2.CreateQueueRequest.SerializeToString,
             response_deserializer=Service__pb2.CRUDResponse.FromString,
             _registered_method=True,
         )
