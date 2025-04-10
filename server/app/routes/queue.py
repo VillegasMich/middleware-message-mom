@@ -46,15 +46,19 @@ async def get_queues(
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
-            remote_queues = Client.send_grpc_get_all_queues(server_ip + ":8080")
-            queues.extend(remote_queues)
+            remote_queues = Client.send_grpc_get_all_queues(server_ip + ":8080") or []
+            for remote_queue in remote_queues:
+                queues.append(
+                    Queue(id=remote_queue.get("id"), name=remote_queue.get("name"))
+                )
+            # queues.extend(remote_queues)
 
     seen_ids = set()
     unique_queues = []
     for queue in queues:
-        if queue["id"] not in seen_ids:
+        if queue.id not in seen_ids:
             unique_queues.append(queue)
-            seen_ids.add(queue["id"])
+            seen_ids.add(queue.id)
 
     return {"message": "Queues listed successfully", "queues": unique_queues}
 
