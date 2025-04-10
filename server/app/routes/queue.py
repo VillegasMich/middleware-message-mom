@@ -60,7 +60,7 @@ async def get_queues(
             unique_queues.append(queue)
             seen_ids.add(queue.id)
 
-    unique_queues.sort()
+    unique_queues.sort(key=lambda q: q.id)
 
     return {"message": "Queues listed successfully", "queues": unique_queues}
 

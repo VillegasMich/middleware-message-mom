@@ -64,7 +64,7 @@ async def get_topics(
             unique_topics.append(topic)
             seen_ids.add(topic.id)
 
-    unique_topics.sort()
+    unique_topics.sort(key=lambda q: q.id)
 
     return {"message": "Topics listed successfully", "topics": unique_topics}
 
