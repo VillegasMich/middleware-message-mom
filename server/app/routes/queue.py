@@ -103,7 +103,12 @@ async def create_queue(
             }
         ).encode()
 
-        # TODO: Mandar gRPC para crear colas no incluir replicacion
+        server_ip, _ = follower_ip[0].split(":")
+        Client.send_grpc_queue_create(
+            new_id,
+            queue.name,
+            server_ip,
+        )
 
         # Create ZooKeeper entries
         zk.create(leader_path, payload_leader)

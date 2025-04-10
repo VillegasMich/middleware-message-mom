@@ -45,6 +45,7 @@ service QueueService {
     rpc UnSubscribe (SubscribeRequest) returns (SubscribeResponse);
     rpc Delete (DeleteRequest) returns (CRUDResponse); 
     rpc GetQueues (GetQueuesRequest) returns (GetQueuesResponse);
+    rpc CreateQueues(Queue) returns (CRUDResponse);
 }
 
 message Queue {
