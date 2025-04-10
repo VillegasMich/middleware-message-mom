@@ -233,7 +233,7 @@ class Client:
             stub = Service_pb2_grpc.QueueServiceStub(channel)
             print(dir(stub))
             request = Service_pb2.CreateQueueRequest(
-                id=queue_id, name=queue_name, user_id=int(user_id)
+                id=queue_id, name=queue_name, user_id=user_id
             )
             try:
                 response = stub.CreateQueues(request)
