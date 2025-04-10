@@ -43,12 +43,13 @@ async def get_queues(
     queues = query.all()
 
     servers: list[str] = zk.get_children("/servers") or []
-    print(servers)
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
             remote_queues = Client.send_grpc_get_all_queues(server_ip + ":8080")
             queues.extend(remote_queues)
+
+    queues = set(queues)
 
     return {"message": "Queues listed successfully", "queues": queues}
 
