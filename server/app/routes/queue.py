@@ -110,7 +110,7 @@ async def create_queue(
             new_id,
             queue.name,
             current_user.id,
-            server_ip,
+            server_ip + ":8080",
         )
 
         # Create ZooKeeper entries
