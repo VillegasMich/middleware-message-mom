@@ -1,5 +1,6 @@
 from collections import deque
-
+import json
+from random import sample
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
 from app.core.rrmanager import get_round_robin_manager
@@ -12,7 +13,7 @@ from app.RoundRobinManager import RoundRobinManager
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
-from zookeeper import SERVER_IP, SERVER_PORT, ZK_NODE_QUEUES, zk
+from zookeeper import SERVER_ADDR, SERVER_IP, SERVER_PORT, ZK_NODE_QUEUES, zk
 
 router = APIRouter()
 
@@ -81,8 +82,48 @@ async def create_queue(
     db.commit()
     db.refresh(new_queue)
 
-    zk.ensure_path(f"{ZK_NODE_QUEUES}/{new_queue.id}")
+    # Choose leader and follower servers
+    if len(servers) > 2:
+        servers.remove(SERVER_ADDR)
+        follower_ip = sample(servers, 1)
+        leader_path = f"{ZK_NODE_QUEUES}/{new_queue.id}"
+        follower_path = f"/servers-metadata/{follower_ip}/Queues/{new_queue.id}"
+        zk.ensure_path(ZK_NODE_QUEUES)
+        zk.ensure_path(f"/servers-metadata/{follower_ip}/Queues")
+        # Data to store in ZooKeeper
+        payload_leader = json.dumps(
+            {
+                "leader": True,
+            }
+        ).encode()
+
+        payload_follower = json.dumps(
+            {
+                "leader": False,
+            }
+        ).encode()
+
+        # TODO: Mandar gRPC para crear colas no incluir replicacion
+
+        # Create ZooKeeper entries
+        zk.create(leader_path, payload_leader)
+        zk.create(follower_path, payload_follower)
+
+        round_robin_manager.user_queues_dict[new_queue.id] = deque()
+
+        print("\n", "Leader and Follower queues created", "\n")
+
+        return {"message": "Queue created successfully", "queue_id": new_queue.id}
+
+    payload_leader = json.dumps(
+        {
+            "leader": True,
+        }
+    ).encode()
+    zk.create(f"{ZK_NODE_QUEUES}/{new_queue.id}", payload_leader)
     round_robin_manager.user_queues_dict[new_queue.id] = deque()
+
+    print("\n", "Leader and NO Follower queues created", "\n")
 
     return {"message": "Queue created successfully", "queue_id": new_queue.id}
 
@@ -120,7 +161,9 @@ async def delete_queue(
                 for queue in server_queues:
                     if queue == str(queue_id):
                         server_ip, _ = server.split(":")
-                        Client.send_grpc_queue_delete(queue_id,current_user.id,server_ip+":8080")
+                        Client.send_grpc_queue_delete(
+                            queue_id, current_user.id, server_ip + ":8080"
+                        )
                         return {
                             "message": "Queue deleted successfully",
                             "queue_id": queue_id,
@@ -136,8 +179,13 @@ async def publish_message(
     current_user=Depends(get_current_user),
 ):
     existing_queue = db.query(Queue).filter(Queue.id == queue_id).first()
+    node_info = None
 
     if existing_queue:
+        data, _ = zk.get(f"{ZK_NODE_QUEUES}/{existing_queue.id}")
+        node_info = json.loads(data.decode())
+
+    if existing_queue and node_info.get("leader"):
         new_message = Message(
             content=message.content,
             routing_key=message.routing_key,
@@ -166,7 +214,10 @@ async def publish_message(
                 )
                 for queue in server_queues:
                     print("Searching in servers for queues")
-                    if queue == str(queue_id):
+                    # Extract dato to know if it is the leader
+                    data, _ = zk.get(f"/servers-metadata/{server}/Queues/{queue}")
+                    node_info = json.loads(data.decode())
+                    if queue == str(queue_id) and node_info.get("leader"):
                         server_ip, _ = server.split(":")
                         response = Client.send_grpc_message(
                             "queue",
@@ -228,7 +279,7 @@ async def consume_message(
 
             message_content = queue_message.message.content
             message_id = queue_message.message_id
-            
+
             db.delete(queue_message)
             db.flush()
 
@@ -239,9 +290,7 @@ async def consume_message(
             )
             if remaining_refs == 0:
                 message_to_delete = (
-                    db.query(Message)
-                    .filter(Message.id == message_id)
-                    .first()
+                    db.query(Message).filter(Message.id == message_id).first()
                 )
                 if message_to_delete:
                     db.delete(message_to_delete)
@@ -267,7 +316,12 @@ async def consume_message(
                 for queue in server_queues:
                     if queue == str(queue_id):
                         server_ip, _ = server.split(":")
-                        response = Client.send_grpc_consume_queue(queue_id,current_user.id,current_user.name,server_ip + ":8080")
+                        response = Client.send_grpc_consume_queue(
+                            queue_id,
+                            current_user.id,
+                            current_user.name,
+                            server_ip + ":8080",
+                        )
                         return {
                             "message": "Message consumed successfully",
                             "content": response.content,

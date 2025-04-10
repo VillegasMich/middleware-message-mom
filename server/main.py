@@ -9,10 +9,19 @@ from app.routes.queue import router as queue_router
 from app.routes.topic import router as topic_router
 from app.routes.user import router as user_router
 from fastapi import FastAPI
-from zookeeper import (SERVER_IP, SERVER_PORT, ZK_NODE_EPHEMERAL,
-                       ZK_NODE_METADATA, ZK_NODE_QUEUES, ZK_NODE_TOPICS,
-                       ZK_NODE_USERS, sync_all_queues, sync_all_topics,
-                       sync_all_users, zk)
+from zookeeper import (
+    SERVER_IP,
+    SERVER_PORT,
+    ZK_NODE_EPHEMERAL,
+    ZK_NODE_METADATA,
+    ZK_NODE_QUEUES,
+    ZK_NODE_TOPICS,
+    ZK_NODE_USERS,
+    sync_all_queues,
+    sync_all_topics,
+    sync_all_users,
+    zk,
+)
 
 db = next(get_db())
 round_robin_manager.sync_users_queues(db)

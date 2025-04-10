@@ -1,7 +1,8 @@
+from random import randint
 from kazoo.client import KazooClient
 
-# ZK_HOST = "localhost:2181"  # LOCAL
-ZK_HOST = "52.21.11.66:2181"  # EC2
+ZK_HOST = "localhost:2181"  # LOCAL
+# ZK_HOST = "52.21.11.66:2181"  # EC2
 
 zk = KazooClient(hosts=ZK_HOST)
 zk.start()
@@ -18,8 +19,10 @@ def refresh_servers():
         server_list = []
         return
 
-    server_list = zk.get_children("/servers")
-    current_index = 0  # Reset index if the list is refreshed
+    server_list = zk.get_children("/servers") or []
+    current_index = randint(
+        0, len(server_list) - 1
+    )  # Reset index if the list is refreshed
 
 
 def get_server():

@@ -17,6 +17,7 @@ GRPC_PORT = int(os.getenv("GRPC_PORT", 8080))
 PUBLIC_IP = os.getenv("PUBLIC_IP")
 HOST = f"{PUBLIC_IP}:" + str(GRPC_PORT)
 
+
 class Server:
     def __init__(self):
         self.running = False
@@ -40,14 +41,10 @@ class Server:
     @staticmethod
     def listen():
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-        Service_pb2_grpc.add_MessageServiceServicer_to_server(
-            MessageService(), server)
-        Service_pb2_grpc.add_QueueServiceServicer_to_server(
-            QueueService(), server)
-        Service_pb2_grpc.add_UserServiceServicer_to_server(
-            UserService(), server)
-        Service_pb2_grpc.add_TopicServiceServicer_to_server(
-            TopicService(), server)
+        Service_pb2_grpc.add_MessageServiceServicer_to_server(MessageService(), server)
+        Service_pb2_grpc.add_QueueServiceServicer_to_server(QueueService(), server)
+        Service_pb2_grpc.add_UserServiceServicer_to_server(UserService(), server)
+        Service_pb2_grpc.add_TopicServiceServicer_to_server(TopicService(), server)
         server.add_insecure_port(HOST)
         print(f"Production service started on {HOST} ")
         server.start()
