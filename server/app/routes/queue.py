@@ -86,7 +86,7 @@ async def create_queue(
     if len(servers) >= 2:
         print("\n REPLICATION \n")
         servers.remove(SERVER_ADDR)
-        follower_ip = sample(servers, 1)
+        follower_ip = sample(servers, 1)[0]
         leader_path = f"{ZK_NODE_QUEUES}/{new_queue.id}"
         follower_path = f"/servers-metadata/{follower_ip}/Queues/{new_queue.id}"
         print("\n FOLLOWER PATH: " + str(follower_path) + "\n")
@@ -105,7 +105,7 @@ async def create_queue(
             }
         ).encode()
 
-        server_ip, _ = follower_ip[0].split(":")
+        server_ip, _ = follower_ip.split(":")
         Client.send_grpc_queue_create(
             new_id,
             queue.name,
