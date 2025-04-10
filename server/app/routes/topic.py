@@ -46,15 +46,27 @@ async def get_topics(
         query = query.filter(Topic.user_id == current_user.id)
 
     topics = query.all()
-    # Traemos los topicos del zk o mandamos un grpc a cada servidor para que las entreguen ???
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
-            remote_queues = Client.send_grpc_get_all_topics(server_ip + ":8080")
-            topics.extend(remote_queues)
+            remote_topics = Client.send_grpc_get_all_topics(server_ip + ":8080") or []
+            for remote_topic in remote_topics:
+                topics.append(
+                    Topic(id=remote_topic.get("id"), name=remote_topic.get("name"))
+                )
+            # topics.extend(remote_queues)
 
-    return {"message": "Topics listed successfully", "topics": topics}
+    seen_ids = set()
+    unique_topics = []
+    for topic in topics:
+        if topic.id not in seen_ids:
+            unique_topics.append(topic)
+            seen_ids.add(topic.id)
+
+    unique_topics.sort()
+
+    return {"message": "Topics listed successfully", "topics": unique_topics}
 
 
 # Get the queue related to a topic (not taking into account routing key)
@@ -97,7 +109,9 @@ async def get_user_queues_topics(
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
             server_ip, _ = server.split(":")
-            remote_queues = Client.send_grpc_get_all_topic_queues(current_user.id, server_ip + ":8080")
+            remote_queues = Client.send_grpc_get_all_topic_queues(
+                current_user.id, server_ip + ":8080"
+            )
             user_queues.extend(remote_queues)
 
     if len(user_queues) > 0:
@@ -197,12 +211,14 @@ async def delete_topic(
                 for topic in server_topic:
                     if topic == str(topic_id):
                         server_ip, _ = server.split(":")
-                        Client.send_grpc_topic_delete(topic_id,current_user.id,server_ip+":8080")
+                        Client.send_grpc_topic_delete(
+                            topic_id, current_user.id, server_ip + ":8080"
+                        )
                         return {
                             "message": "Topic deleted successfully",
                             "topic_name": topic,
                         }
-                    
+
     raise HTTPException(status_code=404, detail="Topic not found")
 
 
@@ -337,8 +353,8 @@ async def consume_message(
                         )
                         return {
                             "message": "Message consumed successfully",
-                            "content": [message['content'] for message in messages],
-                            "ids": [message['id'] for message in messages],
+                            "content": [message["content"] for message in messages],
+                            "ids": [message["id"] for message in messages],
                         }
     raise HTTPException(status_code=404, detail="Private queue not found")
 
@@ -359,7 +375,6 @@ async def subscribe(
         private_queue = db.query(Queue).filter(Queue.name == queue_name).first()
 
         if not private_queue:
-            
             new_id = 1
             servers: list[str] = zk.get_children("/servers") or []
             for server in servers:
