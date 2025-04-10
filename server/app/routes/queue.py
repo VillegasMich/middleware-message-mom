@@ -182,11 +182,11 @@ async def delete_queue(
                         Client.send_grpc_queue_delete(
                             queue_id, current_user.id, server_ip + ":8080"
                         )
-                        break
 
         return {"message": "Queue deleted successfully", "queue_id": queue_id}
 
     else:
+        was_deleted = False
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -199,11 +199,12 @@ async def delete_queue(
                         Client.send_grpc_queue_delete(
                             queue_id, current_user.id, server_ip + ":8080"
                         )
-                        break
-                return {
-                    "message": "Queue deleted successfully",
-                    "queue_id": queue_id,
-                }
+                    was_deleted = True
+        if was_deleted:
+            return {
+                "message": "Queue deleted successfully",
+                "queue_id": queue_id,
+            }
     raise HTTPException(status_code=404, detail="Queue not found.")
 
 
@@ -375,6 +376,7 @@ async def consume_message(
             }
 
     else:
+        was_message_consumed = False
         message_content = ""
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
@@ -392,10 +394,12 @@ async def consume_message(
                             server_ip + ":8080",
                         )
                         message_content = response.content
-                return {
-                    "message": "Message consumed successfully",
-                    "content": response.content,
-                }
+                        was_message_consumed = True
+        if was_message_consumed:
+            return {
+                "message": "Message consumed successfully",
+                "content": response.content,
+            }
     raise HTTPException(status_code=409, detail="Invalid user turn")
 
 
