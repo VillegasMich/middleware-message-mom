@@ -84,10 +84,12 @@ async def create_queue(
 
     # Choose leader and follower servers
     if len(servers) >= 2:
+        print("\n REPLICATION \n")
         servers.remove(SERVER_ADDR)
         follower_ip = sample(servers, 1)
         leader_path = f"{ZK_NODE_QUEUES}/{new_queue.id}"
         follower_path = f"/servers-metadata/{follower_ip}/Queues/{new_queue.id}"
+        print("\n FOLLOWER PATH: " + str(follower_path) + "\n")
         zk.ensure_path(ZK_NODE_QUEUES)
         zk.ensure_path(f"/servers-metadata/{follower_ip}/Queues")
         # Data to store in ZooKeeper
