@@ -125,6 +125,16 @@ class Topic(_message.Message):
     name: str
     def __init__(self, id: _Optional[int] = ..., name: _Optional[str] = ...) -> None: ...
 
+class CreateTopicsRequest(_message.Message):
+    __slots__ = ("id", "name", "user_id")
+    ID_FIELD_NUMBER: _ClassVar[int]
+    NAME_FIELD_NUMBER: _ClassVar[int]
+    USER_ID_FIELD_NUMBER: _ClassVar[int]
+    id: int
+    name: str
+    user_id: int
+    def __init__(self, id: _Optional[int] = ..., name: _Optional[str] = ..., user_id: _Optional[int] = ...) -> None: ...
+
 class SubscribeTopicRequest(_message.Message):
     __slots__ = ("topic_id", "user_id", "user_name", "routing_key")
     TOPIC_ID_FIELD_NUMBER: _ClassVar[int]

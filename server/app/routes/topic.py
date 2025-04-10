@@ -1,6 +1,7 @@
 import fnmatch
 from typing import Optional
-
+import json
+from random import sample
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
 from app.grpc.Client import Client
@@ -14,7 +15,14 @@ from app.models.user_queue import user_queue as UserQueue
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from zookeeper import SERVER_IP, SERVER_PORT, ZK_NODE_TOPICS, zk, ZK_NODE_QUEUES
+from zookeeper import (
+    SERVER_ADDR,
+    SERVER_IP,
+    SERVER_PORT,
+    ZK_NODE_TOPICS,
+    zk,
+    ZK_NODE_QUEUES,
+)
 
 router = APIRouter()
 
@@ -169,7 +177,44 @@ async def create_topic(
     db.commit()
     db.refresh(new_topic)
 
-    zk.ensure_path(f"{ZK_NODE_TOPICS}/{new_topic.id}")
+    if len(servers) >= 2:
+        print("\n REPLICATION \n")
+        servers.remove(SERVER_ADDR)
+        follower_ip = sample(servers, 1)[0]
+        leader_path = f"{ZK_NODE_TOPICS}/{new_topic.id}"
+        follower_path = f"/servers-metadata/{follower_ip}/Topics/{new_topic.id}"
+        print("\n FOLLOWER PATH: " + str(follower_path) + "\n")
+        zk.ensure_path(ZK_NODE_TOPICS)
+        zk.ensure_path(f"/servers-metadata/{follower_ip}/Topics")
+        # Data to store in ZooKeeper
+        payload_leader = json.dumps(
+            {
+                "leader": True,
+            }
+        ).encode()
+
+        payload_follower = json.dumps(
+            {
+                "leader": False,
+            }
+        ).encode()
+
+        server_ip, _ = follower_ip.split(":")
+        response = Client.send_grpc_topic_create(
+            new_id, topic.name, current_user.id, server_ip + ":8080"
+        )
+
+        # Create ZooKeeper entries
+        zk.create(leader_path, payload_leader)
+        zk.create(follower_path, payload_follower)
+        return {"message": "Topic created successfully", "topic_id": new_topic.id}
+
+    payload_leader = json.dumps(
+        {
+            "leader": True,
+        }
+    ).encode()
+    zk.create(f"{ZK_NODE_TOPICS}/{new_topic.id}", payload_leader)
 
     return {"message": "Topic created successfully", "topic_id": new_topic.id}
 

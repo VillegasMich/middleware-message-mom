@@ -92,11 +92,18 @@ service TopicService {
     rpc UnSubscribe (SubscribeTopicRequest) returns (SubscribeResponse);
     rpc Delete (DeleteRequest) returns (CRUDResponse); 
     rpc GetTopics (GetTopicsRequest) returns (GetTopicsResponse);
+    rpc CreateTopics (CreateTopicsRequest) returns (CRUDResponse);
 }
 
 message Topic {
     int32 id = 1;
     string name = 2;
+}
+
+message CreateTopicsRequest {
+    int32 id = 1;
+    string name = 2;
+    int32 user_id = 3;
 }
 
 message SubscribeTopicRequest {
