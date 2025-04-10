@@ -49,7 +49,7 @@ async def get_queues(
             remote_queues = Client.send_grpc_get_all_queues(server_ip + ":8080")
             queues.extend(remote_queues)
 
-    queues = set(queues)
+    queues = list(set(queues))
 
     return {"message": "Queues listed successfully", "queues": queues}
 
