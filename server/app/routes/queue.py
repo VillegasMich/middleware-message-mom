@@ -49,7 +49,14 @@ async def get_queues(
             remote_queues = Client.send_grpc_get_all_queues(server_ip + ":8080")
             queues.extend(remote_queues)
 
-    return {"message": "Queues listed successfully", "queues": set(queues)}
+    seen_ids = set()
+    unique_queues = []
+    for queue in queues:
+        if queue.id not in seen_ids:
+            unique_queues.append(queue)
+            seen_ids.add(queue.id)
+
+    return {"message": "Queues listed successfully", "queues": unique_queues}
 
 
 @router.post("/queues/")
