@@ -5,6 +5,7 @@ from collections import deque
 
 from ..models.topic import Topic
 from ..models.queue import Queue
+from ..models.message import Message
 from ..models.queue_routing_key import QueueRoutingKey
 from ..models.queue_message import QueueMessage
 from zookeeper import zk, ZK_NODE_QUEUES, ZK_NODE_TOPICS
@@ -32,9 +33,22 @@ class TopicRepository:
             bound_queues = self.db.query(Queue).filter(Queue.topic_id == topic.id).all()
 
             for queue in bound_queues:
-                self.db.query(QueueMessage).filter(
-                    QueueMessage.queue_id == queue.id
-                ).delete()
+                queue_messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == queue.id).all()
+                
+                for queue_message in queue_messages:
+                    queue_message_id = queue_message.message_id
+                    self.db.delete(queue_message)
+                    
+                    remaining_refs = (
+                        self.db.query(QueueMessage)
+                        .filter(QueueMessage.message_id == queue_message_id)
+                        .count()
+                    )
+                    if remaining_refs == 1:
+                        message_to_delete = self.db.query(Message).filter(Message.id == queue_message_id).first()
+                        if message_to_delete:
+                            self.db.delete(message_to_delete)
+
                 self.db.delete(queue)
 
             self.db.delete(topic)
@@ -149,7 +163,27 @@ class TopicRepository:
         )
 
         if remaining_keys == 0:
-            self.db.query(QueueMessage).filter(QueueMessage.queue_id == queue_id).delete()
+            queue_messages = (
+                self.db.query(QueueMessage)
+                .filter(QueueMessage.queue_id == queue_id)
+                .all()
+            )
+
+            for queue_message in queue_messages:
+                message_id = queue_message.message_id
+                self.db.delete(queue_message)
+
+                remaining_refs = (
+                    self.db.query(QueueMessage)
+                    .filter(QueueMessage.message_id == message_id)
+                    .count()
+                )
+
+                if remaining_refs == 0:
+                    message = self.db.query(Message).filter(Message.id == message_id).first()
+                    if message:
+                        self.db.delete(message)
+
             self.db.delete(existing_private_queue)
             self.db.commit()
 

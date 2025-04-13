@@ -164,6 +164,17 @@ async def delete_queue(
                 detail="You do not have permission to delete this queue.",
             )
 
+        #Delete leftover messages in the queue
+        queue_messages = db.query(QueueMessage).filter(QueueMessage.queue_id == queue_id).all()
+        
+        for queue_message in queue_messages:
+            
+            queue_message_id = queue_message.message_id
+            db.delete(queue_message)
+            
+            message = db.query(Message).filter(Message.id == queue_message_id).first()
+            db.delete(message)
+            
         db.delete(queue)
         db.commit()
 
@@ -260,7 +271,7 @@ async def publish_message(
             "message_id": new_message.id,
         }
     else:
-        was_message_sended = False
+        was_message_sent = False
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -283,8 +294,8 @@ async def publish_message(
                                 status_code=500,
                                 detail="Client wasn't able to save the message",
                             )
-                        was_message_sended = True
-        if was_message_sended:
+                        was_message_sent = True
+        if was_message_sent:
             return {
                 "message": "Message published successfully",
                 "queue_id": "",

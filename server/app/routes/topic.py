@@ -236,8 +236,24 @@ async def delete_topic(
 
         bound_queues = db.query(Queue).filter(Queue.topic_id == topic.id).all()
 
+        #Delete all private queues and their associated messages
         for queue in bound_queues:
-            db.query(QueueMessage).filter(QueueMessage.queue_id == queue.id).delete()
+            queue_messages = db.query(QueueMessage).filter(QueueMessage.queue_id == queue.id).all()
+            
+            for queue_message in queue_messages:
+                queue_message_id = queue_message.message_id
+                db.delete(queue_message)
+                
+                remaining_refs = (
+                    db.query(QueueMessage)
+                    .filter(QueueMessage.message_id == queue_message_id)
+                    .count()
+                )
+                if remaining_refs == 1:
+                    message_to_delete = db.query(Message).filter(Message.id == queue_message_id).first()
+                    if message_to_delete:
+                        db.delete(message_to_delete)
+
             db.delete(queue)
 
         db.delete(topic)
@@ -355,7 +371,7 @@ async def publish_message(
             "message_id": new_message.id,
         }
     else:
-        was_message_sended = False
+        was_message_sent = False
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -377,8 +393,8 @@ async def publish_message(
                                 status_code=500,
                                 detail="Client wasn't able to save the message",
                             )
-                        was_message_sended = True
-        if was_message_sended:
+                        was_message_sent = True
+        if was_message_sent:
             return {
                 "message": "Message published successfully",
                 "queue_id": "",
@@ -619,7 +635,7 @@ async def unsubscribe(
 
         db.delete(routing_key_entry)
         db.commit()
-        
+
         remaining_keys = (
             db.query(QueueRoutingKey)
             .filter(QueueRoutingKey.queue_id == queue_id)
@@ -627,7 +643,26 @@ async def unsubscribe(
         )
 
         if remaining_keys == 0:
-            db.query(QueueMessage).filter(QueueMessage.queue_id == queue_id).delete()
+            queue_messages = (
+                db.query(QueueMessage)
+                .filter(QueueMessage.queue_id == queue_id)
+                .all()
+            )
+
+            for queue_message in queue_messages:
+                message_id = queue_message.message_id
+                db.delete(queue_message)
+
+                remaining_refs = (
+                    db.query(QueueMessage)
+                    .filter(QueueMessage.message_id == message_id)
+                    .count()
+                )
+
+                if remaining_refs == 0:
+                    message = db.query(Message).filter(Message.id == message_id).first()
+                    if message:
+                        db.delete(message)
 
             db.delete(existing_private_queue)
             db.commit()

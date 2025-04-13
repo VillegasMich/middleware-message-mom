@@ -4,6 +4,8 @@ from fastapi import HTTPException
 from collections import deque
 
 from ..models.queue import Queue
+from ..models.message import Message
+from ..models.queue_message import QueueMessage
 from ..models.user_queue import user_queue as UserQueue
 from ..RoundRobinManager import RoundRobinManager
 from app.core.rrmanager import get_round_robin_manager
@@ -76,6 +78,16 @@ class QueueRepository:
                     status_code=403,
                     detail="You do not have permission to delete this queue.",
                 )
+            
+            queue_messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == queue.id).all()
+        
+            for queue_message in queue_messages:
+                
+                queue_message_id = queue_message.message_id
+                self.db.delete(queue_message)
+                
+                message = self.db.query(Message).filter(Message.id == queue_message_id).first()
+                self.db.delete(message)
 
             self.db.delete(queue)
             self.db.commit()
