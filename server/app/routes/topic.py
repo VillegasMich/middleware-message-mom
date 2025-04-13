@@ -649,18 +649,13 @@ async def unsubscribe(
                     
                     if queue_info["topic_id"] == topic.topic_id and queue_info["user_id"] == current_user.id:
                         server_ip, _ = server.split(":")
-                        response = Client.send_grpc_topic_unsubscribe(
+                        Client.send_grpc_topic_unsubscribe(
                             queue_id=None,
                             user_id=current_user.id,
                             user_name=current_user.name,
                             server_address=server_ip + ":8080",
                             routing_key=topic.routing_key,
                         )
-                        if response.status_code != 1:
-                                raise HTTPException(
-                                    status_code=500,
-                                    detail="Client wasn't able to unsubscribe",
-                                )
 
         return {"message": "Successfully unsubscribed from the topic with that routing key."}
     
@@ -683,18 +678,13 @@ async def unsubscribe(
                     if queue_info["topic_id"] == topic.topic_id and queue_info["user_id"] == current_user.id:
                         server_ip, _ = server.split(":")
                         print(f"Sending unsubscribe to {server_ip} for queue {queue_id}, topic {topic.topic_id}, routing_key {topic.routing_key}")
-                        response = Client.send_grpc_topic_unsubscribe(
+                        Client.send_grpc_topic_unsubscribe(
                             queue_id=None,
                             user_id=current_user.id,
                             user_name=current_user.name,
                             server_address=server_ip + ":8080",
                             routing_key=topic.routing_key,
                         )
-                        if response.status_code != 1:
-                                    raise HTTPException(
-                                        status_code=500,
-                                        detail="Client wasn't able to unsubscribe",
-                                    )
 
         return {"message": "Successfully unsubscribed from the topic with that routing key."}
     
