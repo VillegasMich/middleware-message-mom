@@ -153,10 +153,16 @@ class MessageRepository:
         print(private_queue)
         print('-------------------------------')
         if private_queue:
+            
+            routing_keys = [rk.routing_key for rk in private_queue.routing_keys]
+            
             messages = (
                 self.db.query(Message)
                 .join(QueueMessage, Message.id == QueueMessage.message_id)
-                .filter(QueueMessage.queue_id == private_queue.id)
+                .filter(
+                    QueueMessage.queue_id == private_queue.id,
+                    Message.routing_key.in_(routing_keys) 
+                )
                 .order_by(Message.created_at.asc())
                 .all()
             )

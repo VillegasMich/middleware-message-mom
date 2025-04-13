@@ -403,10 +403,20 @@ async def consume_message(
     )
 
     if private_queue:
+        
+        valid_keys_subquery = (
+            db.query(QueueRoutingKey.routing_key)
+            .filter(QueueRoutingKey.queue_id == private_queue.id)
+            .subquery()
+        )
+        
         messages = (
             db.query(Message)
             .join(QueueMessage, Message.id == QueueMessage.message_id)
-            .filter(QueueMessage.queue_id == private_queue.id)
+             .filter(
+                QueueMessage.queue_id == private_queue.id,
+                Message.routing_key.in_(valid_keys_subquery)
+            )
             .order_by(Message.created_at.asc())
             .all()
         )
