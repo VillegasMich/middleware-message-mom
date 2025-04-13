@@ -184,9 +184,12 @@ class Topic:
         if response.status_code == 200:
             print(f"[yellow]Unsubscribed from topic:[/] {topic_id}")
         else:
-            print(
-                f"""[red]Error:[/] {response.json().get("detail", "No topic found")}"""
-            )
+            try:
+                error_detail = response.json().get("detail", "No topic found")
+            except Exception:
+                error_detail = f"Unexpected error: {response.text or 'Empty response'}"
+
+            print(f"[red]Error:[/] {error_detail}")
 
     @staticmethod
     def pull_message(queue_id: int):
