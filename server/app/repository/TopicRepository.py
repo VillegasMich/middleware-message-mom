@@ -107,11 +107,13 @@ class TopicRepository:
         
         
     def unsubscribe(self, request):
-        queue_id = request.queue_id
+        a_queue_id = request.queue_id
         user_id = request.user_id
         user_name = request.user_name
         topic_id = request.topic_id
         routing_key = request.routing_key
+        
+        print(f"Received unsubscribe request for topic_id={request.topic_id}, user_id={request.user_id}, routing_key={request.routing_key}")
          
         existing_private_queue = (
             self.db.query(Queue)
@@ -123,6 +125,7 @@ class TopicRepository:
             raise HTTPException(status_code=404, detail="Queue not found")
 
         queue_id = existing_private_queue.id
+        print(f"Queue found on server: {queue_id}")
 
         routing_key_entry = (
             self.db.query(QueueRoutingKey)

@@ -640,13 +640,19 @@ async def unsubscribe(
                 )
                 if str(queue_id) in server_queues:
                     server_ip, _ = server.split(":")
-                    Client.send_grpc_topic_unsubscribe(
+                    print(f"Sending unsubscribe to {server_ip} for queue {queue_id}, topic {topic.topic_id}, routing_key {topic.routing_key}")
+                    response = Client.send_grpc_topic_unsubscribe(
                         queue_id=queue_id,
                         user_id=current_user.id,
                         user_name=current_user.name,
                         server_address=server_ip + ":8080",
                         routing_key=topic.routing_key,
                     )
+                    if response.status_code != 1:
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to subscribe",
+                            )
 
         return {"message": "Successfully unsubscribed from the topic with that routing key."}
     
