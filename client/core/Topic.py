@@ -163,6 +163,30 @@ class Topic:
             print(
                 f"""[red]Error:[/] {response.json().get("detail", "No topic found")}"""
             )
+            
+    
+    def unsubscribe():
+        SERVER_ZOO = get_server_zoo()
+        Topic.get_all()
+
+        topic_id = Prompt.ask("[cyan]Enter topic ID[/]")
+        routing_key = Prompt.ask("[cyan]Enter routing key[/]")
+
+        response = requests.post(
+            f"{SERVER_ZOO}/topics/unsubscribe",
+            json={
+                "topic_id": topic_id,
+                "routing_key": routing_key,
+            },
+            headers=Util.get_headers(),
+        )
+
+        if response.status_code == 200:
+            print(f"[yellow]Unsubscribed from topic:[/] {topic_id}")
+        else:
+            print(
+                f"""[red]Error:[/] {response.json().get("detail", "No topic found")}"""
+            )
 
     @staticmethod
     def pull_message(queue_id: int):

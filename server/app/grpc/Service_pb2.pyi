@@ -88,14 +88,18 @@ class GetQueuesResponse(_message.Message):
     def __init__(self, queues: _Optional[_Iterable[_Union[Queue, _Mapping]]] = ...) -> None: ...
 
 class SubscribeRequest(_message.Message):
-    __slots__ = ("queue_id", "user_id", "user_name")
+    __slots__ = ("queue_id", "user_id", "user_name", "topic_id", "routing_key")
     QUEUE_ID_FIELD_NUMBER: _ClassVar[int]
     USER_ID_FIELD_NUMBER: _ClassVar[int]
     USER_NAME_FIELD_NUMBER: _ClassVar[int]
+    TOPIC_ID_FIELD_NUMBER: _ClassVar[int]
+    ROUTING_KEY_FIELD_NUMBER: _ClassVar[int]
     queue_id: int
     user_id: int
     user_name: str
-    def __init__(self, queue_id: _Optional[int] = ..., user_id: _Optional[int] = ..., user_name: _Optional[str] = ...) -> None: ...
+    topic_id: int
+    routing_key: str
+    def __init__(self, queue_id: _Optional[int] = ..., user_id: _Optional[int] = ..., user_name: _Optional[str] = ..., topic_id: _Optional[int] = ..., routing_key: _Optional[str] = ...) -> None: ...
 
 class SubscribeResponse(_message.Message):
     __slots__ = ("status_code",)

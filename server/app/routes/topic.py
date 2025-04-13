@@ -579,6 +579,84 @@ async def subscribe(
     raise HTTPException(status_code=404, detail="Topic not found")
 
 
+@router.post("/topics/unsubscribe")
+async def unsubscribe(
+    topic: TopicSubscribe,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    existing_private_queue = (
+        db.query(Queue)
+        .filter(Queue.topic_id == topic.topic_id, Queue.user_id == current_user.id)
+        .first()
+    )
+    
+    if existing_private_queue:
+        
+        queue_id = existing_private_queue.id
+        
+        routing_key_entry = (
+            db.query(QueueRoutingKey)
+            .filter(
+                QueueRoutingKey.queue_id == queue_id,
+                QueueRoutingKey.routing_key == topic.routing_key,
+            )
+            .first()
+        )
+
+        if not routing_key_entry:
+            raise HTTPException(status_code=404, detail="Routing key not found for queue")
+
+        db.delete(routing_key_entry)
+        db.commit()
+        
+        remaining_keys = (
+            db.query(QueueRoutingKey)
+            .filter(QueueRoutingKey.queue_id == queue_id)
+            .count()
+        )
+
+        if remaining_keys == 0:
+            db.query(QueueMessage).filter(QueueMessage.queue_id == queue_id).delete()
+
+            db.delete(existing_private_queue)
+            db.commit()
+        
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
+                if str(queue_id) in server_queues:
+                    server_ip, _ = server.split(":")
+                    Client.send_grpc_topic_unsubscribe(
+                        queue_id=queue_id,
+                        user_id=current_user.id,
+                        user_name=current_user.name,
+                        server_address=server_ip + ":8080",
+                        routing_key=topic.routing_key,
+                    )
+
+        return {"message": "Successfully unsubscribed from the topic with that routing key."}
+    
+    else:
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_ip, _ = server.split(":")
+                Client.send_grpc_topic_unsubscribe(
+                    queue_id=None,
+                    user_id=current_user.id,
+                    user_name=current_user.name,
+                    server_address=server_ip + ":8080",
+                    topic_id=topic.topic_id,
+                    routing_key=topic.routing_key,
+                )
+
+        return {"message": "Successfully unsubscribed from the topic with that routing key."}
+    
+
 # TODO: Añadir el unsubscribe
 # Revisar la misma estructura del subcribe de los topicos
 # y la estructura de el unsubscribe de las colas

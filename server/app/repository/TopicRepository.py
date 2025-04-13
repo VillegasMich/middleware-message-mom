@@ -104,6 +104,61 @@ class TopicRepository:
             return {"message": "Successfully subscribed to the topic"}
         else:
             return {"message": "Your subscription failed"}
+        
+        
+    def unsubscribe(self, request):
+        queue_id = request.queue_id
+        user_id = request.user_id
+        user_name = request.user_name
+        topic_id = request.topic_id
+        routing_key = request.routing_key
+
+        if queue_id:
+            existing_private_queue = (
+                self.db.query(Queue)
+                .filter(Queue.id == queue_id, Queue.user_id == user_id)
+                .first()
+            )
+        else:  
+            existing_private_queue = (
+                self.db.query(Queue)
+                .filter(Queue.topic_id == topic_id, Queue.user_id == user_id)
+                .first()
+            )
+
+        if not existing_private_queue:
+            raise HTTPException(status_code=404, detail="Queue not found")
+
+        queue_id = existing_private_queue.id
+
+        routing_key_entry = (
+            self.db.query(QueueRoutingKey)
+            .filter(
+                QueueRoutingKey.queue_id == queue_id,
+                QueueRoutingKey.routing_key == routing_key,
+            )
+            .first()
+        )
+
+        if not routing_key_entry:
+            raise HTTPException(status_code=404, detail="Routing key not found for queue")
+
+        self.db.delete(routing_key_entry)
+        self.db.commit()
+
+        remaining_keys = (
+            self.db.query(QueueRoutingKey)
+            .filter(QueueRoutingKey.queue_id == queue_id)
+            .count()
+        )
+
+        if remaining_keys == 0:
+            self.db.query(QueueMessage).filter(QueueMessage.queue_id == queue_id).delete()
+            self.db.delete(existing_private_queue)
+            self.db.commit()
+
+        return {"message": "Successfully unsubscribed from the topic with that routing key."}
+
 
     def create(self, request):
         existing_topic = self.db.query(Topic).filter(Topic.name == request.name).first()

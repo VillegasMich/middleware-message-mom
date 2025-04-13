@@ -577,6 +577,5 @@ async def unsubscribe(
                                 status_code=404, detail="Queue not found"
                             )
         return {
-            "message": "Successfully unsubscribed to the queue",
-            "queue_id": queue_id,
+            "message": "Successfully unsubscribed to the queue"
         }

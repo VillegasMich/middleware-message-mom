@@ -71,6 +71,8 @@ message SubscribeRequest {
     int32 queue_id = 1;
     int32 user_id = 2;
     string user_name = 3;
+    optional int32 topic_id = 4;
+    optional string routing_key = 5;
 }
 
 message SubscribeResponse {

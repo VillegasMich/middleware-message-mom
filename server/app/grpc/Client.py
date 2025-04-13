@@ -4,6 +4,7 @@ from . import Service_pb2
 from . import Service_pb2_grpc
 
 from dotenv import load_dotenv
+from typing import Optional
 
 load_dotenv()
 
@@ -91,6 +92,31 @@ class Client:
                 return response
             except grpc.RpcError as e:
                 print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+    
+    
+    @staticmethod
+    def send_grpc_topic_unsubscribe(
+        private_queue_id: int, user_id: int, user_name: str, 
+        remote_host: str, topic_id: Optional[int] = None, routing_key: Optional[str] = None
+    ):
+        with grpc.insecure_channel(remote_host) as channel:
+            stub = Service_pb2_grpc.TopicServiceStub(channel)
+            
+            request = Service_pb2.SubscribeRequest(
+                queue_id=private_queue_id if private_queue_id is not None else 0, 
+                user_id=user_id,
+                user_name=user_name,
+                topic_id=topic_id if topic_id is not None else 0, 
+                routing_key=routing_key if routing_key is not None else ""  
+            )
+            
+            try:
+                response = stub.UnSubscribe(request)
+                print("Response received from remote service:", response)
+                return response
+            except grpc.RpcError as e:
+                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+
 
     """
         Gets all queues from the remote_host, the queues should be parsed to dict after they are returned

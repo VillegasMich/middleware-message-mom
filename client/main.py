@@ -39,7 +39,8 @@ def show_menu():
         ("11", "Show collected Messages from Topic"),
         ("12", "Send Message to Topic"),
         ("13", "Subscribe to a topic"),
-        ("14", "Exit"),
+        ("14", "Unsubscribe to a topic"),
+        ("15", "Exit"),
     ]
 
     for option, description in menu_items:
@@ -125,6 +126,9 @@ def main():
                     print("\033c", end="")
                     Topic.subscribe()
                 elif choice == "14":
+                    print("\033c", end="")
+                    Topic.unsubscribe()
+                elif choice == "15":
                     print("[bold red]Exiting...[/]")
                     break
                 else:
