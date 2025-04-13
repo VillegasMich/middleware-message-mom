@@ -638,21 +638,29 @@ async def unsubscribe(
                 server_queues: list[str] = (
                     zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
-                if str(queue_id) in server_queues:
-                    server_ip, _ = server.split(":")
-                    print(f"Sending unsubscribe to {server_ip} for queue {queue_id}, topic {topic.topic_id}, routing_key {topic.routing_key}")
-                    response = Client.send_grpc_topic_unsubscribe(
-                        queue_id=queue_id,
-                        user_id=current_user.id,
-                        user_name=current_user.name,
-                        server_address=server_ip + ":8080",
-                        routing_key=topic.routing_key,
-                    )
-                    if response.status_code != 1:
-                            raise HTTPException(
-                                status_code=500,
-                                detail="Client wasn't able to subscribe",
-                            )
+                
+                for queue_zk_id in server_queues:
+                    queue_path = f"/servers-metadata/{server}/Queues/{queue_zk_id}"
+                    queue_data = zk.get(queue_path)
+                    if not queue_data:
+                        continue
+                    
+                    queue_info = json.loads(queue_data[0].decode())
+                    
+                    if queue_info["topic_id"] == topic.topic_id and queue_info["user_id"] == current_user.id:
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_topic_unsubscribe(
+                            queue_id=None,
+                            user_id=current_user.id,
+                            user_name=current_user.name,
+                            server_address=server_ip + ":8080",
+                            routing_key=topic.routing_key,
+                        )
+                        if response.status_code != 1:
+                                raise HTTPException(
+                                    status_code=500,
+                                    detail="Client wasn't able to unsubscribe",
+                                )
 
         return {"message": "Successfully unsubscribed from the topic with that routing key."}
     
@@ -660,15 +668,33 @@ async def unsubscribe(
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_ip, _ = server.split(":")
-                Client.send_grpc_topic_unsubscribe(
-                    queue_id=None,
-                    user_id=current_user.id,
-                    user_name=current_user.name,
-                    server_address=server_ip + ":8080",
-                    topic_id=topic.topic_id,
-                    routing_key=topic.routing_key,
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
+                
+                for queue_zk_id in server_queues:
+                    queue_path = f"/servers-metadata/{server}/Queues/{queue_zk_id}"
+                    queue_data = zk.get(queue_path)
+                    if not queue_data:
+                        continue
+                    
+                    queue_info = json.loads(queue_data[0].decode())
+                    
+                    if queue_info["topic_id"] == topic.topic_id and queue_info["user_id"] == current_user.id:
+                        server_ip, _ = server.split(":")
+                        print(f"Sending unsubscribe to {server_ip} for queue {queue_id}, topic {topic.topic_id}, routing_key {topic.routing_key}")
+                        response = Client.send_grpc_topic_unsubscribe(
+                            queue_id=None,
+                            user_id=current_user.id,
+                            user_name=current_user.name,
+                            server_address=server_ip + ":8080",
+                            routing_key=topic.routing_key,
+                        )
+                        if response.status_code != 1:
+                                    raise HTTPException(
+                                        status_code=500,
+                                        detail="Client wasn't able to unsubscribe",
+                                    )
 
         return {"message": "Successfully unsubscribed from the topic with that routing key."}
     
