@@ -112,19 +112,12 @@ class TopicRepository:
         user_name = request.user_name
         topic_id = request.topic_id
         routing_key = request.routing_key
-
-        if queue_id:
-            existing_private_queue = (
-                self.db.query(Queue)
-                .filter(Queue.id == queue_id, Queue.user_id == user_id)
-                .first()
-            )
-        else:  
-            existing_private_queue = (
-                self.db.query(Queue)
-                .filter(Queue.topic_id == topic_id, Queue.user_id == user_id)
-                .first()
-            )
+         
+        existing_private_queue = (
+            self.db.query(Queue)
+            .filter(Queue.topic_id == topic_id, Queue.user_id == user_id)
+            .first()
+        )
 
         if not existing_private_queue:
             raise HTTPException(status_code=404, detail="Queue not found")
