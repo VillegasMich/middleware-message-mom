@@ -285,8 +285,8 @@ async def delete_topic(
                 server_topic = (
                     zk.get_children(f"/servers-metadata/{server}/Topics") or []
                 )
-                for topic in server_topic:
-                    if topic == str(topic_id):
+                for topic_zk_id in server_topic:
+                    if topic_zk_id == str(topic_id):
                         server_ip, _ = server.split(":")
                         Client.send_grpc_topic_delete(
                             topic_id, current_user.id, server_ip + ":8080"
