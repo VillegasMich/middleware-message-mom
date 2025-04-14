@@ -113,6 +113,7 @@ message SubscribeTopicRequest {
     int32 user_id = 2;
     string user_name = 3;
     string routing_key = 4;
+    optional int32 queue_id = 5;
 }
 
 message GetTopicsRequest {

@@ -140,16 +140,18 @@ class CreateTopicsRequest(_message.Message):
     def __init__(self, id: _Optional[int] = ..., name: _Optional[str] = ..., user_id: _Optional[int] = ...) -> None: ...
 
 class SubscribeTopicRequest(_message.Message):
-    __slots__ = ("topic_id", "user_id", "user_name", "routing_key")
+    __slots__ = ("topic_id", "user_id", "user_name", "routing_key", "queue_id")
     TOPIC_ID_FIELD_NUMBER: _ClassVar[int]
     USER_ID_FIELD_NUMBER: _ClassVar[int]
     USER_NAME_FIELD_NUMBER: _ClassVar[int]
     ROUTING_KEY_FIELD_NUMBER: _ClassVar[int]
+    QUEUE_ID_FIELD_NUMBER: _ClassVar[int]
     topic_id: int
     user_id: int
     user_name: str
     routing_key: str
-    def __init__(self, topic_id: _Optional[int] = ..., user_id: _Optional[int] = ..., user_name: _Optional[str] = ..., routing_key: _Optional[str] = ...) -> None: ...
+    queue_id: int
+    def __init__(self, topic_id: _Optional[int] = ..., user_id: _Optional[int] = ..., user_name: _Optional[str] = ..., routing_key: _Optional[str] = ..., queue_id: _Optional[int] = ...) -> None: ...
 
 class GetTopicsRequest(_message.Message):
     __slots__ = ("allTopics",)

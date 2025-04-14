@@ -75,17 +75,27 @@ class Client:
 
     @staticmethod
     def send_grpc_topic_subscribe(
-        topic_id: int, user_id: int, user_name: str, routing_key: str, remote_host: str
+        topic_id: int, user_id: int, user_name: str, routing_key: str, remote_host: str, queue_id: int = None
     ):
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.TopicServiceStub(channel)
             print(dir(stub))
-            request = Service_pb2.SubscribeTopicRequest(
-                topic_id=topic_id,
-                user_id=user_id,
-                user_name=user_name,
-                routing_key=routing_key,
-            )
+            if(queue_id == None):
+                request = Service_pb2.SubscribeTopicRequest(
+                    topic_id=topic_id,
+                    user_id=user_id,
+                    user_name=user_name,
+                    routing_key=routing_key,
+                )
+            else:
+                request = Service_pb2.SubscribeTopicRequest(
+                    topic_id=topic_id,
+                    user_id=user_id,
+                    user_name=user_name,
+                    routing_key=routing_key,
+                    queue_id=queue_id
+                )
+
             try:
                 response = stub.Subscribe(request)
                 print("Response received from remote service:", response)

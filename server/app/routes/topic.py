@@ -566,6 +566,7 @@ async def subscribe(
                             current_user.name,
                             topic.routing_key,
                             server_ip + ":8080",
+                            private_queue.id
                         )
                         if response.status_code != 1:
                             raise HTTPException(
