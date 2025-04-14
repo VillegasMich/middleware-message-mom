@@ -566,7 +566,6 @@ async def subscribe(
                             current_user.name,
                             topic.routing_key,
                             server_ip + ":8080",
-                            private_queue.id
                         )
                         if response.status_code != 1:
                             raise HTTPException(
@@ -674,19 +673,11 @@ async def unsubscribe(
                 server_queues: list[str] = (
                     zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
-                
-                for queue_zk_id in server_queues:
-                    queue_path = f"/servers-metadata/{server}/Queues/{queue_zk_id}"
-                    queue_data = zk.get(queue_path)
-                    if not queue_data:
-                        continue
-                    
-                    queue_info = json.loads(queue_data[0].decode())
-                    
-                    if queue_info["topic_id"] == topic.topic_id and queue_info["user_id"] == current_user.id:
+                for queue in server_queues:
+                    if queue == str(queue_id):
                         server_ip, _ = server.split(":")
                         Client.send_grpc_topic_unsubscribe(
-                            queue_id=None,
+                            queue_id=queue_id,
                             user_id=current_user.id,
                             user_name=current_user.name,
                             server_address=server_ip + ":8080",
@@ -699,32 +690,20 @@ async def unsubscribe(
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_queues: list[str] = (
-                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                server_topics: list[str] = (
+                    zk.get_children(f"/servers-metadata/{server}/Topics") or []
                 )
-                
-                for queue_zk_id in server_queues:
-                    queue_path = f"/servers-metadata/{server}/Queues/{queue_zk_id}"
-                    queue_data = zk.get(queue_path)
-                    if not queue_data:
-                        continue
-                    
-                    queue_info = json.loads(queue_data[0].decode())
-                    
-                    if queue_info["topic_id"] == topic.topic_id and queue_info["user_id"] == current_user.id:
+                for server_topic_id in server_topics:
+                    if server_topic_id == str(topic.topic_id):
                         server_ip, _ = server.split(":")
-                        print(f"Sending unsubscribe to {server_ip} for queue {queue_id}, topic {topic.topic_id}, routing_key {topic.routing_key}")
                         Client.send_grpc_topic_unsubscribe(
                             queue_id=None,
                             user_id=current_user.id,
                             user_name=current_user.name,
                             server_address=server_ip + ":8080",
+                            topic_id=topic.topic_id,
                             routing_key=topic.routing_key,
                         )
 
         return {"message": "Successfully unsubscribed from the topic with that routing key."}
-    
 
-# TODO: Añadir el unsubscribe
-# Revisar la misma estructura del subcribe de los topicos
-# y la estructura de el unsubscribe de las colas
