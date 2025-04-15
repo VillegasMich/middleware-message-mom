@@ -144,7 +144,7 @@ class TopicRepository:
             raise HTTPException(status_code=404, detail="Routing key not found for queue")
 
         self.db.delete(routing_key_entry)
-        self.db.commit()
+        self.db.flush()
 
         remaining_keys = (
             self.db.query(QueueRoutingKey)

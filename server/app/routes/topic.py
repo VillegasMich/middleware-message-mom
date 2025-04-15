@@ -623,6 +623,7 @@ async def unsubscribe(
             raise HTTPException(status_code=404, detail="Routing key not found for queue")
 
         db.delete(routing_key_entry)
+        db.flush()
 
         remaining_keys = (
             db.query(QueueRoutingKey)

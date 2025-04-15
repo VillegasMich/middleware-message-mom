@@ -185,9 +185,13 @@ class Topic:
             print(f"[yellow]Unsubscribed from topic:[/] {topic_id}")
         else:
             try:
-                error_detail = response.json().get("detail", "No topic found")
-            except Exception:
-                error_detail = f"Unexpected error: {response.text or 'Empty response'}"
+                content_type = response.headers.get("Content-Type", "")
+                if "application/json" in content_type:
+                    error_detail = response.json().get("detail", "No detail provided.")
+                else:
+                    error_detail = response.text or "Empty response"
+            except Exception as e:
+                error_detail = f"Unexpected error: {e}"
 
             print(f"[red]Error:[/] {error_detail}")
 
