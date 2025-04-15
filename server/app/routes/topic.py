@@ -686,7 +686,7 @@ async def unsubscribe(
                     if server_topic_id == str(topic.topic_id):
                         server_ip, _ = server.split(":")
                         Client.send_grpc_topic_unsubscribe(
-                            None,
+                            0,
                             current_user.id,
                             current_user.name,
                             server_ip + ":8080",

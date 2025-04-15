@@ -113,7 +113,7 @@ class Client:
             stub = Service_pb2_grpc.TopicServiceStub(channel)
             
             request = Service_pb2.SubscribeRequest(
-                queue_id=private_queue_id if private_queue_id is not None else 0, 
+                queue_id=private_queue_id, 
                 user_id=user_id,
                 user_name=user_name,
                 topic_id=topic_id if topic_id is not None else 0, 
