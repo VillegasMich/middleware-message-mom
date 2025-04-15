@@ -666,11 +666,11 @@ async def unsubscribe(
                     if queue == str(queue_id):
                         server_ip, _ = server.split(":")
                         Client.send_grpc_topic_unsubscribe(
-                            queue_id,
-                            current_user.id,
-                            current_user.name,
-                            server_ip + ":8080",
-                            topic.routing_key,
+                            private_queue_id=queue_id,
+                            user_id=current_user.id,
+                            user_name=current_user.name,
+                            remote_host=server_ip + ":8080",
+                            routing_key=topic.routing_key,
                         )
 
         return {"message": "Successfully unsubscribed from the topic with that routing key."}
@@ -686,12 +686,12 @@ async def unsubscribe(
                     if server_topic_id == str(topic.topic_id):
                         server_ip, _ = server.split(":")
                         Client.send_grpc_topic_unsubscribe(
-                            0,
-                            current_user.id,
-                            current_user.name,
-                            server_ip + ":8080",
-                            topic.topic_id,
-                            topic.routing_key,
+                            private_queue_id=0,
+                            user_id=current_user.id,
+                            user_name=current_user.name,
+                            remote_host=server_ip + ":8080",
+                            topic_id=topic.topic_id,
+                            routing_key=topic.routing_key,
                         )
 
         return {"message": "Successfully unsubscribed from the topic with that routing key."}
