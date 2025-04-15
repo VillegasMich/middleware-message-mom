@@ -31,28 +31,15 @@ class TopicRepository:
                 )
 
             bound_queues = self.db.query(Queue).filter(Queue.topic_id == topic.id).all()
+            queue_ids = [queue.id for queue in bound_queues]
 
+            self.db.query(QueueMessage).filter(QueueMessage.queue_id.in_(queue_ids)).delete(synchronize_session=False)
+            
+            self.db.query(Message).filter(Message.topic_id == topic.id).delete(synchronize_session=False)
+            
             for queue in bound_queues:
-                queue_messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == queue.id).all()
-                
-                for queue_message in queue_messages:
-                    queue_message_id = queue_message.message_id
-
-                    remaining_refs = (
-                        self.db.query(QueueMessage)
-                        .filter(QueueMessage.message_id == queue_message_id)
-                        .count()
-                    )
-
-                    self.db.delete(queue_message)
-
-                    if remaining_refs == 1:
-                        message_to_delete = self.db.query(Message).filter(Message.id == queue_message_id).first()
-                        if message_to_delete:
-                            self.db.delete(message_to_delete)
-
                 self.db.delete(queue)
-
+                
             self.db.delete(topic)
             self.db.commit()
 
