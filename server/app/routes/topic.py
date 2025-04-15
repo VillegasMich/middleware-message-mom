@@ -242,15 +242,16 @@ async def delete_topic(
             
             for queue_message in queue_messages:
                 queue_message_id = queue_message.message_id
-                db.delete(queue_message)
-                db.commit()
-                
+
                 remaining_refs = (
                     db.query(QueueMessage)
                     .filter(QueueMessage.message_id == queue_message_id)
                     .count()
                 )
-                if remaining_refs == 0:
+
+                db.delete(queue_message)
+
+                if remaining_refs == 1:
                     message_to_delete = db.query(Message).filter(Message.id == queue_message_id).first()
                     if message_to_delete:
                         db.delete(message_to_delete)

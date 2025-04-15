@@ -37,15 +37,16 @@ class TopicRepository:
                 
                 for queue_message in queue_messages:
                     queue_message_id = queue_message.message_id
-                    self.db.delete(queue_message)
-                    self.db.commit()
-                    
+
                     remaining_refs = (
                         self.db.query(QueueMessage)
                         .filter(QueueMessage.message_id == queue_message_id)
                         .count()
                     )
-                    if remaining_refs == 0:
+
+                    self.db.delete(queue_message)
+
+                    if remaining_refs == 1:
                         message_to_delete = self.db.query(Message).filter(Message.id == queue_message_id).first()
                         if message_to_delete:
                             self.db.delete(message_to_delete)
