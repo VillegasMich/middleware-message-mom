@@ -624,6 +624,7 @@ async def unsubscribe(
 
         db.delete(routing_key_entry)
         db.flush()
+        db.commit()
 
         remaining_keys = (
             db.query(QueueRoutingKey)

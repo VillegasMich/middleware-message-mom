@@ -145,6 +145,7 @@ class TopicRepository:
 
         self.db.delete(routing_key_entry)
         self.db.flush()
+        self.db.commit()
 
         remaining_keys = (
             self.db.query(QueueRoutingKey)
