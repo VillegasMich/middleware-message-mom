@@ -678,7 +678,7 @@ async def unsubscribe(
                                 topic_id=topic.topic_id,
                                 routing_key=topic.routing_key,
                             )
-                            if response.status_code != 1:
+                            if response != 1:
                                 raise HTTPException(
                                     status_code=500,
                                     detail="Client wasn't able to unsubscribe",
@@ -704,7 +704,7 @@ async def unsubscribe(
                                 topic_id=topic.topic_id,
                                 routing_key=topic.routing_key,
                             )
-                            if response.status_code != 1:
+                            if response != 1:
                                 raise HTTPException(
                                     status_code=500,
                                     detail="Client wasn't able to unsubscribe",
