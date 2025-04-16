@@ -670,13 +670,19 @@ async def unsubscribe(
                     for server_queue in server_queues:
                         if int(server_queue) == (queue_id):
                             server_ip, _ = server.split(":")
-                            Client.send_grpc_topic_unsubscribe(
+                            response = Client.send_grpc_topic_unsubscribe(
                                 private_queue_id=queue_id,
                                 user_id=current_user.id,
                                 user_name=current_user.name,
                                 remote_host=server_ip + ":8080",
+                                topic_id=topic.topic_id,
                                 routing_key=topic.routing_key,
                             )
+                            if response.status_code != 1:
+                                raise HTTPException(
+                                    status_code=500,
+                                    detail="Client wasn't able to unsubscribe",
+                                )
 
             return {"message": "Successfully unsubscribed from the topic with that routing key."}
         
@@ -690,14 +696,19 @@ async def unsubscribe(
                     for server_topic_id in server_topics:
                         if int(server_topic_id) == (topic.topic_id):
                             server_ip, _ = server.split(":")
-                            Client.send_grpc_topic_unsubscribe(
-                                private_queue_id=0,
+                            response = Client.send_grpc_topic_unsubscribe(
+                                private_queue_id=None,
                                 user_id=current_user.id,
                                 user_name=current_user.name,
                                 remote_host=server_ip + ":8080",
                                 topic_id=topic.topic_id,
                                 routing_key=topic.routing_key,
                             )
+                            if response.status_code != 1:
+                                raise HTTPException(
+                                    status_code=500,
+                                    detail="Client wasn't able to unsubscribe",
+                                )
 
             return {"message": "Successfully unsubscribed from the topic with that routing key."}
         

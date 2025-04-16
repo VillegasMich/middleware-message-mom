@@ -116,13 +116,12 @@ class TopicRepository:
         
     def unsubscribe(self, request):
         try:
-            queue_id = request.queue_id
             user_id = request.user_id
             user_name = request.user_name
             topic_id = request.topic_id
             routing_key = request.routing_key
             
-            if queue_id == 0:
+            if not request.queue_id:
                 
                 existing_private_queue = (
                     self.db.query(Queue)
@@ -131,6 +130,7 @@ class TopicRepository:
                 )
                 
             else:
+                queue_id = request.queue_id
                 
                 existing_private_queue = (
                     self.db.query(Queue)

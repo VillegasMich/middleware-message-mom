@@ -106,19 +106,27 @@ class Client:
     
     @staticmethod
     def send_grpc_topic_unsubscribe(
-        private_queue_id: int, user_id: int, user_name: str, 
-        remote_host: str, topic_id: Optional[int] = None, routing_key: Optional[str] = None
+        user_id: int, user_name: str, 
+        remote_host: str, topic_id: Optional[int] = None, routing_key: Optional[str] = None, private_queue_id: int=None
     ):
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.TopicServiceStub(channel)
             
-            request = Service_pb2.SubscribeRequest(
-                queue_id=private_queue_id, 
-                user_id=user_id,
-                user_name=user_name,
-                topic_id=topic_id if topic_id is not None else 0, 
-                routing_key=routing_key if routing_key is not None else ""  
+            if private_queue_id == None:
+                request = Service_pb2.SubscribeTopicRequest(
+                    topic_id=topic_id, 
+                    user_id=user_id,
+                    user_name=user_name,
+                    routing_key=routing_key,
             )
+            else:
+                request = Service_pb2.SubscribeTopicRequest(
+                    topic_id=topic_id, 
+                    user_id=user_id,
+                    user_name=user_name,
+                    routing_key=routing_key,
+                    queue_id=private_queue_id, 
+                )
             
             try:
                 response = stub.UnSubscribe(request)
