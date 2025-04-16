@@ -132,6 +132,7 @@ class Client:
                 response = stub.UnSubscribe(request)
                 if response.status_code == 1:
                     print("Unsubscribed successfully!")
+                    return response
                 else:
                     print("Failed to unsubscribe.")
             except grpc.RpcError as e:
