@@ -173,6 +173,7 @@ class TopicRepository:
                 for queue_message in queue_messages:
                     message_id = queue_message.message_id
                     self.db.delete(queue_message)
+                    self.db.flush()
 
                     remaining_refs = (
                         self.db.query(QueueMessage)

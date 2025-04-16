@@ -646,6 +646,7 @@ async def unsubscribe(
                 for queue_message in queue_messages:
                     message_id = queue_message.message_id
                     db.delete(queue_message)
+                    db.flush()
 
                     remaining_refs = (
                         db.query(QueueMessage)
