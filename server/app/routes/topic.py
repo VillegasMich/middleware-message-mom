@@ -667,8 +667,8 @@ async def unsubscribe(
                     server_queues: list[str] = (
                         zk.get_children(f"/servers-metadata/{server}/Queues") or []
                     )
-                    for queue in server_queues:
-                        if queue == str(queue_id):
+                    for server_queue in server_queues:
+                        if int(server_queue) == (queue_id):
                             server_ip, _ = server.split(":")
                             Client.send_grpc_topic_unsubscribe(
                                 private_queue_id=queue_id,
@@ -688,7 +688,7 @@ async def unsubscribe(
                         zk.get_children(f"/servers-metadata/{server}/Topics") or []
                     )
                     for server_topic_id in server_topics:
-                        if server_topic_id == str(topic.topic_id):
+                        if int(server_topic_id) == (topic.topic_id):
                             server_ip, _ = server.split(":")
                             Client.send_grpc_topic_unsubscribe(
                                 private_queue_id=0,
