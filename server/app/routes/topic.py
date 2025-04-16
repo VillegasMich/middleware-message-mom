@@ -1,6 +1,7 @@
 import fnmatch
 from typing import Optional
 import json
+import traceback
 from random import sample
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
@@ -13,6 +14,7 @@ from app.models.topic import Topic
 from app.models.user import User
 from app.models.user_queue import user_queue as UserQueue
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.logger import logger
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from zookeeper import (
@@ -600,100 +602,108 @@ async def unsubscribe(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
-    existing_private_queue = (
-        db.query(Queue)
-        .filter(Queue.topic_id == topic.topic_id, Queue.user_id == current_user.id)
-        .first()
-    )
-    
-    if existing_private_queue:
+    try:
         
-        queue_id = existing_private_queue.id
-        
-        routing_key_entry = (
-            db.query(QueueRoutingKey)
-            .filter(
-                QueueRoutingKey.queue_id == queue_id,
-                QueueRoutingKey.routing_key == topic.routing_key,
-            )
+        existing_private_queue = (
+            db.query(Queue)
+            .filter(Queue.topic_id == topic.topic_id, Queue.user_id == current_user.id)
             .first()
         )
-
-        if not routing_key_entry:
-            raise HTTPException(status_code=404, detail="Routing key not found for queue")
-
-        db.delete(routing_key_entry)
-        db.flush()
-        db.commit()
-
-        remaining_keys = (
-            db.query(QueueRoutingKey)
-            .filter(QueueRoutingKey.queue_id == queue_id)
-            .count()
-        )
-
-        if remaining_keys == 0:
-            queue_messages = (
-                db.query(QueueMessage)
-                .filter(QueueMessage.queue_id == queue_id)
-                .all()
+        
+        if existing_private_queue:
+            
+            queue_id = existing_private_queue.id
+            
+            routing_key_entry = (
+                db.query(QueueRoutingKey)
+                .filter(
+                    QueueRoutingKey.queue_id == queue_id,
+                    QueueRoutingKey.routing_key == topic.routing_key,
+                )
+                .first()
             )
 
-            for queue_message in queue_messages:
-                message_id = queue_message.message_id
-                db.delete(queue_message)
+            if not routing_key_entry:
+                raise HTTPException(status_code=404, detail="Routing key not found for queue")
 
-                remaining_refs = (
-                    db.query(QueueMessage)
-                    .filter(QueueMessage.message_id == message_id)
-                    .count()
-                )
-
-                if remaining_refs == 0:
-                    message = db.query(Message).filter(Message.id == message_id).first()
-                    if message:
-                        db.delete(message)
-
-            db.delete(existing_private_queue)
+            db.delete(routing_key_entry)
+            db.flush()
             db.commit()
+
+            remaining_keys = (
+                db.query(QueueRoutingKey)
+                .filter(QueueRoutingKey.queue_id == queue_id)
+                .count()
+            )
+
+            if remaining_keys == 0:
+                queue_messages = (
+                    db.query(QueueMessage)
+                    .filter(QueueMessage.queue_id == queue_id)
+                    .all()
+                )
+
+                for queue_message in queue_messages:
+                    message_id = queue_message.message_id
+                    db.delete(queue_message)
+
+                    remaining_refs = (
+                        db.query(QueueMessage)
+                        .filter(QueueMessage.message_id == message_id)
+                        .count()
+                    )
+
+                    if remaining_refs == 0:
+                        message = db.query(Message).filter(Message.id == message_id).first()
+                        if message:
+                            db.delete(message)
+
+                db.delete(existing_private_queue)
+                db.commit()
+            
+            servers: list[str] = zk.get_children("/servers") or []
+            for server in servers:
+                if server != f"{SERVER_IP}:{SERVER_PORT}":
+                    server_queues: list[str] = (
+                        zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                    )
+                    for queue in server_queues:
+                        if queue == str(queue_id):
+                            server_ip, _ = server.split(":")
+                            Client.send_grpc_topic_unsubscribe(
+                                private_queue_id=queue_id,
+                                user_id=current_user.id,
+                                user_name=current_user.name,
+                                remote_host=server_ip + ":8080",
+                                routing_key=topic.routing_key,
+                            )
+
+            return {"message": "Successfully unsubscribed from the topic with that routing key."}
         
-        servers: list[str] = zk.get_children("/servers") or []
-        for server in servers:
-            if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_queues: list[str] = (
-                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
-                )
-                for queue in server_queues:
-                    if queue == str(queue_id):
-                        server_ip, _ = server.split(":")
-                        Client.send_grpc_topic_unsubscribe(
-                            private_queue_id=queue_id,
-                            user_id=current_user.id,
-                            user_name=current_user.name,
-                            remote_host=server_ip + ":8080",
-                            routing_key=topic.routing_key,
-                        )
+        else:
+            servers: list[str] = zk.get_children("/servers") or []
+            for server in servers:
+                if server != f"{SERVER_IP}:{SERVER_PORT}":
+                    server_topics: list[str] = (
+                        zk.get_children(f"/servers-metadata/{server}/Topics") or []
+                    )
+                    for server_topic_id in server_topics:
+                        if server_topic_id == str(topic.topic_id):
+                            server_ip, _ = server.split(":")
+                            Client.send_grpc_topic_unsubscribe(
+                                private_queue_id=0,
+                                user_id=current_user.id,
+                                user_name=current_user.name,
+                                remote_host=server_ip + ":8080",
+                                topic_id=topic.topic_id,
+                                routing_key=topic.routing_key,
+                            )
 
-        return {"message": "Successfully unsubscribed from the topic with that routing key."}
-    
-    else:
-        servers: list[str] = zk.get_children("/servers") or []
-        for server in servers:
-            if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_topics: list[str] = (
-                    zk.get_children(f"/servers-metadata/{server}/Topics") or []
-                )
-                for server_topic_id in server_topics:
-                    if server_topic_id == str(topic.topic_id):
-                        server_ip, _ = server.split(":")
-                        Client.send_grpc_topic_unsubscribe(
-                            private_queue_id=0,
-                            user_id=current_user.id,
-                            user_name=current_user.name,
-                            remote_host=server_ip + ":8080",
-                            topic_id=topic.topic_id,
-                            routing_key=topic.routing_key,
-                        )
-
-        return {"message": "Successfully unsubscribed from the topic with that routing key."}
+            return {"message": "Successfully unsubscribed from the topic with that routing key."}
+        
+    except Exception as e:
+        logger.error(f"Error in unsubscribe: {e}")
+        traceback.print_exc()
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Unsubscribe failed due to server error.")
 

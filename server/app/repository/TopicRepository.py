@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from fastapi import HTTPException
 from collections import deque
-
+import traceback
 from ..models.topic import Topic
 from ..models.queue import Queue
 from ..models.message import Message
@@ -114,71 +114,78 @@ class TopicRepository:
         
         
     def unsubscribe(self, request):
-        a_queue_id = request.queue_id
-        user_id = request.user_id
-        user_name = request.user_name
-        topic_id = request.topic_id
-        routing_key = request.routing_key
-         
-        existing_private_queue = (
-            self.db.query(Queue)
-            .filter(Queue.topic_id == topic_id, Queue.user_id == user_id)
-            .first()
-        )
-
-        if not existing_private_queue:
-            raise HTTPException(status_code=404, detail="Queue not found")
-
-        queue_id = existing_private_queue.id
-
-        routing_key_entry = (
-            self.db.query(QueueRoutingKey)
-            .filter(
-                QueueRoutingKey.queue_id == queue_id,
-                QueueRoutingKey.routing_key == routing_key,
-            )
-            .first()
-        )
-
-        if not routing_key_entry:
-            raise HTTPException(status_code=404, detail="Routing key not found for queue")
-
-        self.db.delete(routing_key_entry)
-        self.db.flush()
-        self.db.commit()
-
-        remaining_keys = (
-            self.db.query(QueueRoutingKey)
-            .filter(QueueRoutingKey.queue_id == queue_id)
-            .count()
-        )
-
-        if remaining_keys == 0:
-            queue_messages = (
-                self.db.query(QueueMessage)
-                .filter(QueueMessage.queue_id == queue_id)
-                .all()
+        try:
+            a_queue_id = request.queue_id
+            user_id = request.user_id
+            user_name = request.user_name
+            topic_id = request.topic_id
+            routing_key = request.routing_key
+            
+            existing_private_queue = (
+                self.db.query(Queue)
+                .filter(Queue.topic_id == topic_id, Queue.user_id == user_id)
+                .first()
             )
 
-            for queue_message in queue_messages:
-                message_id = queue_message.message_id
-                self.db.delete(queue_message)
+            if not existing_private_queue:
+                raise HTTPException(status_code=404, detail="Queue not found")
 
-                remaining_refs = (
-                    self.db.query(QueueMessage)
-                    .filter(QueueMessage.message_id == message_id)
-                    .count()
+            queue_id = existing_private_queue.id
+
+            routing_key_entry = (
+                self.db.query(QueueRoutingKey)
+                .filter(
+                    QueueRoutingKey.queue_id == queue_id,
+                    QueueRoutingKey.routing_key == routing_key,
                 )
+                .first()
+            )
 
-                if remaining_refs == 0:
-                    message = self.db.query(Message).filter(Message.id == message_id).first()
-                    if message:
-                        self.db.delete(message)
+            if not routing_key_entry:
+                raise HTTPException(status_code=404, detail="Routing key not found for queue")
 
-            self.db.delete(existing_private_queue)
+            self.db.delete(routing_key_entry)
+            self.db.flush()
             self.db.commit()
 
-        return {"message": "Successfully unsubscribed from the topic with that routing key."}
+            remaining_keys = (
+                self.db.query(QueueRoutingKey)
+                .filter(QueueRoutingKey.queue_id == queue_id)
+                .count()
+            )
+
+            if remaining_keys == 0:
+                queue_messages = (
+                    self.db.query(QueueMessage)
+                    .filter(QueueMessage.queue_id == queue_id)
+                    .all()
+                )
+
+                for queue_message in queue_messages:
+                    message_id = queue_message.message_id
+                    self.db.delete(queue_message)
+
+                    remaining_refs = (
+                        self.db.query(QueueMessage)
+                        .filter(QueueMessage.message_id == message_id)
+                        .count()
+                    )
+
+                    if remaining_refs == 0:
+                        message = self.db.query(Message).filter(Message.id == message_id).first()
+                        if message:
+                            self.db.delete(message)
+
+                self.db.delete(existing_private_queue)
+                self.db.commit()
+
+            return {"message": "Successfully unsubscribed from the topic with that routing key."}
+        
+        except Exception as e:
+            print(f"[Server Unsubscribe] Error: {e}")
+            traceback.print_exc()
+            self.db.rollback()
+            raise HTTPException(status_code=500, detail="Internal server error while unsubscribing.")
 
 
     def create(self, request):
