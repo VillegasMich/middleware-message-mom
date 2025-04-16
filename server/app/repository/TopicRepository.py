@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from collections import deque
 import traceback
+import grpc
 from ..models.topic import Topic
 from ..models.queue import Queue
 from ..models.message import Message
@@ -121,14 +122,24 @@ class TopicRepository:
             topic_id = request.topic_id
             routing_key = request.routing_key
             
-            existing_private_queue = (
-                self.db.query(Queue)
-                .filter(Queue.id == queue_id)
-                .first()
-            )
+            if queue_id == 0:
+                
+                existing_private_queue = (
+                    self.db.query(Queue)
+                    .filter(Queue.topic_id == topic_id, Queue.user_id == user_id)
+                    .first()
+                )
+                
+            else:
+                
+                existing_private_queue = (
+                    self.db.query(Queue)
+                    .filter(Queue.id == queue_id)
+                    .first()
+                )
 
             if not existing_private_queue:
-                raise HTTPException(status_code=404, detail="Queue not found")
+                raise grpc.RpcError(grpc.StatusCode.NOT_FOUND, "Queue not found")
 
             routing_key_entry = (
                 self.db.query(QueueRoutingKey)

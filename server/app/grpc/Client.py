@@ -122,8 +122,10 @@ class Client:
             
             try:
                 response = stub.UnSubscribe(request)
-                print("Response received from remote service:", response)
-                return response
+                if response.status_code == 1:
+                    print("Unsubscribed successfully!")
+                else:
+                    print("Failed to unsubscribe.")
             except grpc.RpcError as e:
                 print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
 
