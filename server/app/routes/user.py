@@ -16,11 +16,10 @@ async def get_subscribed_topics(
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-
     servers = zk.get_children("/servers") or []
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
-            server_topics = zk.get_children(f"/servers/{server}/Topics") or []
+            server_topics = zk.get_children(f"/servers-metadata/{server}/Topics") or []
             for topic in server_topics:
                 if topic not in user.topics:
                     user.topics.append(topic)

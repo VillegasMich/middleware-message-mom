@@ -4,6 +4,7 @@ from app.core.auth_helpers import get_current_user
 from app.core.config import ALGORITHM, SECRET_KEY
 from app.core.database import get_db
 from app.models.user import User
+from ..grpc.Client import Client
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -22,7 +23,7 @@ class LoginRequest(BaseModel):
     password: str
 
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 7
+ACCESS_TOKEN_EXPIRE_MINUTES = 120
 
 router = APIRouter()
 
@@ -35,13 +36,30 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.name == username).first():
         raise HTTPException(status_code=400, detail="User already exists")
 
-    new_user = User(name=username)
+    new_id = 1
+    servers: list[str] = zk.get_children("/servers") or []
+    for server in servers:
+        server_users: list[str] = (
+            zk.get_children(f"/servers-metadata/{server}/Users") or []
+        )
+        for users_id in server_users:
+            if int(users_id) >= new_id:
+                new_id = int(users_id) + 1
+
+    new_user = User(id=new_id, name=username)
     new_user.set_password(password)
 
     db.add(new_user)
     db.commit()
 
     zk.ensure_path(f"{ZK_NODE_USERS}/{new_user.id}")
+
+    servers: list[str] = zk.get_children("/servers") or []
+    for server in servers:
+        if server != f"{SERVER_IP}:{SERVER_PORT}":
+            server_ip, _ = server.split(":")
+            response = Client.send_grpc_register(username,password,new_id,server_ip + ":8080")
+
     return {"message": "User registered successfully"}
 
 
@@ -66,7 +84,8 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         servers = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
-                server_users = zk.get_children(f"servers/{server}/Users") or []
+                server_users = zk.get_children(
+                    f"servers-metadata/{server}/Users") or []
                 for user in server_users:
                     print(f"User {user} found on server {server}")
     raise HTTPException(status_code=400, detail="Invalid credentials")

@@ -36,6 +36,7 @@ class Listener:
                 if queues and len(queues) > 0:
                     for queue in queues:
                         messages = Topic.pull_message(queue.get("id"))
+                        # print(messages)
                         if messages:
                             for message in messages:
                                 if queue["name"] in self.dict:
@@ -43,6 +44,6 @@ class Listener:
                                 else:
                                     self.dict[queue["name"]] = {message}
             except Exception as e:
-                # print(f"Error al realizar la petición: {e}")
+                pass
 
             time.sleep(self.period)

@@ -1,5 +1,5 @@
 import requests
-from config import SERVER_ZOO
+from config import get_server_zoo
 from rich import print
 from rich.prompt import Prompt
 from Util import Util
@@ -8,6 +8,8 @@ from Util import Util
 class User:
     @staticmethod
     def register():
+        SERVER_ZOO = get_server_zoo()
+
         """Registers a new user"""
         username = Prompt.ask("[cyan]Enter username[/]")
         password = Prompt.ask("[cyan]Enter password[/]", password=True)
@@ -24,6 +26,7 @@ class User:
     @staticmethod
     def login():
         """Logs in and obtains a token"""
+        SERVER_ZOO = get_server_zoo()
         username = Prompt.ask("[cyan]Enter username[/]")
         password = Prompt.ask("[cyan]Enter password[/]", password=True)
 
@@ -42,6 +45,7 @@ class User:
 
     @staticmethod
     def get_user_queues():
+        SERVER_ZOO = get_server_zoo()
         response = requests.get(
             f"{SERVER_ZOO}/user/queues-topics", headers=Util.get_headers()
         )

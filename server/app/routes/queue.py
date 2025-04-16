@@ -1,5 +1,6 @@
 from collections import deque
-
+import json
+from random import sample
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
 from app.core.rrmanager import get_round_robin_manager
@@ -12,7 +13,7 @@ from app.RoundRobinManager import RoundRobinManager
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
-from zookeeper import SERVER_IP, SERVER_PORT, ZK_NODE_QUEUES, zk
+from zookeeper import SERVER_ADDR, SERVER_IP, SERVER_PORT, ZK_NODE_QUEUES, zk
 
 router = APIRouter()
 
@@ -41,19 +42,27 @@ async def get_queues(
 
     queues = query.all()
 
-    # Traemos las queue del zk o mandamos un grpc a cada servidor para que las entreguen ???
     servers: list[str] = zk.get_children("/servers") or []
-    print(servers)
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
-            print("Ask for queues")
-            # #TEST
-            # #------------------------------
-            # Client.send_grpc_message(
-            #     "queue", 1, "listando todas las queues", "default", "127.0.0.1:8080")
-            # #------------------------------
+            server_ip, _ = server.split(":")
+            remote_queues = Client.send_grpc_get_all_queues(server_ip + ":8080") or []
+            for remote_queue in remote_queues:
+                queues.append(
+                    Queue(id=remote_queue.get("id"), name=remote_queue.get("name"))
+                )
+            # queues.extend(remote_queues)
 
-    return {"message": "Queues listed successfully", "queues": queues}
+    seen_ids = set()
+    unique_queues = []
+    for queue in queues:
+        if queue.id not in seen_ids:
+            unique_queues.append(queue)
+            seen_ids.add(queue.id)
+
+    unique_queues.sort(key=lambda q: q.id)
+
+    return {"message": "Queues listed successfully", "queues": unique_queues}
 
 
 @router.post("/queues/")
@@ -63,17 +72,78 @@ async def create_queue(
     current_user=Depends(get_current_user),
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
+    # Check if in the current server the queue exists
     existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
     if existing_queue:
         raise HTTPException(status_code=400, detail="Queue already exists")
 
-    new_queue = Queue(name=queue.name, is_private=False, user_id=current_user.id)
+    new_id = 1
+    servers: list[str] = zk.get_children("/servers") or []
+    for server in servers:
+        server_queues: list[str] = (
+            zk.get_children(f"/servers-metadata/{server}/Queues") or []
+        )
+        for queue_id in server_queues:
+            if int(queue_id) >= new_id:
+                new_id = int(queue_id) + 1
+
+    new_queue = Queue(
+        id=new_id, name=queue.name, is_private=False, user_id=current_user.id
+    )
     db.add(new_queue)
     db.commit()
     db.refresh(new_queue)
 
-    zk.ensure_path(f"{ZK_NODE_QUEUES}/{new_queue.id}")
+    # Choose leader and follower servers
+    if len(servers) >= 2:
+        print("\n REPLICATION \n")
+        servers.remove(SERVER_ADDR)
+        follower_ip = sample(servers, 1)[0]
+        leader_path = f"{ZK_NODE_QUEUES}/{new_queue.id}"
+        follower_path = f"/servers-metadata/{follower_ip}/Queues/{new_queue.id}"
+        print("\n FOLLOWER PATH: " + str(follower_path) + "\n")
+        zk.ensure_path(ZK_NODE_QUEUES)
+        zk.ensure_path(f"/servers-metadata/{follower_ip}/Queues")
+        # Data to store in ZooKeeper
+        payload_leader = json.dumps(
+            {
+                "leader": True,
+            }
+        ).encode()
+
+        payload_follower = json.dumps(
+            {
+                "leader": False,
+            }
+        ).encode()
+
+        server_ip, _ = follower_ip.split(":")
+        response = Client.send_grpc_queue_create(
+            new_id,
+            queue.name,
+            current_user.id,
+            server_ip + ":8080",
+        )
+
+        # Create ZooKeeper entries
+        zk.create(leader_path, payload_leader)
+        zk.create(follower_path, payload_follower)
+
+        round_robin_manager.user_queues_dict[new_queue.id] = deque()
+
+        print("\n", "Leader and Follower queues created", "\n")
+
+        return {"message": "Queue created successfully", "queue_id": new_queue.id}
+
+    payload_leader = json.dumps(
+        {
+            "leader": True,
+        }
+    ).encode()
+    zk.create(f"{ZK_NODE_QUEUES}/{new_queue.id}", payload_leader)
     round_robin_manager.user_queues_dict[new_queue.id] = deque()
+
+    print("\n", "Leader and NO Follower queues created", "\n")
 
     return {"message": "Queue created successfully", "queue_id": new_queue.id}
 
@@ -94,27 +164,58 @@ async def delete_queue(
                 detail="You do not have permission to delete this queue.",
             )
 
+        #Delete leftover messages in the queue
+        queue_messages = db.query(QueueMessage).filter(QueueMessage.queue_id == queue_id).all()
+        
+        for queue_message in queue_messages:
+            
+            queue_message_id = queue_message.message_id
+            db.delete(queue_message)
+            
+            message = db.query(Message).filter(Message.id == queue_message_id).first()
+            db.delete(message)
+            
         db.delete(queue)
         db.commit()
 
         zk.delete(f"{ZK_NODE_QUEUES}/{queue_id}", recursive=True)
         round_robin_manager.user_queues_dict.pop(queue_id, None)
-        return {"message": "Queue deleted successfully", "queue_id": queue_id}
 
-    else:
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
-                    zk.get_children(f"/servers/{server}/Queues") or []
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    if queue == queue_id:
-                        print("send grpc to delete queue")
-                        return {
-                            "message": "Queue deleted successfully",
-                            "queue_id": queue_id,
-                        }
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        Client.send_grpc_queue_delete(
+                            queue_id, current_user.id, server_ip + ":8080"
+                        )
+
+        return {"message": "Queue deleted successfully", "queue_id": queue_id}
+
+    else:
+        was_deleted = False
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
+                for queue in server_queues:
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        Client.send_grpc_queue_delete(
+                            queue_id, current_user.id, server_ip + ":8080"
+                        )
+                    was_deleted = True
+        if was_deleted:
+            return {
+                "message": "Queue deleted successfully",
+                "queue_id": queue_id,
+            }
     raise HTTPException(status_code=404, detail="Queue not found.")
 
 
@@ -142,26 +243,65 @@ async def publish_message(
 
         db.commit()
 
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
+                for queue in server_queues:
+                    print("Searching in servers for queues")
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_message(
+                            "queue",
+                            queue_id,
+                            message.content,
+                            message.routing_key,
+                            server_ip + ":8080",
+                        )
+                        if response != 1:
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to save the message",
+                            )
         return {
             "message": "Message published successfully",
             "queue_id": existing_queue.id,
             "message_id": new_message.id,
         }
     else:
+        was_message_sent = False
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
-                    zk.get_children(f"/servers/{server}/Queues") or []
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    if queue == queue_id:
-                        print("send grpc to send message to queue")
-                        return {
-                            "message": "Message published successfully",
-                            "queue_id": existing_queue.id,
-                            "message_id": new_message.id,
-                        }
+                    print("Searching in servers for queues")
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_message(
+                            "queue",
+                            queue_id,
+                            message.content,
+                            message.routing_key,
+                            server_ip + ":8080",
+                        )
+                        if response != 1:
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to save the message",
+                            )
+                        was_message_sent = True
+        if was_message_sent:
+            return {
+                "message": "Message published successfully",
+                "queue_id": "",
+                "message_id": "",
+            }
+
     raise HTTPException(status_code=404, detail="Queue not found")
 
 
@@ -173,11 +313,7 @@ async def consume_message(
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
-
     if queue:
-        if not queue:
-            raise HTTPException(status_code=404, detail="Queue not found")
-
         is_subscribed = (
             db.query(UserQueue)
             .filter(
@@ -206,27 +342,44 @@ async def consume_message(
                 raise HTTPException(status_code=404, detail="Message not found")
 
             message_content = queue_message.message.content
+            message_id = queue_message.message_id
 
             db.delete(queue_message)
+            db.flush()
 
             remaining_refs = (
                 db.query(QueueMessage)
-                .filter(QueueMessage.message_id == queue_message.message_id)
+                .filter(QueueMessage.message_id == message_id)
                 .count()
             )
             if remaining_refs == 0:
                 message_to_delete = (
-                    db.query(Message)
-                    .filter(Message.id == queue_message.message_id)
-                    .first()
+                    db.query(Message).filter(Message.id == message_id).first()
                 )
                 if message_to_delete:
                     db.delete(message_to_delete)
 
+            db.flush()
             db.commit()
 
             turn_user = round_robin_manager.user_queues_dict[queue.id].popleft()
             round_robin_manager.user_queues_dict[queue.id].append(turn_user)
+
+            servers: list[str] = zk.get_children("/servers") or []
+            for server in servers:
+                if server != f"{SERVER_IP}:{SERVER_PORT}":
+                    server_queues: list[str] = (
+                        zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                    )
+                    for queue in server_queues:
+                        if queue == str(queue_id):
+                            server_ip, _ = server.split(":")
+                            response = Client.send_grpc_consume_queue(
+                                queue_id,
+                                current_user.id,
+                                current_user.name,
+                                server_ip + ":8080",
+                            )
 
             return {
                 "message": "Message consumed successfully",
@@ -234,19 +387,30 @@ async def consume_message(
             }
 
     else:
+        was_message_consumed = False
+        message_content = ""
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
-                    zk.get_children(f"/servers/{server}/Queues") or []
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    if queue == queue_id:
-                        print("send grpc to consume message")
-                        return {
-                            "message": "Message consumed successfully",
-                            "content": "Message content from gRPC",
-                        }
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_consume_queue(
+                            queue_id,
+                            current_user.id,
+                            current_user.name,
+                            server_ip + ":8080",
+                        )
+                        message_content = response.content
+                        was_message_consumed = True
+        if was_message_consumed:
+            return {
+                "message": "Message consumed successfully",
+                "content": response.content,
+            }
     raise HTTPException(status_code=409, detail="Invalid user turn")
 
 
@@ -297,21 +461,57 @@ async def subscribe(
 
         round_robin_manager.user_queues_dict[queue_id].append(current_user.name)
 
-        return {"message": "Successfully subscribed to the queue"}
-    else:
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
-                    zk.get_children(f"/servers/{server}/Queues") or []
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    if queue == queue_id:
-                        print("send grpc to subscribe to queue")
-                        return {
-                            "message": "Successfully subscribed to the queue",
-                            "queue_id": queue_id,
-                        }
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_queue_subscribe(
+                            queue_id,
+                            current_user.id,
+                            current_user.name,
+                            server_ip + ":8080",
+                        )
+                        if response.status_code != 1:
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to subscribe",
+                            )
+
+        return {"message": "Successfully subscribed to the queue"}
+    else:
+        was_subscribed = False
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
+                for queue in server_queues:
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_queue_subscribe(
+                            queue_id,
+                            current_user.id,
+                            current_user.name,
+                            server_ip + ":8080",
+                        )
+                        if response.status_code != 1:
+                            raise HTTPException(
+                                status_code=500,
+                                detail="Client wasn't able to subscribe",
+                            )
+                        was_subscribed = True
+        if was_subscribed:
+            return {
+                "message": "Successfully subscribed to the queue",
+                "queue_id": queue_id,
+            }
+
     raise HTTPException(status_code=404, detail="Queue not found")
 
 
@@ -350,19 +550,43 @@ async def unsubscribe(
             if not round_robin_manager.user_queues_dict[queue_id]:
                 del round_robin_manager.user_queues_dict[queue_id]
 
+        servers: list[str] = zk.get_children("/servers") or []
+        for server in servers:
+            if server != f"{SERVER_IP}:{SERVER_PORT}":
+                server_queues: list[str] = (
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                )
+                for queue in server_queues:
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_queue_unsubscribe(
+                            queue_id,
+                            current_user.id,
+                            current_user.name,
+                            server_ip + ":8080",
+                        )
+
         return {"message": "Successfully unsubscribed from the queue"}
     else:
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
                 server_queues: list[str] = (
-                    zk.get_children(f"/servers/{server}/Queues") or []
+                    zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    if queue == queue_id:
-                        print("send grpc to unsubscribe from queue")
-                        return {
-                            "message": "Successfully unsubscribed from the queue",
-                            "queue_id": queue_id,
-                        }
-    raise HTTPException(status_code=404, detail="Queue not found")
+                    if queue == str(queue_id):
+                        server_ip, _ = server.split(":")
+                        response = Client.send_grpc_queue_unsubscribe(
+                            queue_id,
+                            current_user.id,
+                            current_user.name,
+                            server_ip + ":8080",
+                        )
+                        if response.status_code != 1:
+                            raise HTTPException(
+                                status_code=404, detail="Queue not found"
+                            )
+        return {
+            "message": "Successfully unsubscribed to the queue"
+        }

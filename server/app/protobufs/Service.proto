@@ -2,6 +2,8 @@ syntax = "proto3";
 
 service MessageService {
     rpc AddMessage (Message) returns (MessageResponse);
+    rpc ConsumeQueueMessage (ConsumeMessageRequest) returns (ConsumeMessageResponse);
+    rpc ConsumeTopicMessage (ConsumeMessageRequest) returns (ConsumeMessagesResponse);
 }
 
 message Message {
@@ -13,4 +15,132 @@ message Message {
 
 message MessageResponse {
     int32 status_code = 1; 
+}
+
+message ConsumedMessage {
+    string content = 1;
+    int32 id = 2;
+}
+
+message ConsumeMessageRequest {
+    int32 id = 1;
+    string user_name = 2;
+    int32 user_id = 3;
+}
+
+message ConsumeMessageResponse {
+    int32 status_code = 1;
+    string content = 2; 
+}
+
+message ConsumeMessagesResponse {
+    int32 status_code = 1;
+    repeated ConsumedMessage messages = 2; 
+}
+
+
+
+service QueueService {
+    rpc Subscribe (SubscribeRequest) returns (SubscribeResponse);
+    rpc UnSubscribe (SubscribeRequest) returns (SubscribeResponse);
+    rpc Delete (DeleteRequest) returns (CRUDResponse); 
+    rpc GetQueues (GetQueuesRequest) returns (GetQueuesResponse);
+    rpc CreateQueues(CreateQueueRequest) returns (CRUDResponse);
+}
+
+message Queue {
+    int32 id = 1;
+    string name = 2;
+}
+
+message CreateQueueRequest {
+    int32 id = 1;
+    string name = 2;
+    int32 user_id = 3;
+}
+
+message GetQueuesRequest {
+    int32 allQueues = 1;
+}
+
+message GetQueuesResponse {
+    repeated Queue queues = 1;
+}
+
+message SubscribeRequest {
+    int32 queue_id = 1;
+    int32 user_id = 2;
+    string user_name = 3;
+    optional int32 topic_id = 4;
+    optional string routing_key = 5;
+}
+
+message SubscribeResponse {
+    int32 status_code = 1;
+}
+
+message DeleteRequest {
+    int32 id = 1;
+    int32 user_id = 2;
+}
+
+message CRUDResponse {
+    int32 status_code = 1;
+}
+
+
+service TopicService {
+    rpc Subscribe (SubscribeTopicRequest) returns (SubscribeResponse);
+    rpc UnSubscribe (SubscribeTopicRequest) returns (SubscribeResponse);
+    rpc Delete (DeleteRequest) returns (CRUDResponse); 
+    rpc GetTopics (GetTopicsRequest) returns (GetTopicsResponse);
+    rpc CreateTopics (CreateTopicsRequest) returns (CRUDResponse);
+}
+
+message Topic {
+    int32 id = 1;
+    string name = 2;
+}
+
+message CreateTopicsRequest {
+    int32 id = 1;
+    string name = 2;
+    int32 user_id = 3;
+}
+
+message SubscribeTopicRequest {
+    int32 topic_id = 1;
+    int32 user_id = 2;
+    string user_name = 3;
+    string routing_key = 4;
+    optional int32 queue_id = 5;
+}
+
+message GetTopicsRequest {
+    int32 allTopics = 1;
+}
+
+message GetTopicsResponse {
+    repeated Topic topic = 1;
+}
+
+
+
+service UserService {
+    rpc Register (RegisterRequest) returns (RegisterResponse);
+    rpc GetUserTopicQueues (GetUserTopicQueuesRequest) returns (GetQueuesResponse);
+}
+
+message RegisterRequest {
+    string user_name = 1;
+    string user_password = 2;
+    int32 user_id = 3;
+}
+
+message RegisterResponse {
+    int32 status_code = 1;
+}
+
+message GetUserTopicQueuesRequest {
+    int32 user_id = 1;    
 }

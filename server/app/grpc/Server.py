@@ -1,23 +1,21 @@
 import os
 import threading
 from concurrent import futures
-
 import grpc
 
 from . import Service_pb2, Service_pb2_grpc
+from ..core.database import get_db
+from .services.MessageService import MessageService
+from .services.QueueService import QueueService
+from .services.TopicService import TopicService
+from .services.UserService import UserService
 
-GRPC_PORT = int(os.getenv("GRPC_PORT", 8080))  # Change per instance
-HOST = "127.0.0.1:" + str(GRPC_PORT)
+# os.environ["GRPC_VERBOSITY"] = "debug"
+# os.environ["GRPC_TRACE"] = "all"
 
-
-class MessageService(Service_pb2_grpc.MessageServiceServicer):
-    """
-    Here the message should be saved in the queue or topic received.
-    """
-
-    def AddMessage(self, request, context):
-        print("Request is received: " + str(request))
-        return Service_pb2.MessageResponse(status_code=1)
+GRPC_PORT = int(os.getenv("GRPC_PORT", 8080))
+PUBLIC_IP = os.getenv("PUBLIC_IP")
+HOST = f"{PUBLIC_IP}:" + str(GRPC_PORT)
 
 
 class Server:
@@ -44,8 +42,10 @@ class Server:
     def listen():
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         Service_pb2_grpc.add_MessageServiceServicer_to_server(MessageService(), server)
+        Service_pb2_grpc.add_QueueServiceServicer_to_server(QueueService(), server)
+        Service_pb2_grpc.add_UserServiceServicer_to_server(UserService(), server)
+        Service_pb2_grpc.add_TopicServiceServicer_to_server(TopicService(), server)
         server.add_insecure_port(HOST)
-        print("Production service started on port 8080")
+        print(f"Production service started on {HOST} ")
         server.start()
         server.wait_for_termination()
-
