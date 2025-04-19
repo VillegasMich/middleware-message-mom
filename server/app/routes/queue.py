@@ -95,7 +95,7 @@ async def create_queue(
     db.refresh(new_queue)
 
     # Choose leader and follower servers
-    if len(servers) >= 2:
+    if len(servers) >=   2:
         print("\n REPLICATION \n")
         servers.remove(SERVER_ADDR)
         follower_ip = sample(servers, 1)[0]

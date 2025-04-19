@@ -45,6 +45,7 @@ class Server:
 
         for queue in server_queues:
             data_bytes,_  = zk.get(f"/servers-metadata/{SERVER_ADDR}/Queues/{queue}")
+            print(data_bytes)
             if data_bytes:
                 try:
                     metadata = json.loads(data_bytes.decode("utf-8"))
