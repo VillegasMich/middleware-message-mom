@@ -45,8 +45,15 @@ class Server:
 
         for queue in server_queues:
             data_bytes,_  = zk.get(f"/servers-metadata/{SERVER_ADDR}/Queues/{queue}")
-            metadata = json.loads(data_bytes.decode('utf-8'))
-            print(metadata)
+            if data_bytes:
+                try:
+                    metadata = json.loads(data_bytes.decode("utf-8"))
+                except json.JSONDecodeError:
+                    print(f"{data_bytes!r}")
+                    continue
+                print("JSON almacenado:", metadata)
+            else:
+                print(f"El nodo vacío (no tiene datos)")
     """
         Init the thread that listens for new incoming requests in this MOM.
     """
