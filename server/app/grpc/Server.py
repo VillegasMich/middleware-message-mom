@@ -41,7 +41,9 @@ class Server:
         server_queues: list[str] = (
             zk.get_children(f"/servers-metadata/{SERVER_ADDR}/Queues") or []
         )
+        print('------------------------------------------')
         print(server_queues)
+        print('------------------------------------------')
 
     """
         Init the thread that listens for new incoming requests in this MOM.
