@@ -58,6 +58,8 @@ async def lifespan(app: FastAPI):
     sync_all_queues(db)
     sync_all_topics(db)
     sync_all_users(db)
+    
+    server.sync_queues()
 
     yield
 
@@ -82,4 +84,3 @@ print(f"ZK NODE: /servers/{SERVER_IP}:{SERVER_PORT}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=SERVER_PORT)
-    server.sync_queues()
