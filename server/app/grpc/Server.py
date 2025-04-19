@@ -2,6 +2,7 @@ import os
 import threading
 from concurrent import futures
 import grpc
+import json
 
 from . import Service_pb2, Service_pb2_grpc
 from ..core.database import get_db
@@ -43,13 +44,9 @@ class Server:
         )
 
         for queue in server_queues:
-            node = zk.get(f"/servers-metadata/{SERVER_ADDR}/Queues/{queue}")
-            print(node)
-            
-        print('------------------------------------------')
-        print(server_queues)
-        print('------------------------------------------')
-
+            data_bytes,_  = zk.get(f"/servers-metadata/{SERVER_ADDR}/Queues/{queue}")
+            metadata = json.loads(data_bytes.decode('utf-8'))
+            print(metadata)
     """
         Init the thread that listens for new incoming requests in this MOM.
     """
