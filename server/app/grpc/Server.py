@@ -9,6 +9,9 @@ from .services.MessageService import MessageService
 from .services.QueueService import QueueService
 from .services.TopicService import TopicService
 from .services.UserService import UserService
+from .Client import Client
+from zookeeper import SERVER_ADDR, SERVER_IP, SERVER_PORT, ZK_NODE_QUEUES, zk
+
 
 # os.environ["GRPC_VERBOSITY"] = "debug"
 # os.environ["GRPC_TRACE"] = "all"
@@ -34,10 +37,15 @@ class Server:
             if self.thread:
                 self.thread.join()
 
+    def sync_queues():
+        server_queues: list[str] = (
+            zk.get_children(f"/servers-metadata/{SERVER_ADDR}/Queues") or []
+        )
+        print(server_queues)
+
     """
         Init the thread that listens for new incoming requests in this MOM.
     """
-
     @staticmethod
     def listen():
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

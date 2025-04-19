@@ -305,3 +305,27 @@ class Client:
                 return response
             except grpc.RpcError as e:
                 print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+    
+    @staticmethod
+    def send_grpc_queue_sync(queue_id: int, remote_host:str):
+        with grpc.insecure_channel(remote_host) as channel:
+            stub = Service_pb2_grpc.QueueServiceStub(channel)
+            print(dir(stub))
+            request = Service_pb2.SyncRequest(id=queue_id)
+            try:
+                response = stub.SyncQueues(request)
+                print("Response received from remote service:", response)
+                if(response.status_code == 1): 
+                    remote_messages = [
+                        { "id": m.id, 
+                        "type": m.type, 
+                        "routing_key": m.routing_key, 
+                        "content":m.content } for m in response.messages
+                    ]
+                    return remote_messages
+                else:
+                    return None
+            except grpc.RpcError as e:
+                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+
+

@@ -63,3 +63,26 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
         db.close()
         print("Request is received: " + str(request))
         return Service_pb2.CRUDResponse(status_code=1)
+
+    def SyncQueues(self, request, context):
+        db = next(get_db())
+        repo = QueueRepository(db)
+        messages = repo.sync_queues(request)
+        db.close()
+
+        if messages:
+            response = Service_pb2.SyncResponse(status_code=1)
+            
+            print(messages)
+            for message in messages:
+                message_item = response.messages.add()
+                message_item.id = message.id
+                message_item.type = 'queue'
+                message_item.routing_key = message.routing_key
+                message_item.content = message.content
+            
+            print("Request is received: " + str(request))
+            
+            return response
+        else:
+            return Service_pb2.SyncResponse(status_code=0)  

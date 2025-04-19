@@ -46,6 +46,7 @@ service QueueService {
     rpc Delete (DeleteRequest) returns (CRUDResponse); 
     rpc GetQueues (GetQueuesRequest) returns (GetQueuesResponse);
     rpc CreateQueues(CreateQueueRequest) returns (CRUDResponse);
+    rpc SyncQueues(SyncRequest) returns (SyncResponse);
 }
 
 message Queue {
@@ -88,6 +89,14 @@ message CRUDResponse {
     int32 status_code = 1;
 }
 
+message SyncRequest {
+    int32 id = 1; 
+}
+
+message SyncResponse {
+    repeated Message messages = 1;
+    int32 status_code = 2;
+}
 
 service TopicService {
     rpc Subscribe (SubscribeTopicRequest) returns (SubscribeResponse);
