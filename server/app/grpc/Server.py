@@ -37,7 +37,7 @@ class Server:
             if self.thread:
                 self.thread.join()
 
-    def sync_queues():
+    def sync_queues(self):
         server_queues: list[str] = (
             zk.get_children(f"/servers-metadata/{SERVER_ADDR}/Queues") or []
         )
