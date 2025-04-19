@@ -1,5 +1,7 @@
 from collections import deque
 import json
+import os
+from kazoo.exceptions import NodeExistsError
 from random import sample
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
@@ -94,58 +96,101 @@ async def create_queue(
     db.commit()
     db.refresh(new_queue)
 
-    # Choose leader and follower servers
-    if len(servers) >=   2:
-        print("\n REPLICATION \n")
+
+    def _create_or_set(path: str, payload: bytes):
+        """
+        Crea el znode con `payload`.  
+        Si ya existe, lo actualiza con `zk.set`.
+        """
+        zk.ensure_path(os.path.dirname(path))
+        try:
+            zk.create(path, payload)
+        except NodeExistsError:
+            zk.set(path, payload)
+
+    def _json_payload(is_leader: bool) -> bytes:
+        return json.dumps({"leader": is_leader}).encode()
+
+    # ---------- dentro de tu función ----------
+    if len(servers) >= 2:
         servers.remove(SERVER_ADDR)
         follower_ip = sample(servers, 1)[0]
-        leader_path = f"{ZK_NODE_QUEUES}/{new_queue.id}"
+
+        leader_path   = f"{ZK_NODE_QUEUES}/{new_queue.id}"
         follower_path = f"/servers-metadata/{follower_ip}/Queues/{new_queue.id}"
-        print("\n FOLLOWER PATH: " + str(follower_path) + "\n")
-        zk.ensure_path(ZK_NODE_QUEUES)
-        zk.ensure_path(f"/servers-metadata/{follower_ip}/Queues")
-        # Data to store in ZooKeeper
-        payload_leader = json.dumps(
-            {
-                "leader": True,
-            }
-        ).encode()
 
-        payload_follower = json.dumps(
-            {
-                "leader": False,
-            }
-        ).encode()
+        # 1) crea/actualiza los nodos con datos
+        _create_or_set(leader_path,   _json_payload(True))
+        _create_or_set(follower_path, _json_payload(False))
 
+        # 2) llamar al follower para que cree la cola en su BD
         server_ip, _ = follower_ip.split(":")
-        response = Client.send_grpc_queue_create(
+        Client.send_grpc_queue_create(
             new_id,
             queue.name,
             current_user.id,
-            server_ip + ":8080",
+            f"{server_ip}:8080",
         )
 
-        # Create ZooKeeper entries
-        zk.create(leader_path, payload_leader)
-        zk.create(follower_path, payload_follower)
-
         round_robin_manager.user_queues_dict[new_queue.id] = deque()
-
-        print("\n", "Leader and Follower queues created", "\n")
-
         return {"message": "Queue created successfully", "queue_id": new_queue.id}
 
-    payload_leader = json.dumps(
-        {
-            "leader": True,
-        }
-    ).encode()
-    zk.create(f"{ZK_NODE_QUEUES}/{new_queue.id}", payload_leader)
+    # ------ caso sin follower ------
+    _create_or_set(f"{ZK_NODE_QUEUES}/{new_queue.id}", _json_payload(True))
     round_robin_manager.user_queues_dict[new_queue.id] = deque()
-
-    print("\n", "Leader and NO Follower queues created", "\n")
-
     return {"message": "Queue created successfully", "queue_id": new_queue.id}
+    # # Choose leader and follower servers
+    # if len(servers) >= 2:
+    #     print("\n REPLICATION \n")
+    #     servers.remove(SERVER_ADDR)
+    #     follower_ip = sample(servers, 1)[0]
+    #     leader_path = f"{ZK_NODE_QUEUES}/{new_queue.id}"
+    #     follower_path = f"/servers-metadata/{follower_ip}/Queues/{new_queue.id}"
+    #     print("\n FOLLOWER PATH: " + str(follower_path) + "\n")
+    #     zk.ensure_path(ZK_NODE_QUEUES)
+    #     zk.ensure_path(f"/servers-metadata/{follower_ip}/Queues")
+    #     # Data to store in ZooKeeper
+    #     payload_leader = json.dumps(
+    #         {
+    #             "leader": True,
+    #         }
+    #     ).encode()
+
+    #     payload_follower = json.dumps(
+    #         {
+    #             "leader": False,
+    #         }
+    #     ).encode()
+
+    #     server_ip, _ = follower_ip.split(":")
+    #     response = Client.send_grpc_queue_create(
+    #         new_id,
+    #         queue.name,
+    #         current_user.id,
+    #         server_ip + ":8080",
+    #     )
+
+    #     # Create ZooKeeper entries
+    #     zk.create(leader_path, payload_leader)
+    #     zk.create(follower_path, payload_follower)
+
+    #     round_robin_manager.user_queues_dict[new_queue.id] = deque()
+
+    #     print("\n", "Leader and Follower queues created", "\n")
+
+    #     return {"message": "Queue created successfully", "queue_id": new_queue.id}
+
+    # payload_leader = json.dumps(
+    #     {
+    #         "leader": True,
+    #     }
+    # ).encode()
+    # zk.create(f"{ZK_NODE_QUEUES}/{new_queue.id}", payload_leader)
+    # round_robin_manager.user_queues_dict[new_queue.id] = deque()
+
+    # print("\n", "Leader and NO Follower queues created", "\n")
+
+    # return {"message": "Queue created successfully", "queue_id": new_queue.id}
 
 
 @router.delete("/queues/{queue_id}")
