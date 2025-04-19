@@ -39,8 +39,13 @@ class Server:
 
     def sync_follower_queues(self):
         server_queues: list[str] = (
-            zk.get(f"/servers-metadata/{SERVER_ADDR}/Queues") or []
+            zk.get_children(f"/servers-metadata/{SERVER_ADDR}/Queues") or []
         )
+
+        for queue in server_queues:
+            node = zk.get(f"/servers-metadata/{SERVER_ADDR}/Queues/{queue}")
+            print(node)
+            
         print('------------------------------------------')
         print(server_queues)
         print('------------------------------------------')
