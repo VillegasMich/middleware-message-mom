@@ -79,7 +79,7 @@ app.include_router(user_router)
 print(f"🚀 Using SERVER_PORT {SERVER_PORT}")
 print(f"ZK NODE: /servers/{SERVER_IP}:{SERVER_PORT}")
 
-# server.sync_queues()
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=SERVER_PORT)
+    server.sync_queues()
