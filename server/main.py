@@ -28,6 +28,7 @@ round_robin_manager.sync_users_queues(db)
 db.close()
 
 server = Server()
+server.sync_queues()
 server.start()
 
 
