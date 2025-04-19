@@ -59,7 +59,7 @@ async def lifespan(app: FastAPI):
     sync_all_topics(db)
     sync_all_users(db)
     
-    server.sync_queues()
+    server.sync_follower_queues()
 
     yield
 
