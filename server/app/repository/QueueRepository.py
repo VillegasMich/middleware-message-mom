@@ -10,7 +10,7 @@ from ..models.user_queue import user_queue as UserQueue
 from ..RoundRobinManager import RoundRobinManager
 from app.core.rrmanager import get_round_robin_manager
 from zookeeper import zk, ZK_NODE_QUEUES
-
+from .MessageRepository import MessageRepository
 
 class QueueRepository:
     """
@@ -158,3 +158,27 @@ class QueueRepository:
             return messages
         else:
             return None
+        
+    def sync_follower_queue(self, request):
+        existing_queue = self.db.query(Queue).filter(Queue.id == request.id).first()
+        queue_messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == existing_queue.id).all()  
+        remote_messages = request.messages
+        local_ids = []
+        message_repo = MessageRepository(self.db)
+
+            
+        for local_message in queue_messages:
+            queue_message_id = local_message.message_id
+            local_ids.append(queue_message_id)
+
+        print('-----------Local Ids------------')
+        print(local_ids)
+        print('-----------Local Ids------------')
+
+        for remote_message in remote_messages:
+            if remote_message.id not in local_ids:
+                payload = {'id': request.id, 'content':remote_message.content, 'routing_key':remote_message.routing_key}
+                print('------Payload-------')
+                print(payload)
+                print('------Payload-------')
+                message_repo.save_queue_message(payload)

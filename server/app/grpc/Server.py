@@ -11,6 +11,7 @@ from .services.QueueService import QueueService
 from .services.TopicService import TopicService
 from .services.UserService import UserService
 from .Client import Client
+from ..repository.QueueRepository import QueueRepository
 from zookeeper import SERVER_ADDR, SERVER_IP, SERVER_PORT, ZK_NODE_QUEUES, zk
 
 
@@ -54,12 +55,19 @@ class Server:
             data_bytes,_  = zk.get(f"/servers-metadata/{SERVER_ADDR}/Queues/{queue}")
             print(data_bytes)
             if data_bytes:
+                # Decodes de metadata from the local server
                 try:
                     metadata = json.loads(data_bytes.decode("utf-8"))
                 except json.JSONDecodeError:
                     print(f"{data_bytes!r}")
                     continue
+
+                # Checks if the servers isn't leader of this queue
                 if(metadata['leader'] == False):
+                    db = next(get_db())
+                    queue_repo = QueueRepository(db)
+                    db.close()
+                    # Looks in all of the servers for the leader server (Could be optimized by putting the owner inside the payload)
                     for server in servers:
                         remote_queues: list[str] = (
                             zk.get_children(f"/servers-metadata/{server}/Queues") or []
@@ -70,7 +78,8 @@ class Server:
                             if remote_metadata['leader'] == True:
                                 server_ip, _ = server.split(":")
                                 messages = Client.send_grpc_get_queue_messages(int(queue),server_ip + ":8080")
-                                print(messages)
+                                payload = {'messages':messages, 'id':queue}
+                                queue_repo.sync_follower_queue(payload)
 
 
             else:
