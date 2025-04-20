@@ -163,7 +163,7 @@ class QueueRepository:
     def sync_follower_queue(self, request):
         existing_queue = self.db.query(Queue).filter(Queue.id == request['id']).first()
         queue_messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == existing_queue.id).all()  
-        remote_messages = request['messages']
+        remote_messages = request['messages'] or []
         local_ids = []
         remote_ids = []
         
