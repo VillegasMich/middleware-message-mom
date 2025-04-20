@@ -28,6 +28,7 @@ class Queue(Base):
     topic_id = Column(Integer, ForeignKey("topics.id"), nullable=True)
     is_private = Column(Boolean, default=sa.sql.expression.false(), nullable=False)
     is_leader = Column(Boolean, default=sa.sql.expression.false(), nullable=False)
+    
     owner = relationship("User", back_populates="owned_queues")
     queue_messages = relationship(
         "QueueMessage", back_populates="queue", cascade="all, delete-orphan"
