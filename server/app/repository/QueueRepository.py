@@ -145,9 +145,16 @@ class QueueRepository:
 
     def get_queue_messages(self, request):
         existing_queue = self.db.query(Queue).filter(Queue.id == request.id).first()
-
+        messages = []
         if existing_queue:
-            messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == existing_queue.id).all()
+            queue_messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == existing_queue.id).all()
+              
+            for queue_message in queue_messages:
+                
+                queue_message_id = queue_message.message_id
+                message = self.db.query(Message).filter(Message.id == queue_message_id).first()
+                messages.append(message)
+
             return messages
         else:
             return None

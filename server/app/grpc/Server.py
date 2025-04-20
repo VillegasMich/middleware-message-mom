@@ -59,7 +59,6 @@ class Server:
                 except json.JSONDecodeError:
                     print(f"{data_bytes!r}")
                     continue
-
                 if(metadata['leader'] == False):
                     for server in servers:
                         remote_queues: list[str] = (
