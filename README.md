@@ -63,3 +63,11 @@ pip install -r requirements.txt
 alembic upgrade head
 fastapi run main.py
 ```
+
+## Tests
+
+- The integration test is located in the `/server/test/zk_integrity.py` and you can run the test with the following command
+
+```bash
+pytest server/test/zk_integrity.py
+```

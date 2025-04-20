@@ -37,7 +37,7 @@ class Client:
             except grpc.RpcError as e:
                 print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
-    #Sends the protobuf Queue subscribeRequest to the remote_host (ipv4).
+    # Sends the protobuf Queue subscribeRequest to the remote_host (ipv4).
     @staticmethod
     def send_grpc_queue_subscribe(
         queue_id: int, user_id: int, user_name: str, remote_host: str
@@ -74,12 +74,17 @@ class Client:
 
     @staticmethod
     def send_grpc_topic_subscribe(
-        topic_id: int, user_id: int, user_name: str, routing_key: str, remote_host: str, queue_id: int = None
+        topic_id: int,
+        user_id: int,
+        user_name: str,
+        routing_key: str,
+        remote_host: str,
+        queue_id: int = None,
     ):
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.TopicServiceStub(channel)
             print(dir(stub))
-            if(queue_id == None):
+            if queue_id == None:
                 request = Service_pb2.SubscribeTopicRequest(
                     topic_id=topic_id,
                     user_id=user_id,
@@ -92,7 +97,7 @@ class Client:
                     user_id=user_id,
                     user_name=user_name,
                     routing_key=routing_key,
-                    queue_id=queue_id
+                    queue_id=queue_id,
                 )
 
             try:
@@ -101,32 +106,35 @@ class Client:
                 return response
             except grpc.RpcError as e:
                 print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
-    
-    
+
     @staticmethod
     def send_grpc_topic_unsubscribe(
-        user_id: int, user_name: str, 
-        remote_host: str, topic_id: Optional[int] = None, routing_key: Optional[str] = None, private_queue_id: int=None
+        user_id: int,
+        user_name: str,
+        remote_host: str,
+        topic_id: Optional[int] = None,
+        routing_key: Optional[str] = None,
+        private_queue_id: int = None,
     ):
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.TopicServiceStub(channel)
-            
+
             if private_queue_id == None:
                 request = Service_pb2.SubscribeTopicRequest(
-                    topic_id=topic_id, 
+                    topic_id=topic_id,
                     user_id=user_id,
                     user_name=user_name,
                     routing_key=routing_key,
-            )
+                )
             else:
                 request = Service_pb2.SubscribeTopicRequest(
-                    topic_id=topic_id, 
+                    topic_id=topic_id,
                     user_id=user_id,
                     user_name=user_name,
                     routing_key=routing_key,
-                    queue_id=private_queue_id, 
+                    queue_id=private_queue_id,
                 )
-            
+
             try:
                 response = stub.UnSubscribe(request)
                 if response.status_code == 1:
@@ -137,7 +145,7 @@ class Client:
             except grpc.RpcError as e:
                 print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
-    #Gets all queues from the remote_host, the queues should be parsed to dict after they are returned
+    # Gets all queues from the remote_host, the queues should be parsed to dict after they are returned
     @staticmethod
     def send_grpc_get_all_queues(remote_host: str):
         with grpc.insecure_channel(remote_host) as channel:
@@ -300,9 +308,9 @@ class Client:
                 return response
             except grpc.RpcError as e:
                 print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
-    
+
     @staticmethod
-    def send_grpc_queue_sync(queue_id: int, remote_host:str):
+    def send_grpc_queue_sync(queue_id: int, remote_host: str):
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.QueueServiceStub(channel)
             print(dir(stub))
@@ -310,16 +318,18 @@ class Client:
             try:
                 response = stub.SyncQueues(request)
                 print("Response received from remote service:", response)
-                if(response.status_code == 1): 
+                if response.status_code == 1:
                     remote_messages = [
-                        { "id": m.id, 
-                        "type": m.type, 
-                        "routing_key": m.routing_key, 
-                        "content":m.content } for m in response.messages
+                        {
+                            "id": m.id,
+                            "type": m.type,
+                            "routing_key": m.routing_key,
+                            "content": m.content,
+                        }
+                        for m in response.messages
                     ]
                     return remote_messages
                 else:
                     return None
             except grpc.RpcError as e:
                 print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
-
