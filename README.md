@@ -40,6 +40,7 @@ DATABASE_URL=mysql+pymysql://user:root@localhost:3306/mom
 SECRET_KEY=...
 ALGORITHM=HS256
 SERVER_ELASTIC_IP=...
+PUBLIC_IP=0.0.0.0
 ```
 
 #### Secret Key
