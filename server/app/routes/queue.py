@@ -88,7 +88,11 @@ async def create_queue(
                 new_id = int(queue_id) + 1
 
     new_queue = Queue(
-        id=new_id, name=queue.name, is_private=False, user_id=current_user.id
+        id=new_id,
+        name=queue.name,
+        is_private=False,
+        user_id=current_user.id,
+        is_leader=True,
     )
     db.add(new_queue)
     db.commit()
@@ -164,17 +168,18 @@ async def delete_queue(
                 detail="You do not have permission to delete this queue.",
             )
 
-        #Delete leftover messages in the queue
-        queue_messages = db.query(QueueMessage).filter(QueueMessage.queue_id == queue_id).all()
-        
+        # Delete leftover messages in the queue
+        queue_messages = (
+            db.query(QueueMessage).filter(QueueMessage.queue_id == queue_id).all()
+        )
+
         for queue_message in queue_messages:
-            
             queue_message_id = queue_message.message_id
             db.delete(queue_message)
-            
+
             message = db.query(Message).filter(Message.id == queue_message_id).first()
             db.delete(message)
-            
+
         db.delete(queue)
         db.commit()
 
@@ -587,6 +592,4 @@ async def unsubscribe(
                             raise HTTPException(
                                 status_code=404, detail="Queue not found"
                             )
-        return {
-            "message": "Successfully unsubscribed to the queue"
-        }
+        return {"message": "Successfully unsubscribed to the queue"}
