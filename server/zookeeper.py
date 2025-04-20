@@ -60,25 +60,11 @@ def sync_all_queues(db: Session):
 
 
 def sync_all_topics(db: Session):
-    payload_leader = json.dumps(
-        {
-            "leader": True,
-        }
-    ).encode()
-
-    payload_follower = json.dumps(
-        {
-            "leader": False,
-        }
-    ).encode()
     topics = db.query(Topic).all()
     for topic in topics:
         topic_path = f"{ZK_NODE_TOPICS}/{topic.id}"
         if not zk.exists(topic_path):
-            if topic.is_leader:
-                zk.create(topic_path, payload_leader, ephemeral=False)
-            else:
-                zk.create(topic_path, payload_follower, ephemeral=False)
+            zk.create(topic_path, b"", ephemeral=False)
             print(f"Created ZK node: {topic_path}")
         else:
             print(f"ZK node already exists: {topic_path}")
