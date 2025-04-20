@@ -67,7 +67,7 @@ class Server:
                     db = next(get_db())
                     queue_repo = QueueRepository(db)
                     db.close()
-                    # Looks in all of the servers for the leader server (Could be optimized by putting the owner inside the payload)
+                    # Looks in all of the servers for the leader server (Could be optimized by putting the owner inside the payload in the zk)
                     for server in servers:
                         remote_queues: list[str] = (
                             zk.get_children(f"/servers-metadata/{server}/Queues") or []

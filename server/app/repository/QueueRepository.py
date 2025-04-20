@@ -165,23 +165,41 @@ class QueueRepository:
         queue_messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == existing_queue.id).all()  
         remote_messages = request['messages']
         local_ids = []
+        remote_ids = []
+        
         message_repo = MessageRepository(self.db)
-
-            
+    
         for local_message in queue_messages:
             queue_message_id = local_message.message_id
             local_ids.append(queue_message_id)
 
+        for remote_message in remote_messages:
+            remote_ids.append(remote_message['id'])
+
         print('-----------Local Ids------------')
         print(local_ids)
         print('-----------Local Ids------------')
+        
+        print('-----------Remote Ids------------')
+        print(remote_ids)
+        print('-----------Remote Ids------------')
 
         for remote_message in remote_messages:
             if remote_message['id'] not in local_ids:
                 payload = {'id': request['id'], 'content':remote_message['content'], 'routing_key':remote_message['routing_key']}
                 payload_obj = SimpleNamespace(**payload)
-                print('------Payload-------')
-                print(payload)
-                print(payload_obj)
-                print('------Payload-------')
                 message_repo.save_queue_message(payload_obj)
+            
+        for local_id in local_ids:
+            if local_id not in remote_ids:
+                (
+                    self.db.query(QueueMessage)
+                    .filter(QueueMessage.message_id == local_id)
+                    .delete(synchronize_session=False)
+                )
+                (
+                    self.db.query(Message)
+                    .filter(Message.id == local_id)
+                    .delete(synchronize_session=False)
+                )
+            self.db.commit() 
