@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from fastapi import HTTPException
 from collections import deque
+from types import SimpleNamespace
 
 from ..models.queue import Queue
 from ..models.message import Message
@@ -160,9 +161,9 @@ class QueueRepository:
             return None
         
     def sync_follower_queue(self, request):
-        existing_queue = self.db.query(Queue).filter(Queue.id == request.id).first()
+        existing_queue = self.db.query(Queue).filter(Queue.id == request['id']).first()
         queue_messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == existing_queue.id).all()  
-        remote_messages = request.messages
+        remote_messages = request['messages']
         local_ids = []
         message_repo = MessageRepository(self.db)
 
@@ -177,8 +178,10 @@ class QueueRepository:
 
         for remote_message in remote_messages:
             if remote_message.id not in local_ids:
-                payload = {'id': request.id, 'content':remote_message.content, 'routing_key':remote_message.routing_key}
+                payload = {'id': request['id'], 'content':remote_message.content, 'routing_key':remote_message.routing_key}
+                payload_obj = SimpleNamespace(**payload)
                 print('------Payload-------')
                 print(payload)
+                print(payload_obj)
                 print('------Payload-------')
-                message_repo.save_queue_message(payload)
+                message_repo.save_queue_message(payload_obj)
