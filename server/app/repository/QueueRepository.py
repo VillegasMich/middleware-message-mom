@@ -143,7 +143,7 @@ class QueueRepository:
 
         print("\n QUEUE REPLICATED \n")
 
-    def sync_queues(self, request):
+    def get_queue_messages(self, request):
         existing_queue = self.db.query(Queue).filter(Queue.id == request.id).first()
 
         if existing_queue:

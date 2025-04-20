@@ -49,7 +49,7 @@ class Server:
         server_queues: list[str] = (
             zk.get_children(f"/servers-metadata/{SERVER_ADDR}/Queues") or []
         )
-
+        servers: list[str] = zk.get_children("/servers") or []
         for queue in server_queues:
             data_bytes,_  = zk.get(f"/servers-metadata/{SERVER_ADDR}/Queues/{queue}")
             print(data_bytes)
@@ -59,7 +59,21 @@ class Server:
                 except json.JSONDecodeError:
                     print(f"{data_bytes!r}")
                     continue
-                print("JSON:", metadata)
+
+                if(metadata['leader'] == False):
+                    for server in servers:
+                        remote_queues: list[str] = (
+                            zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                        )
+                        if queue in remote_queues:
+                            remote_data_bytes,_  = zk.get(f"/servers-metadata/{server}/Queues/{queue}")
+                            remote_metadata = json.loads(remote_data_bytes.decode("utf-8"))
+                            if remote_metadata['leader'] == True:
+                                server_ip, _ = server.split(":")
+                                messages = Client.send_grpc_get_queue_messages(int(queue),server_ip + ":8080")
+                                print(messages)
+
+
             else:
                 print(f"Empty node (no data)")
 
