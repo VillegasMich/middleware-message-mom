@@ -186,7 +186,6 @@ async def create_topic(
         id=new_id,
         name=topic.name,
         user_id=current_user.id,
-        is_leader=True,
     )
     db.add(new_topic)
     db.commit()

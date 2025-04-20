@@ -302,7 +302,7 @@ class Client:
                 print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
     
     @staticmethod
-    def send_grpc_queue_sync(queue_id: int, remote_host:str):
+    def send_grpc_get_queue_messages(queue_id: int, remote_host:str):
         with grpc.insecure_channel(remote_host) as channel:
             stub = Service_pb2_grpc.QueueServiceStub(channel)
             print(dir(stub))

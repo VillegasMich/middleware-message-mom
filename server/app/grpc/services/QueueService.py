@@ -85,7 +85,7 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
         
         db = next(get_db())
         repo = QueueRepository(db)
-        messages = repo.sync_queues(request)
+        messages = repo.get_queue_messages(request)
         db.close()
 
         if messages:

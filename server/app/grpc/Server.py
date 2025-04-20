@@ -11,6 +11,7 @@ from .services.QueueService import QueueService
 from .services.TopicService import TopicService
 from .services.UserService import UserService
 from .Client import Client
+from ..repository.QueueRepository import QueueRepository
 from zookeeper import SERVER_ADDR, SERVER_IP, SERVER_PORT, ZK_NODE_QUEUES, zk
 
 
@@ -49,17 +50,40 @@ class Server:
         server_queues: list[str] = (
             zk.get_children(f"/servers-metadata/{SERVER_ADDR}/Queues") or []
         )
-
+        servers: list[str] = zk.get_children("/servers") or []
+        # Iterates thru each queue in the local server
         for queue in server_queues:
             data_bytes,_  = zk.get(f"/servers-metadata/{SERVER_ADDR}/Queues/{queue}")
             print(data_bytes)
             if data_bytes:
+                # Decodes de metadata from the local server
                 try:
                     metadata = json.loads(data_bytes.decode("utf-8"))
                 except json.JSONDecodeError:
                     print(f"{data_bytes!r}")
                     continue
-                print("JSON:", metadata)
+
+                # Checks if the server isn't leader of this queue
+                if(metadata['leader'] == False):
+                    db = next(get_db())
+                    queue_repo = QueueRepository(db)
+                    db.close()
+                    # Looks in all of the other servers for the leader server (Could be optimized by putting the owner inside the payload in the zk)
+                    for server in servers:
+                        remote_queues: list[str] = (
+                            zk.get_children(f"/servers-metadata/{server}/Queues") or []
+                        )
+                        if queue in remote_queues:
+                            remote_data_bytes,_  = zk.get(f"/servers-metadata/{server}/Queues/{queue}")
+                            remote_metadata = json.loads(remote_data_bytes.decode("utf-8"))
+                            if remote_metadata['leader'] == True:
+                                #If the leader is found, the local server sends an grpc request for the messages
+                                server_ip, _ = server.split(":")
+                                messages = Client.send_grpc_get_queue_messages(int(queue),server_ip + ":8080")
+                                
+                                # After getting the messages, the local server syncs the received messages with its own.
+                                payload = {'messages':messages, 'id':queue}
+                                queue_repo.sync_follower_queue(payload)
             else:
                 print(f"Empty node (no data)")
 

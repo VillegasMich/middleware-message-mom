@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from fastapi import HTTPException
 from collections import deque
+from types import SimpleNamespace
 
 from ..models.queue import Queue
 from ..models.message import Message
@@ -10,7 +11,7 @@ from ..models.user_queue import user_queue as UserQueue
 from ..RoundRobinManager import RoundRobinManager
 from app.core.rrmanager import get_round_robin_manager
 from zookeeper import zk, ZK_NODE_QUEUES
-
+from .MessageRepository import MessageRepository
 
 class QueueRepository:
     """
@@ -143,11 +144,64 @@ class QueueRepository:
 
         print("\n QUEUE REPLICATED \n")
 
-    def sync_queues(self, request):
+    def get_queue_messages(self, request):
         existing_queue = self.db.query(Queue).filter(Queue.id == request.id).first()
-
+        messages = []
         if existing_queue:
-            messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == existing_queue.id).all()
+            queue_messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == existing_queue.id).all()
+              
+            for queue_message in queue_messages:
+                
+                queue_message_id = queue_message.message_id
+                message = self.db.query(Message).filter(Message.id == queue_message_id).first()
+                messages.append(message)
+
             return messages
         else:
             return None
+        
+    def sync_follower_queue(self, request):
+        existing_queue = self.db.query(Queue).filter(Queue.id == request['id']).first()
+        queue_messages = self.db.query(QueueMessage).filter(QueueMessage.queue_id == existing_queue.id).all()  
+        remote_messages = request['messages'] or []
+        local_ids = []
+        remote_ids = []
+        
+        message_repo = MessageRepository(self.db)
+    
+        for local_message in queue_messages:
+            queue_message_id = local_message.message_id
+            local_ids.append(queue_message_id)
+
+        for remote_message in remote_messages:
+            remote_ids.append(remote_message['id'])
+
+        print('-----------Local Ids------------')
+        print(local_ids)
+        print('-----------Local Ids------------')
+        
+        print('-----------Remote Ids------------')
+        print(remote_ids)
+        print('-----------Remote Ids------------')
+
+        # Checks if leader messages are not in follower messages.
+        for remote_message in remote_messages:
+            if remote_message['id'] not in local_ids:
+                payload = {'id': request['id'], 'content':remote_message['content'], 'routing_key':remote_message['routing_key']}
+                payload_obj = SimpleNamespace(**payload)
+                message_repo.save_queue_message(payload_obj)
+
+        # Checks if follower messages are not in leader messages.
+        for local_id in local_ids:
+            if local_id not in remote_ids:
+                (
+                    self.db.query(QueueMessage)
+                    .filter(QueueMessage.message_id == local_id)
+                    .delete(synchronize_session=False)
+                )
+                (
+                    self.db.query(Message)
+                    .filter(Message.id == local_id)
+                    .delete(synchronize_session=False)
+                )
+            self.db.commit() 
