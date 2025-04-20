@@ -177,7 +177,7 @@ class QueueRepository:
         print('-----------Local Ids------------')
 
         for remote_message in remote_messages:
-            if remote_message.id not in local_ids:
+            if remote_message['id'] not in local_ids:
                 payload = {'id': request['id'], 'content':remote_message.content, 'routing_key':remote_message.routing_key}
                 payload_obj = SimpleNamespace(**payload)
                 print('------Payload-------')
