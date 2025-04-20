@@ -182,7 +182,12 @@ async def create_topic(
             if int(topic_id) >= new_id:
                 new_id = int(topic_id) + 1
 
-    new_topic = Topic(id=new_id, name=topic.name, user_id=current_user.id)
+    new_topic = Topic(
+        id=new_id,
+        name=topic.name,
+        user_id=current_user.id,
+        is_leader=True,
+    )
     db.add(new_topic)
     db.commit()
     db.refresh(new_topic)
@@ -251,13 +256,17 @@ async def delete_topic(
         bound_queues = db.query(Queue).filter(Queue.topic_id == topic.id).all()
         queue_ids = [queue.id for queue in bound_queues]
 
-        db.query(QueueMessage).filter(QueueMessage.queue_id.in_(queue_ids)).delete(synchronize_session=False)
-         
-        db.query(Message).filter(Message.topic_id == topic.id).delete(synchronize_session=False)
-        
+        db.query(QueueMessage).filter(QueueMessage.queue_id.in_(queue_ids)).delete(
+            synchronize_session=False
+        )
+
+        db.query(Message).filter(Message.topic_id == topic.id).delete(
+            synchronize_session=False
+        )
+
         for queue in bound_queues:
             db.delete(queue)
-            
+
         db.delete(topic)
         db.commit()
 
@@ -426,19 +435,18 @@ async def consume_message(
 
     #Check if the private queue associated with the user exists locally
     if private_queue:
-        
         valid_keys_subquery = (
             db.query(QueueRoutingKey.routing_key)
             .filter(QueueRoutingKey.queue_id == private_queue.id)
             .subquery()
         )
-        
+
         messages = (
             db.query(Message)
             .join(QueueMessage, Message.id == QueueMessage.message_id)
-             .filter(
+            .filter(
                 QueueMessage.queue_id == private_queue.id,
-                Message.routing_key.in_(valid_keys_subquery)
+                Message.routing_key.in_(valid_keys_subquery),
             )
             .order_by(Message.created_at.asc())
             .all()
@@ -536,6 +544,7 @@ async def subscribe(
                 user_id=current_user.id,
                 topic_id=topic_id,
                 is_private=True,
+                is_leader=True,
             )
 
             db.add(private_queue)
@@ -580,7 +589,7 @@ async def subscribe(
                             current_user.name,
                             topic.routing_key,
                             server_ip + ":8080",
-                            private_queue.id
+                            private_queue.id,
                         )
                         if response.status_code != 1:
                             raise HTTPException(
@@ -629,7 +638,6 @@ async def unsubscribe(
     current_user=Depends(get_current_user),
 ):
     try:
-        
         existing_private_queue = (
             db.query(Queue)
             .filter(Queue.topic_id == topic.topic_id, Queue.user_id == current_user.id)
@@ -638,9 +646,8 @@ async def unsubscribe(
         
         #Check if the private queue associated with the user exists locally
         if existing_private_queue:
-            
             queue_id = existing_private_queue.id
-            
+
             routing_key_entry = (
                 db.query(QueueRoutingKey)
                 .filter(
@@ -651,7 +658,9 @@ async def unsubscribe(
             )
 
             if not routing_key_entry:
-                raise HTTPException(status_code=404, detail="Routing key not found for queue")
+                raise HTTPException(
+                    status_code=404, detail="Routing key not found for queue"
+                )
 
             #Delete the routing key entry
             db.delete(routing_key_entry)
@@ -684,7 +693,9 @@ async def unsubscribe(
                     )
 
                     if remaining_refs == 0:
-                        message = db.query(Message).filter(Message.id == message_id).first()
+                        message = (
+                            db.query(Message).filter(Message.id == message_id).first()
+                        )
                         if message:
                             db.delete(message)
 
@@ -742,11 +753,14 @@ async def unsubscribe(
                                     detail="Client wasn't able to unsubscribe",
                                 )
 
-            return {"message": "Successfully unsubscribed from the topic with that routing key."}
-        
+            return {
+                "message": "Successfully unsubscribed from the topic with that routing key."
+            }
+
     except Exception as e:
         logger.error(f"Error in unsubscribe: {e}")
         traceback.print_exc()
         db.rollback()
-        raise HTTPException(status_code=500, detail="Unsubscribe failed due to server error.")
-
+        raise HTTPException(
+            status_code=500, detail="Unsubscribe failed due to server error."
+        )
