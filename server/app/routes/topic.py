@@ -522,6 +522,7 @@ async def subscribe(
                 user_id=current_user.id,
                 topic_id=topic_id,
                 is_private=True,
+                is_leader=True,
             )
 
             db.add(private_queue)

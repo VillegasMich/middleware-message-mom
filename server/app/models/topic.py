@@ -13,4 +13,3 @@ class Topic(Base):
     users = relationship("User", secondary="user_topic", overlaps="topics")
     messages = relationship("Message", overlaps="topic")
     queues = relationship("Queue", back_populates="topic")
-    is_leader = Column(Boolean, default=sa.sql.expression.false(), nullable=False)
