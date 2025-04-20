@@ -184,12 +184,14 @@ class QueueRepository:
         print(remote_ids)
         print('-----------Remote Ids------------')
 
+        # Checks if leader messages are not in follower messages.
         for remote_message in remote_messages:
             if remote_message['id'] not in local_ids:
                 payload = {'id': request['id'], 'content':remote_message['content'], 'routing_key':remote_message['routing_key']}
                 payload_obj = SimpleNamespace(**payload)
                 message_repo.save_queue_message(payload_obj)
-            
+
+        # Checks if follower messages are not in leader messages.
         for local_id in local_ids:
             if local_id not in remote_ids:
                 (
