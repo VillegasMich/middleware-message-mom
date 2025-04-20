@@ -1,3 +1,9 @@
+"""
+This file defines the authentication-related routes for the server side application.
+It includes endpoints for user registration and login, handling JWT token generation,
+and interacting with the ZooKeeper service for user and server metadata management.
+"""
+
 from datetime import datetime, timedelta
 
 from app.core.auth_helpers import get_current_user
@@ -30,6 +36,8 @@ router = APIRouter()
 
 @router.post("/register/")
 def register(user_data: UserCreate, db: Session = Depends(get_db)):
+    #Registers a new user and ensures the username is unique across all servers.
+    
     username = user_data.username
     password = user_data.password
 
@@ -54,6 +62,7 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
     zk.ensure_path(f"{ZK_NODE_USERS}/{new_user.id}")
 
+    #Send the new user data to all other servers
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -65,11 +74,14 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login/")
 def login(request: LoginRequest, db: Session = Depends(get_db)):
+    #Logs in a user and generates a JWT token for authentication.
+    
     username = request.username
     password = request.password
 
     user = db.query(User).filter(User.name == username).first()
 
+    #Check if the user exists locally and verify the password
     if user:
         expires_at = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
@@ -80,6 +92,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
         )
         return {"access_token": access_token, "token_type": "bearer"}
 
+    #If the user is not found locally, check other servers
     else:
         servers = zk.get_children("/servers") or []
         for server in servers:

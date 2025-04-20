@@ -5,7 +5,15 @@ import grpc
 
 
 class TopicService(Service_pb2_grpc.TopicServiceServicer):
+    """
+    This class implements the gRPC service for managing topics.
+    It provides methods to retrieve, create, delete, subscribe, unsubscribe, and synchronize topics.
+    This class interacts with the database through the TopicRepository to perform the required operations.
+    """
+    
     def GetTopics(self, request, context):
+        #Handle the retrieval of all topics.
+        
         db = next(get_db())
         repo = TopicRepository(db)
         topics = repo.all()
@@ -25,6 +33,8 @@ class TopicService(Service_pb2_grpc.TopicServiceServicer):
         return response
 
     def Subscribe(self, request, context):
+        #Handle the subscription to a topic.
+        
         db = next(get_db())
         repo = TopicRepository(db)
 
@@ -34,6 +44,8 @@ class TopicService(Service_pb2_grpc.TopicServiceServicer):
         return Service_pb2.SubscribeResponse(status_code=1)
 
     def UnSubscribe(self, request, context):
+        #Handle the unsubscription from a topic.
+        
         db = next(get_db())
         repo = TopicRepository(db)
 
@@ -50,6 +62,8 @@ class TopicService(Service_pb2_grpc.TopicServiceServicer):
             db.close()
 
     def Delete(self, request, context):
+        #Handle the deletion of a topic.
+        
         db = next(get_db())
         repo = TopicRepository(db)
 
@@ -59,6 +73,8 @@ class TopicService(Service_pb2_grpc.TopicServiceServicer):
         return Service_pb2.CRUDResponse(status_code=1)
 
     def CreateTopics(self, request, context):
+        #Handle the creation of a new topic.
+        
         db = next(get_db())
         repo = TopicRepository(db)
 

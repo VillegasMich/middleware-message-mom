@@ -1,7 +1,12 @@
 from app.core.database import Base
 from sqlalchemy import Column, ForeignKey, Integer
 
-
+"""
+    ATTRIBUTES
+    id => Represents the unique id for the user queue table.
+    user_id => Represents the unique id of a user.
+    queue_id => Represents the unique id of a queue.
+"""
 class user_queue(Base):
     __tablename__ = "user_queue"
 

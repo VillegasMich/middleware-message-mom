@@ -2,16 +2,18 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Enum, DateTime, func
 from sqlalchemy.orm import relationship
 from app.core.database import Base
 
-'''
-    MESSAGE ATTRIBUTES
+"""
+    ATTRIBUTES
     id => Represents the unique id for the message.
     content => Contains the body of the message.
-    queue_id => Relationship with a specific queue, if null the message is not related to a queue.
     topic_id => Relationship with a specific topic, if null the message is not related to a topic.
     status => Status of the message, initialized in "Pending".
-    routing_key => Represents the name of the queue or topic the message is set to be delivered.
+    routing_key => Routing key used to identify the message, it is a string that can be used to filter messages.
     created_at => Creation date of the message, needed to implement FIFO functionality.
-'''
+    
+    queue_messages => Relationship with the QueueMessage model, which represents the messages in the queues.
+    topic => Relationship with the Topic model, which represents the messages in the topics.
+"""
 class Message(Base):
     __tablename__ = "messages"
 

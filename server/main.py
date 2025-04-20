@@ -1,3 +1,10 @@
+"""
+This is the main entry point for the FastAPI server side application. It initializes the application,
+sets up routes for authentication, queues, topics, and users, and manages the server's lifecycle.
+It also integrates with ZooKeeper for service registration, metadata management, and synchronization
+of queues, topics, and users across distributed servers. Additionally, it starts the gRPC server for handling
+remote procedure calls.
+"""
 from contextlib import asynccontextmanager
 
 import uvicorn

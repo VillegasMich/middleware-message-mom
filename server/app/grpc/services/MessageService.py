@@ -2,13 +2,18 @@ from .. import Service_pb2, Service_pb2_grpc
 from ...core.database import get_db
 from ...repository.MessageRepository import MessageRepository
 
+
 class MessageService(Service_pb2_grpc.MessageServiceServicer):
     """
-    Here the message should be saved in the queue or topic received.
+    This class implements the gRPC service for handling messages.
+    It provides methods to add messages to queues or topics, consume messages from queues,
+    and consume messages from topics. This class interacts with the database through
+    the MessageRepository to perform the necessary operations.
     """
 
     def AddMessage(self, request, context):
-
+        #Handle the addition of messages to either a queue or a topic.
+        
         db = next(get_db())
         repo = MessageRepository(db)
 
@@ -22,6 +27,8 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
         return Service_pb2.MessageResponse(status_code=1)
 
     def ConsumeQueueMessage(self, request, context):
+        #Handle the consumption of messages from a queue.
+        
         db = next(get_db())
         repo = MessageRepository(db)
         content = repo.consume_queue_message(request)
@@ -30,9 +37,7 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
         return Service_pb2.ConsumeMessageResponse(status_code=1, content=content)
     
     def ConsumeTopicMessage(self, request, context):
-        print('--------Consume topic request------')
-        print(request)
-        print('-----------------------------------')
+        #Handle the consumption of messages from a topic.
         
         db = next(get_db())
         repo = MessageRepository(db)
@@ -44,10 +49,6 @@ class MessageService(Service_pb2_grpc.MessageServiceServicer):
             message_item = response.messages.add() 
             message_item.content = content
             message_item.id = id
-
-        print('--------------Topic Messages-----------------')
-        print(response)
-        print('---------------------------------------')
 
         db.close()
         print("Request is received: " + str(request))

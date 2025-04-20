@@ -13,17 +13,19 @@ TOKEN = ""
 
 console = Console()
 
-
 def show_menu():
+    """
+    Display the main menu options in a table format for the client.
+    This function is called in the main loop to show the menu options
+    """
+    
     table = Table(
         title="Middleware MOM Client", show_header=False, header_style="bold cyan"
     )
 
-    # Add column with proper padding
     table.add_column("Option", justify="center", style="bold blue")
     table.add_column("Description", justify="left", style="white")
 
-    # Add rows
     menu_items = [
         ("1", "List all the Queues"),
         ("2", "Create Queue"),
@@ -50,13 +52,13 @@ def show_menu():
 
 
 def main():
+    #Main interactive loop for the client
+    
     new_server = get_server()
     config.update_server_zoo(new_server)
     if config.SERVER_IP_PORT:
         try:
-            """Main interactive loop"""
             global TOKEN
-
             while True:
                 print("\n[bold]Welcome to the Middleware MOM Client![/]")
                 print("1. Register")

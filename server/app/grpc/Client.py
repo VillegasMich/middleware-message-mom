@@ -14,8 +14,10 @@ REMOTE_HOST = os.getenv("REMOTE_HOST", "localhost:8080")
 
 class Client:
     """
-    Sends the protobuf message to the remote_host (ipv4), the remote_host must see if the queue or topic exists
-    within him, create the message and save it.
+    This class provides static methods to interact with remote gRPC services.
+    It includes functionality for sending messages, subscribing/unsubscribing to queues and topics,
+    consuming messages, and managing queues and topics on remote servers. This class acts as a
+    client-side interface for gRPC communication with the middleware.
     """
 
     @staticmethod
@@ -33,12 +35,9 @@ class Client:
                 print("Response received from remote service:", response)
                 return response.status_code
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
-    """
-        Sends the protobuf Queue subscribeRequest to the remote_host (ipv4).
-    """
-
+    #Sends the protobuf Queue subscribeRequest to the remote_host (ipv4).
     @staticmethod
     def send_grpc_queue_subscribe(
         queue_id: int, user_id: int, user_name: str, remote_host: str
@@ -54,7 +53,7 @@ class Client:
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_queue_unsubscribe(
@@ -71,7 +70,7 @@ class Client:
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_topic_subscribe(
@@ -101,7 +100,7 @@ class Client:
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
     
     
     @staticmethod
@@ -136,13 +135,9 @@ class Client:
                 else:
                     print("Failed to unsubscribe.")
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
-
-    """
-        Gets all queues from the remote_host, the queues should be parsed to dict after they are returned
-    """
-
+    #Gets all queues from the remote_host, the queues should be parsed to dict after they are returned
     @staticmethod
     def send_grpc_get_all_queues(remote_host: str):
         with grpc.insecure_channel(remote_host) as channel:
@@ -157,7 +152,7 @@ class Client:
                 ]
                 return remote_queues_list
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_consume_queue(
@@ -174,7 +169,7 @@ class Client:
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_consume_topic(
@@ -195,7 +190,7 @@ class Client:
                 ]
                 return result
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_register(
@@ -212,7 +207,7 @@ class Client:
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_get_all_topics(remote_host: str):
@@ -228,7 +223,7 @@ class Client:
                 ]
                 return remote_topics_list
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_get_all_topic_queues(user_id: int, remote_host: str):
@@ -244,7 +239,7 @@ class Client:
                 ]
                 return remote_queues_list
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_queue_delete(queue_id: int, user_id: str, remote_host: str):
@@ -257,7 +252,7 @@ class Client:
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_topic_delete(topic_id: int, user_id: str, remote_host: str):
@@ -270,7 +265,7 @@ class Client:
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_queue_create(
@@ -287,7 +282,7 @@ class Client:
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 
     @staticmethod
     def send_grpc_topic_create(
@@ -304,7 +299,7 @@ class Client:
                 print("Response received from remote service:", response)
                 return response
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
     
     @staticmethod
     def send_grpc_queue_sync(queue_id: int, remote_host:str):
@@ -326,6 +321,5 @@ class Client:
                 else:
                     return None
             except grpc.RpcError as e:
-                print(f"Error al llamar al servicio gRPC: {e.code()} - {e.details()}")
-
+                print(f"Error calling the gRPC service: {e.code()} - {e.details()}")
 

@@ -5,7 +5,15 @@ from ...repository.QueueRepository import QueueRepository
 
 
 class QueueService(Service_pb2_grpc.QueueServiceServicer):
+    """
+    This class implements the gRPC service for managing queues.
+    It provides methods to retrieve, create, delete, subscribe, unsubscribe, and synchronize queues.
+    This class interacts with the database through the QueueRepository to perform the required operations.
+    """
+    
     def GetQueues(self, request, context):
+        #Handle the retrieval of all queues.
+        
         db = next(get_db())
         repo = QueueRepository(db)
         queues = repo.all()
@@ -24,6 +32,8 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
         return response
 
     def Delete(self, request, context):
+        #Handle the deletion of a queue.
+        
         db = next(get_db())
 
         repo = QueueRepository(db)
@@ -35,6 +45,8 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
         return Service_pb2.CRUDResponse(status_code=1)
 
     def Subscribe(self, request, context):
+        #Handle the subscription to a queue.
+        
         db = next(get_db())
 
         repo = QueueRepository(db)
@@ -45,6 +57,8 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
         return Service_pb2.SubscribeResponse(status_code=1)
 
     def UnSubscribe(self, request, context):
+        #Handle the unsubscription from a queue.
+        
         db = next(get_db())
 
         repo = QueueRepository(db)
@@ -55,6 +69,8 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
         return Service_pb2.SubscribeResponse(status_code=1)
 
     def CreateQueues(self, request, context):
+        #Handle the creation of a new queue.
+        
         db = next(get_db())
 
         repo = QueueRepository(db)
@@ -65,6 +81,8 @@ class QueueService(Service_pb2_grpc.QueueServiceServicer):
         return Service_pb2.CRUDResponse(status_code=1)
 
     def SyncQueues(self, request, context):
+        #Handle the synchronization of queues.
+        
         db = next(get_db())
         repo = QueueRepository(db)
         messages = repo.sync_queues(request)

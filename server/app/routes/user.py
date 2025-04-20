@@ -1,3 +1,9 @@
+"""
+This file defines the routes for managing users in the server side application.
+It includes an endpoint to get the topics a user is subscribed to.
+The routes interact with the database, ZooKeeper, and gRPC
+services to ensure proper management.
+"""
 from app.core.auth_helpers import get_current_user
 from app.core.database import get_db
 from app.models.user import User

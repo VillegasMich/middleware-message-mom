@@ -13,6 +13,13 @@ from zookeeper import zk, ZK_NODE_QUEUES, ZK_NODE_TOPICS
 
 
 class TopicRepository:
+    """
+    This class provides methods to interact with the database for topic-related operations.
+    It includes functionality to retrieve, create, delete, subscribe, and unsubscribe from topics.
+    This class ensures proper database transactions and integrates with ZooKeeper for topic management
+    and synchronization across distributed servers.
+    """
+    
     def __init__(self, db: Session):
         self.db = db
 

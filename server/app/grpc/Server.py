@@ -23,6 +23,13 @@ HOST = f"{PUBLIC_IP}:" + str(GRPC_PORT)
 
 
 class Server:
+    """
+    This class manages the gRPC server lifecycle for the middleware.
+    It provides methods to start and stop the server, initialize threads for listening to incoming requests,
+    and synchronize follower queues using ZooKeeper. This class integrates various gRPC services such as
+    MessageService, QueueService, TopicService, and UserService to handle client requests.
+    """
+    
     def __init__(self):
         self.running = False
 
@@ -52,12 +59,11 @@ class Server:
                 except json.JSONDecodeError:
                     print(f"{data_bytes!r}")
                     continue
-                print("JSON almacenado:", metadata)
+                print("JSON:", metadata)
             else:
-                print(f"El nodo vacío (no tiene datos)")
-    """
-        Init the thread that listens for new incoming requests in this MOM.
-    """
+                print(f"Empty node (no data)")
+
+    #Init the thread that listens for new incoming requests in this MOM.
     @staticmethod
     def listen():
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

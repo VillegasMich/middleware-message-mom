@@ -1,3 +1,9 @@
+"""
+This file handles the integration with ZooKeeper for server discovery, metadata management, and synchronization
+of queues, topics, and users. It defines constants for ZooKeeper node paths, initializes the ZooKeeper client,
+and provides functions to synchronize database entities (queues, topics, and users) with ZooKeeper nodes.
+This ensures consistency and coordination across distributed servers in the system.
+"""
 import os
 import socket
 

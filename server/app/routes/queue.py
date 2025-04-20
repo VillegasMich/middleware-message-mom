@@ -1,3 +1,10 @@
+"""
+This file defines the routes for managing message queues in the server side application.
+It includes endpoints for creating, retrieving, deleting, publishing messages to, consuming messages from,
+subscribing to, and unsubscribing from queues. The routes interact with the database, ZooKeeper, and gRPC
+services to ensure proper queue management and replication across servers.
+"""
+
 from collections import deque
 import json
 from random import sample
@@ -26,7 +33,7 @@ class MessageCreate(BaseModel):
     content: str
     routing_key: str
 
-
+#Get all queues, either owned by the user or public ones.
 @router.get("/queues/")
 async def get_queues(
     db: Session = Depends(get_db),
@@ -42,6 +49,7 @@ async def get_queues(
 
     queues = query.all()
 
+    #Send gRPC request to other servers to get their queues
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
         if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -64,7 +72,7 @@ async def get_queues(
 
     return {"message": "Queues listed successfully", "queues": unique_queues}
 
-
+#Create a new queue, ensuring it doesn't already exist in the current server.
 @router.post("/queues/")
 async def create_queue(
     queue: QueueCreate,
@@ -72,11 +80,12 @@ async def create_queue(
     current_user=Depends(get_current_user),
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
-    # Check if in the current server the queue exists
+    # Check if the queue exists locally
     existing_queue = db.query(Queue).filter(Queue.name == queue.name).first()
     if existing_queue:
         raise HTTPException(status_code=400, detail="Queue already exists")
 
+    #Set the new queue ID to be the highest ID + 1 across all servers
     new_id = 1
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
@@ -147,7 +156,7 @@ async def create_queue(
 
     return {"message": "Queue created successfully", "queue_id": new_queue.id}
 
-
+#Delete a queue, ensuring the user has permission to do so.
 @router.delete("/queues/{queue_id}")
 async def delete_queue(
     queue_id: int,
@@ -157,6 +166,7 @@ async def delete_queue(
 ):
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
 
+    #Check if the queue exists locally
     if queue:
         if queue.user_id != current_user.id:
             raise HTTPException(
@@ -181,6 +191,7 @@ async def delete_queue(
         zk.delete(f"{ZK_NODE_QUEUES}/{queue_id}", recursive=True)
         round_robin_manager.user_queues_dict.pop(queue_id, None)
 
+        #Propagate the deletion to other servers
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -196,6 +207,7 @@ async def delete_queue(
 
         return {"message": "Queue deleted successfully", "queue_id": queue_id}
 
+    #If the queue doesn't exist locally, check other servers and propagate the deletion
     else:
         was_deleted = False
         servers: list[str] = zk.get_children("/servers") or []
@@ -218,7 +230,7 @@ async def delete_queue(
             }
     raise HTTPException(status_code=404, detail="Queue not found.")
 
-
+#Publish a message to a queue
 @router.post("/queues/{queue_id}/publish")
 async def publish_message(
     queue_id: int,
@@ -227,7 +239,8 @@ async def publish_message(
     current_user=Depends(get_current_user),
 ):
     existing_queue = db.query(Queue).filter(Queue.id == queue_id).first()
-
+    
+    #Check if the queue exists locally
     if existing_queue:
         new_message = Message(
             content=message.content,
@@ -243,6 +256,7 @@ async def publish_message(
 
         db.commit()
 
+        #Propagate the message to other servers
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -250,7 +264,6 @@ async def publish_message(
                     zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    print("Searching in servers for queues")
                     if queue == str(queue_id):
                         server_ip, _ = server.split(":")
                         response = Client.send_grpc_message(
@@ -270,6 +283,8 @@ async def publish_message(
             "queue_id": existing_queue.id,
             "message_id": new_message.id,
         }
+        
+    #If the queue doesn't exist locally, check other servers and propagate the message    
     else:
         was_message_sent = False
         servers: list[str] = zk.get_children("/servers") or []
@@ -279,7 +294,6 @@ async def publish_message(
                     zk.get_children(f"/servers-metadata/{server}/Queues") or []
                 )
                 for queue in server_queues:
-                    print("Searching in servers for queues")
                     if queue == str(queue_id):
                         server_ip, _ = server.split(":")
                         response = Client.send_grpc_message(
@@ -297,14 +311,12 @@ async def publish_message(
                         was_message_sent = True
         if was_message_sent:
             return {
-                "message": "Message published successfully",
-                "queue_id": "",
-                "message_id": "",
+                "message": "Message published successfully"
             }
 
     raise HTTPException(status_code=404, detail="Queue not found")
 
-
+#Consume a message from a queue
 @router.get("/queues/{queue_id}/consume")
 async def consume_message(
     queue_id: int,
@@ -313,6 +325,8 @@ async def consume_message(
     round_robin_manager: RoundRobinManager = Depends(get_round_robin_manager),
 ):
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
+    
+    #Check if the queue exists locally
     if queue:
         is_subscribed = (
             db.query(UserQueue)
@@ -328,6 +342,7 @@ async def consume_message(
 
         expected_user_name = round_robin_manager.user_queues_dict[queue.id][-1]
 
+        #Check if it is the current user's turn to consume the message
         if expected_user_name == current_user.name:
             queue_message = (
                 db.query(QueueMessage)
@@ -362,9 +377,11 @@ async def consume_message(
             db.flush()
             db.commit()
 
+            #Update the round robin queue for the current user
             turn_user = round_robin_manager.user_queues_dict[queue.id].popleft()
             round_robin_manager.user_queues_dict[queue.id].append(turn_user)
 
+            #Propagate the message consumption to other servers
             servers: list[str] = zk.get_children("/servers") or []
             for server in servers:
                 if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -386,6 +403,7 @@ async def consume_message(
                 "content": message_content,
             }
 
+    #If the queue doesn't exist locally, check other servers and propagate the consumption
     else:
         was_message_consumed = False
         message_content = ""
@@ -413,7 +431,7 @@ async def consume_message(
             }
     raise HTTPException(status_code=409, detail="Invalid user turn")
 
-
+#Subscribe a user to a queue
 @router.post("/queues/subscribe")
 async def subscribe(
     queue_id: int,
@@ -423,20 +441,8 @@ async def subscribe(
 ):
     existing_queue = db.query(Queue).filter(Queue.id == queue_id).first()
 
+    #Check if the queue exists locally
     if existing_queue:
-        if existing_queue.is_private:
-            is_invited = (
-                db.query(UserQueue)
-                .filter(
-                    UserQueue.user_id == current_user.id,
-                    UserQueue.queue_id == existing_queue.id,
-                )
-                .first()
-            )
-            if not is_invited:
-                raise HTTPException(
-                    status_code=403, detail="You must be invited to join this queue."
-                )
 
         user_queue_entry = (
             db.query(UserQueue)
@@ -456,11 +462,13 @@ async def subscribe(
         db.add(new_subscription)
         db.commit()
 
+        # Update the round robin queue for the current user
         if queue_id not in round_robin_manager.user_queues_dict:
             round_robin_manager.user_queues_dict[queue_id] = deque()
 
         round_robin_manager.user_queues_dict[queue_id].append(current_user.name)
 
+        # Propagate the subscription to other servers
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -483,6 +491,8 @@ async def subscribe(
                             )
 
         return {"message": "Successfully subscribed to the queue"}
+    
+    #If the queue doesn't exist locally, check other servers and propagate the subscription
     else:
         was_subscribed = False
         servers: list[str] = zk.get_children("/servers") or []
@@ -514,7 +524,7 @@ async def subscribe(
 
     raise HTTPException(status_code=404, detail="Queue not found")
 
-
+#Unsubscribe a user from a queue
 @router.post("/queues/unsubscribe")
 async def unsubscribe(
     queue_id: int,
@@ -524,6 +534,7 @@ async def unsubscribe(
 ):
     existing_queue = db.query(Queue).filter(Queue.id == queue_id).first()
 
+    #Check if the queue exists locally
     if existing_queue:
         user_queue_entry = (
             db.query(UserQueue)
@@ -540,6 +551,7 @@ async def unsubscribe(
         db.delete(user_queue_entry)
         db.commit()
 
+        #Update the round robin queue for the current user
         if queue_id in round_robin_manager.user_queues_dict:
             round_robin_manager.user_queues_dict[queue_id] = deque(
                 user
@@ -550,6 +562,7 @@ async def unsubscribe(
             if not round_robin_manager.user_queues_dict[queue_id]:
                 del round_robin_manager.user_queues_dict[queue_id]
 
+        #Propagate the unsubscription to other servers
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -567,6 +580,8 @@ async def unsubscribe(
                         )
 
         return {"message": "Successfully unsubscribed from the queue"}
+    
+    #If the queue doesn't exist locally, check other servers and propagate the unsubscription
     else:
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
