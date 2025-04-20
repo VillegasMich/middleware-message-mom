@@ -11,6 +11,12 @@ import fnmatch
 
 
 class MessageRepository:
+    """
+    This class provides methods to interact with the database for message-related operations.
+    It includes functionality to save messages to queues or topics, consume messages from queues, and handle
+    message routing based on routing keys. This class ensures proper database transactions and message management
+    for the middleware.
+    """
 
     def __init__(self, db: Session):
         self.db = db

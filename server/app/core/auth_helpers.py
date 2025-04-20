@@ -1,3 +1,9 @@
+"""
+This file contains helper functions for authentication and user verification in the server side.
+It includes functionality to decode and validate JWT tokens, check for token expiration, and retrieve
+the authenticated user from the database. These utilities ensure secure access to protected endpoints.
+"""
+
 from fastapi import Depends, HTTPException
 from datetime import datetime
 from fastapi.security import OAuth2PasswordBearer
@@ -10,7 +16,8 @@ from app.core.database import get_db
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    """Verifies the JWT token, checks if it's expired, and retrieves the authenticated user from the database."""
+    #Verifies the JWT token, checks if it's expired, and retrieves the authenticated user from the database.
+    
     try:
 
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

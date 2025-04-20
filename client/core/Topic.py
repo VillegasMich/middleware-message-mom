@@ -7,22 +7,18 @@ from Util import Util
 
 
 class Topic:
+    
+    """
+    This class provides static methods to interact with topics on the server.
+    It includes functionality for listing, creating, deleting, subscribing, unsubscribing,
+    sending, and receiving messages from topics. This class acts as a client-side interface
+    for managing topics and their messages.
+    """
+    
     @staticmethod
     def get_all(message: str = "Topics", only_owned: bool = False):
-        """
-        Lists all the topics
-        Response:
-        {
-            "message": "message_output"
-            "topics": "[
-                {
-                    "name": topic_name
-                    "id": topic_id
-                },
-                ...
-            ]"
-        }
-        """
+        #Lists all the topics
+        
         SERVER_ZOO = get_server_zoo()
         response = requests.get(
             f"{SERVER_ZOO}/topics?{only_owned}", headers=Util.get_headers()
@@ -35,6 +31,7 @@ class Topic:
                 print("[yellow]There aren't any topics yet.[/]")
                 return
             else:
+                #Prints the topics in a tree format.
                 tree_root = Tree(f"\n[bold yellow]{message}:[/]")
                 for topic in topics:
                     tree_root.add(
@@ -52,20 +49,11 @@ class Topic:
 
         return topics
 
+
     @staticmethod
     def create():
-        """
-        Creates a new topic
-        Request body:
-        {
-            "name": "topic_name"
-        }
-        Response:
-        {
-            "message": "Topic created successfully",
-            "id": "topic_id"
-        }
-        """
+        #Creates a new topic
+        
         SERVER_ZOO = get_server_zoo()
         name = Prompt.ask("[cyan]Enter topic name[/]")
 
@@ -80,11 +68,13 @@ class Topic:
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
 
+
     @staticmethod
     def delete():
-        """Deletes a topic"""
+        #Deletes a topic
         SERVER_ZOO = get_server_zoo()
 
+        #Returns all the topics owned by the user.
         topics = Topic.get_all("Your Topics", only_owned=True)
 
         if not topics:
@@ -104,14 +94,16 @@ class Topic:
                 f"[red]Error:[/] {delete_response.json().get('detail', 'Unknown error')}"
             )
 
+
     @staticmethod
     def send_message():
-        """Sends a message to a topic"""
+        #Sends a message to a topic
 
         SERVER_ZOO = get_server_zoo()
         topics = Topic.get_all()
 
         if not topics:
+            print("[yellow]There aren't any topics yet.[/]")
             return
 
         topic_id = Prompt.ask("[cyan]Enter topic ID to send a message[/]")
@@ -124,14 +116,17 @@ class Topic:
             json={"content": message, "routing_key": routing_key},
             headers=Util.get_headers(),
         )
+
         if response.status_code == 200:
             print("[green]Message sent successfully![/]")
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
 
+
     @staticmethod
     def show_collected_messages(message_dict: dict[str, set]):
-        """Show all collected messages from user topics"""
+        #Show all collected messages from the user's subscribed topics
+        
         tree_root = Tree("\n[bold yellow]Topics:[/]")
 
         for topic in message_dict.keys():
@@ -140,8 +135,11 @@ class Topic:
                 topic_root.add(str(message))
         print(tree_root)
 
+
     @staticmethod
     def subscribe():
+        #Subscribes to a topic
+        
         SERVER_ZOO = get_server_zoo()
         Topic.get_all()
 
@@ -166,6 +164,8 @@ class Topic:
             
     
     def unsubscribe():
+        #Unsubscribes from a topic
+        
         SERVER_ZOO = get_server_zoo()
         Topic.get_all()
 
@@ -195,8 +195,11 @@ class Topic:
 
             print(f"[red]Error:[/] {error_detail}")
 
+
     @staticmethod
     def pull_message(queue_id: int):
+        #Retrieves all collected messages from a specific user's subscribed topic
+        
         SERVER_ZOO = get_server_zoo()
         response = requests.get(
             f"{SERVER_ZOO}/topics/queues/{queue_id}/consume", headers=Util.get_headers()

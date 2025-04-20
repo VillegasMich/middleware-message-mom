@@ -1,3 +1,10 @@
+"""
+This file defines the routes for managing message topics in the server side application.
+It includes endpoints for creating, retrieving, deleting, publishing messages to, consuming messages from,
+subscribing to, and unsubscribing from topics. The routes interact with the database, ZooKeeper, and gRPC
+services to ensure proper topic management and replication across servers.
+"""
+
 import fnmatch
 from typing import Optional
 import json
@@ -43,7 +50,7 @@ class MessageCreate(BaseModel):
     content: str
     routing_key: str
 
-
+#Get all topics, either owned by the user or not
 @router.get("/topics/")
 async def get_topics(
     db: Session = Depends(get_db),
@@ -79,7 +86,7 @@ async def get_topics(
     return {"message": "Topics listed successfully", "topics": unique_topics}
 
 
-# Get the queue related to a topic (not taking into account routing key)
+#Get the queue related to a topic (not taking into account routing key)
 @router.get("/user/queue-topic")
 async def get_user_queue_topic(
     topic_id: int,
@@ -104,7 +111,7 @@ async def get_user_queue_topic(
                     return {"message": "Queue listed successfully", "queue": queue}
 
 
-# Queues of ALL subscribed topics
+#Get all the user's queues associated with all subscribed topics
 @router.get("/user/queues-topics")
 async def get_user_queues_topics(
     db: Session = Depends(get_db), current_user=Depends(get_current_user)
@@ -130,7 +137,7 @@ async def get_user_queues_topics(
     return {"message": "No queues found for subscribed topics", "queues": []}
 
 
-# Queue binded to a routing key (1 topic)
+#Get the queue associated with a topic and routing key
 @router.get("/user/routingkey-topic")
 async def get_user_routingkey_topic(
     topic_id: int,
@@ -153,7 +160,7 @@ async def get_user_routingkey_topic(
 
     return {"message": "Queue listed successfully", "queue": user_queue}
 
-
+#Create a new topic
 @router.post("/topics/")
 async def create_topic(
     topic: TopicCreate,
@@ -164,6 +171,7 @@ async def create_topic(
     if existing_topic:
         raise HTTPException(status_code=400, detail="Topic already exists")
 
+    #Set the new topic ID to be the highest ID + 1 across all servers
     new_id = 1
     servers: list[str] = zk.get_children("/servers") or []
     for server in servers:
@@ -174,11 +182,17 @@ async def create_topic(
             if int(topic_id) >= new_id:
                 new_id = int(topic_id) + 1
 
-    new_topic = Topic(id=new_id, name=topic.name, user_id=current_user.id)
+    new_topic = Topic(
+        id=new_id,
+        name=topic.name,
+        user_id=current_user.id,
+        is_leader=True,
+    )
     db.add(new_topic)
     db.commit()
     db.refresh(new_topic)
 
+    #Choose leader and follower servers
     if len(servers) >= 2:
         print("\n REPLICATION \n")
         servers.remove(SERVER_ADDR)
@@ -201,6 +215,7 @@ async def create_topic(
             }
         ).encode()
 
+        #Propagate the topic creation to the follower server
         server_ip, _ = follower_ip.split(":")
         response = Client.send_grpc_topic_create(
             new_id, topic.name, current_user.id, server_ip + ":8080"
@@ -220,7 +235,7 @@ async def create_topic(
 
     return {"message": "Topic created successfully", "topic_id": new_topic.id}
 
-
+#Delete a topic, ensuring that the user is the owner of the topic
 @router.delete("/topics/{topic_id}")
 async def delete_topic(
     topic_id: int,
@@ -229,6 +244,7 @@ async def delete_topic(
 ):
     topic = db.query(Topic).filter(Topic.id == topic_id).first()
 
+    #Check if the topic exists locally
     if topic:
         if topic.user_id != current_user.id:
             raise HTTPException(
@@ -236,21 +252,27 @@ async def delete_topic(
                 detail="You do not have permission to delete this topic",
             )
 
+        #Delete all queues and messages associated with the topic
         bound_queues = db.query(Queue).filter(Queue.topic_id == topic.id).all()
         queue_ids = [queue.id for queue in bound_queues]
 
-        db.query(QueueMessage).filter(QueueMessage.queue_id.in_(queue_ids)).delete(synchronize_session=False)
-         
-        db.query(Message).filter(Message.topic_id == topic.id).delete(synchronize_session=False)
-        
+        db.query(QueueMessage).filter(QueueMessage.queue_id.in_(queue_ids)).delete(
+            synchronize_session=False
+        )
+
+        db.query(Message).filter(Message.topic_id == topic.id).delete(
+            synchronize_session=False
+        )
+
         for queue in bound_queues:
             db.delete(queue)
-            
+
         db.delete(topic)
         db.commit()
 
         zk.delete(f"{ZK_NODE_TOPICS}/{topic.id}", recursive=True)
 
+        #Propagate the topic deletion to other servers
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -266,6 +288,7 @@ async def delete_topic(
 
         return {"message": "Topic deleted successfully", "topic_name": topic.name}
 
+    #If the topic doesn't exist locally, check other servers and propagate the deletion
     else:
         was_deleted = False
         servers: list[str] = zk.get_children("/servers") or []
@@ -288,13 +311,14 @@ async def delete_topic(
             }
     raise HTTPException(status_code=404, detail="Topic not found")
 
-
+#Publish a message to a topic
 @router.post("/topics/{topic_id}/publish")
 async def publish_message(
     topic_id: int, message: MessageCreate, db: Session = Depends(get_db)
 ):
     existing_topic = db.query(Topic).filter(Topic.id == topic_id).first()
 
+    #Check if the topic exists locally
     if existing_topic:
         routing_key = message.routing_key
 
@@ -333,6 +357,7 @@ async def publish_message(
         db.add_all(queue_messages)
         db.commit()
 
+        #Propagate the message to other servers
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -360,6 +385,8 @@ async def publish_message(
             "topic_id": existing_topic.id,
             "message_id": new_message.id,
         }
+
+    #If the topic doesn't exist locally, check other servers and propagate the message
     else:
         was_message_sent = False
         servers: list[str] = zk.get_children("/servers") or []
@@ -386,14 +413,12 @@ async def publish_message(
                         was_message_sent = True
         if was_message_sent:
             return {
-                "message": "Message published successfully",
-                "queue_id": "",
-                "message_id": "",
+                "message": "Message published successfully"
             }
 
     raise HTTPException(status_code=404, detail="Topic not found")
 
-
+#Consume messages from a topic
 @router.get("/topics/queues/{queue_id}/consume")
 async def consume_message(
     queue_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)
@@ -408,20 +433,20 @@ async def consume_message(
         .first()
     )
 
+    #Check if the private queue associated with the user exists locally
     if private_queue:
-        
         valid_keys_subquery = (
             db.query(QueueRoutingKey.routing_key)
             .filter(QueueRoutingKey.queue_id == private_queue.id)
             .subquery()
         )
-        
+
         messages = (
             db.query(Message)
             .join(QueueMessage, Message.id == QueueMessage.message_id)
-             .filter(
+            .filter(
                 QueueMessage.queue_id == private_queue.id,
-                Message.routing_key.in_(valid_keys_subquery)
+                Message.routing_key.in_(valid_keys_subquery),
             )
             .order_by(Message.created_at.asc())
             .all()
@@ -430,6 +455,7 @@ async def consume_message(
         if not messages:
             raise HTTPException(status_code=404, detail="No messages found")
 
+        #Propagate the message consumption to other servers
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -451,6 +477,8 @@ async def consume_message(
             "content": [message.content for message in messages],
             "ids": [message.id for message in messages],
         }
+        
+    #If the private queue doesn't exist locally, check other servers and propagate the consumption
     else:
         was_message_consumed = False
         messages = []
@@ -481,7 +509,7 @@ async def consume_message(
             }
     raise HTTPException(status_code=404, detail="Private queue not found")
 
-
+#Subscribe to a topic with a routing key
 @router.post("/topics/subscribe")
 async def subscribe(
     topic: TopicSubscribe,
@@ -490,6 +518,7 @@ async def subscribe(
 ):
     existing_topic = db.query(Topic).filter(Topic.id == topic.topic_id).first()
 
+    #Check if the topic exists locally
     if existing_topic:
         topic_id = existing_topic.id
 
@@ -508,12 +537,14 @@ async def subscribe(
                     if int(queue_id) >= new_id:
                         new_id = int(queue_id) + 1
 
+            #Create a new private queue for the user
             private_queue = Queue(
                 id=new_id,
                 name=queue_name,
                 user_id=current_user.id,
                 topic_id=topic_id,
                 is_private=True,
+                is_leader=True,
             )
 
             db.add(private_queue)
@@ -531,6 +562,7 @@ async def subscribe(
         )
 
         if not existing_routing_key:
+            #Register the routing key for the private queue
             routing_key = QueueRoutingKey(
                 queue_id=private_queue.id, routing_key=topic.routing_key
             )
@@ -541,6 +573,7 @@ async def subscribe(
                 status_code=400, detail="Routing key already exists for this queue"
             )
 
+        #Propagate the subscription to other servers
         servers: list[str] = zk.get_children("/servers") or []
         for server in servers:
             if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -556,7 +589,7 @@ async def subscribe(
                             current_user.name,
                             topic.routing_key,
                             server_ip + ":8080",
-                            private_queue.id
+                            private_queue.id,
                         )
                         if response.status_code != 1:
                             raise HTTPException(
@@ -564,6 +597,8 @@ async def subscribe(
                                 detail="Client wasn't able to subscribe",
                             )
         return {"message": "Successfully subscribed to the topic"}
+    
+    #If the topic doesn't exist locally, check other servers and propagate the subscription
     else:
         was_subscribed = False
         servers: list[str] = zk.get_children("/servers") or []
@@ -595,7 +630,7 @@ async def subscribe(
             }
     raise HTTPException(status_code=404, detail="Topic not found")
 
-
+#Unsubscribe from a topic with a routing key
 @router.post("/topics/unsubscribe")
 async def unsubscribe(
     topic: TopicSubscribe,
@@ -603,17 +638,16 @@ async def unsubscribe(
     current_user=Depends(get_current_user),
 ):
     try:
-        
         existing_private_queue = (
             db.query(Queue)
             .filter(Queue.topic_id == topic.topic_id, Queue.user_id == current_user.id)
             .first()
         )
         
+        #Check if the private queue associated with the user exists locally
         if existing_private_queue:
-            
             queue_id = existing_private_queue.id
-            
+
             routing_key_entry = (
                 db.query(QueueRoutingKey)
                 .filter(
@@ -624,8 +658,11 @@ async def unsubscribe(
             )
 
             if not routing_key_entry:
-                raise HTTPException(status_code=404, detail="Routing key not found for queue")
+                raise HTTPException(
+                    status_code=404, detail="Routing key not found for queue"
+                )
 
+            #Delete the routing key entry
             db.delete(routing_key_entry)
             db.flush()
             db.commit()
@@ -643,6 +680,7 @@ async def unsubscribe(
                     .all()
                 )
 
+                #If applicable, delete all messages associated with the queue
                 for queue_message in queue_messages:
                     message_id = queue_message.message_id
                     db.delete(queue_message)
@@ -655,13 +693,16 @@ async def unsubscribe(
                     )
 
                     if remaining_refs == 0:
-                        message = db.query(Message).filter(Message.id == message_id).first()
+                        message = (
+                            db.query(Message).filter(Message.id == message_id).first()
+                        )
                         if message:
                             db.delete(message)
 
                 db.delete(existing_private_queue)
                 db.commit()
-            
+                
+            #Propagate the unsubscription to other servers
             servers: list[str] = zk.get_children("/servers") or []
             for server in servers:
                 if server != f"{SERVER_IP}:{SERVER_PORT}":
@@ -687,6 +728,7 @@ async def unsubscribe(
 
             return {"message": "Successfully unsubscribed from the topic with that routing key."}
         
+        #If the private queue doesn't exist locally, check other servers and propagate the unsubscription
         else:
             servers: list[str] = zk.get_children("/servers") or []
             for server in servers:
@@ -711,11 +753,14 @@ async def unsubscribe(
                                     detail="Client wasn't able to unsubscribe",
                                 )
 
-            return {"message": "Successfully unsubscribed from the topic with that routing key."}
-        
+            return {
+                "message": "Successfully unsubscribed from the topic with that routing key."
+            }
+
     except Exception as e:
         logger.error(f"Error in unsubscribe: {e}")
         traceback.print_exc()
         db.rollback()
-        raise HTTPException(status_code=500, detail="Unsubscribe failed due to server error.")
-
+        raise HTTPException(
+            status_code=500, detail="Unsubscribe failed due to server error."
+        )

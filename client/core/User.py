@@ -6,11 +6,18 @@ from Util import Util
 
 
 class User:
+    """
+    This class provides static methods for user-related operations such as registration,
+    login, and retrieving the user's subscribed queues. It acts as a client-side interface
+    for managing user authentication and associated data.
+    """
+    
     @staticmethod
     def register():
+        #Registers a new user
+        
         SERVER_ZOO = get_server_zoo()
 
-        """Registers a new user"""
         username = Prompt.ask("[cyan]Enter username[/]")
         password = Prompt.ask("[cyan]Enter password[/]", password=True)
 
@@ -23,9 +30,11 @@ class User:
         else:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
 
+
     @staticmethod
     def login():
-        """Logs in and obtains a token"""
+        #Logs in and obtains a token for the user
+        
         SERVER_ZOO = get_server_zoo()
         username = Prompt.ask("[cyan]Enter username[/]")
         password = Prompt.ask("[cyan]Enter password[/]", password=True)
@@ -43,8 +52,11 @@ class User:
             print(f"[red]Error:[/] {response.json().get('detail', 'Unknown error')}")
             return None
 
+
     @staticmethod
     def get_user_queues():
+        #Retrieves the private queues of the topics that the user is subscribed to
+        
         SERVER_ZOO = get_server_zoo()
         response = requests.get(
             f"{SERVER_ZOO}/user/queues-topics", headers=Util.get_headers()

@@ -2,6 +2,7 @@ import os
 import threading
 from concurrent import futures
 import grpc
+import json
 
 from . import Service_pb2, Service_pb2_grpc
 from ..core.database import get_db
@@ -9,6 +10,9 @@ from .services.MessageService import MessageService
 from .services.QueueService import QueueService
 from .services.TopicService import TopicService
 from .services.UserService import UserService
+from .Client import Client
+from zookeeper import SERVER_ADDR, SERVER_IP, SERVER_PORT, ZK_NODE_QUEUES, zk
+
 
 # os.environ["GRPC_VERBOSITY"] = "debug"
 # os.environ["GRPC_TRACE"] = "all"
@@ -19,6 +23,13 @@ HOST = f"{PUBLIC_IP}:" + str(GRPC_PORT)
 
 
 class Server:
+    """
+    This class manages the gRPC server lifecycle for the middleware.
+    It provides methods to start and stop the server, initialize threads for listening to incoming requests,
+    and synchronize follower queues using ZooKeeper. This class integrates various gRPC services such as
+    MessageService, QueueService, TopicService, and UserService to handle client requests.
+    """
+    
     def __init__(self):
         self.running = False
 
@@ -34,10 +45,25 @@ class Server:
             if self.thread:
                 self.thread.join()
 
-    """
-        Init the thread that listens for new incoming requests in this MOM.
-    """
+    def sync_follower_queues(self):
+        server_queues: list[str] = (
+            zk.get_children(f"/servers-metadata/{SERVER_ADDR}/Queues") or []
+        )
 
+        for queue in server_queues:
+            data_bytes,_  = zk.get(f"/servers-metadata/{SERVER_ADDR}/Queues/{queue}")
+            print(data_bytes)
+            if data_bytes:
+                try:
+                    metadata = json.loads(data_bytes.decode("utf-8"))
+                except json.JSONDecodeError:
+                    print(f"{data_bytes!r}")
+                    continue
+                print("JSON:", metadata)
+            else:
+                print(f"Empty node (no data)")
+
+    #Init the thread that listens for new incoming requests in this MOM.
     @staticmethod
     def listen():
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

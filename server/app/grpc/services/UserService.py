@@ -3,8 +3,15 @@ from ...core.database import get_db
 from ...repository.UserRepository import UserRepository
 
 class UserService(Service_pb2_grpc.UserServiceServicer):
+    """
+    This class implements the gRPC service for managing users.
+    It provides methods to register users and get their private queues associated to their subscribed topics.
+    This class interacts with the database through the UserRepository to perform the required operations.
+    """
 
     def Register(self, request, context):
+        #Handle the registration of a new user.
+        
         db = next(get_db())
         
         repo = UserRepository(db)
@@ -15,6 +22,8 @@ class UserService(Service_pb2_grpc.UserServiceServicer):
         return Service_pb2.RegisterResponse(status_code=1)
     
     def GetUserTopicQueues(self, request, context):
+        #Handle the retrieval of all private queues associated with a user.
+        
         db = next(get_db())
         repo = UserRepository(db)
         queues = repo.get_topic_queues(request)

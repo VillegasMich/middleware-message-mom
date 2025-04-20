@@ -1,3 +1,10 @@
+"""
+This is the main entry point for the FastAPI server side application. It initializes the application,
+sets up routes for authentication, queues, topics, and users, and manages the server's lifecycle.
+It also integrates with ZooKeeper for service registration, metadata management, and synchronization
+of queues, topics, and users across distributed servers. Additionally, it starts the gRPC server for handling
+remote procedure calls.
+"""
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -58,6 +65,8 @@ async def lifespan(app: FastAPI):
     sync_all_queues(db)
     sync_all_topics(db)
     sync_all_users(db)
+    
+    server.sync_follower_queues()
 
     yield
 
@@ -78,6 +87,7 @@ app.include_router(user_router)
 
 print(f"🚀 Using SERVER_PORT {SERVER_PORT}")
 print(f"ZK NODE: /servers/{SERVER_IP}:{SERVER_PORT}")
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=SERVER_PORT)

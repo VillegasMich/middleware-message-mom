@@ -7,22 +7,17 @@ from Util import Util
 
 
 class Queue:
+    """
+    This class provides static methods to interact with queues on the server.
+    It includes functionality for listing, creating, deleting, subscribing, unsubscribing,
+    sending, and receiving messages from queues. This class acts as a client-side interface
+    for managing queues and their messages.
+    """
+    
     @staticmethod
     def get_all(message: str = "Queues", only_owned: bool = False):
-        """
-        Lists all the queues
-        Response:
-        {
-            "message": "message_output"
-            "queues": "[
-                {
-                    "name": queue_name
-                    "id": queue_id
-                },
-                ...
-            ]"
-        }
-        """
+        #Lists all the queues
+        
         SERVER_ZOO = get_server_zoo()
         response = requests.get(
             f"{SERVER_ZOO}/queues?{only_owned}", headers=Util.get_headers()
@@ -35,6 +30,7 @@ class Queue:
                 print("[yellow]There aren't any queues yet.[/]")
                 return
             else:
+                #Prints the queues in a tree format
                 tree_root = Tree(f"\n[bold yellow]{message}:[/]")
                 for queue in queues:
                     tree_root.add(
@@ -54,18 +50,8 @@ class Queue:
 
     @staticmethod
     def create():
-        """
-        Creates a new queue
-        Request body:
-        {
-            "name": "queue_name"
-        }
-        Response:
-        {
-            "message": "Queue created successfully",
-            "id": "queue_id"
-        }
-        """
+        #Creates a new queue
+        
         SERVER_ZOO = get_server_zoo()
         name = Prompt.ask("[cyan]Enter queue name[/]")
 
@@ -80,9 +66,10 @@ class Queue:
 
     @staticmethod
     def delete():
-        """Deletes a queue"""
-
+        #Deletes a queue
+        
         SERVER_ZOO = get_server_zoo()
+        #Returns all the queues owned by the user
         queues = Queue.get_all("Your Queues", only_owned=True)
 
         if not queues:
@@ -104,6 +91,8 @@ class Queue:
 
     @staticmethod
     def subscribe():
+        #Subscribes to a queue
+        
         SERVER_ZOO = get_server_zoo()
         Queue.get_all()
 
@@ -123,6 +112,8 @@ class Queue:
 
     @staticmethod
     def unsubscribe():
+        #Unsubscribes from a queue
+        
         SERVER_ZOO = get_server_zoo()
         Queue.get_all()
 
@@ -142,12 +133,13 @@ class Queue:
 
     @staticmethod
     def send_message():
-        """Sends a message to a queue"""
+        #Sends a message to a queue
+        
         SERVER_ZOO = get_server_zoo()
-
         queues = Queue.get_all()
 
         if not queues:
+            print("[yellow]There aren't any queues yet.[/]")
             return
 
         queue_id = Prompt.ask("[cyan]Enter queue ID to send a message[/]")
@@ -168,7 +160,7 @@ class Queue:
 
     @staticmethod
     def receive_message():
-        """Receives a message from a queue"""
+        #Receives a message from a queue
 
         SERVER_ZOO = get_server_zoo()
         queues = Queue.get_all()
@@ -176,7 +168,7 @@ class Queue:
         if not queues:
             return
 
-        queue_id = Prompt.ask("[cyan]Enter queue ID to recieve message[/]")
+        queue_id = Prompt.ask("[cyan]Enter queue ID to receive message[/]")
 
         response = requests.get(
             f"{SERVER_ZOO}/queues/{queue_id}/consume",

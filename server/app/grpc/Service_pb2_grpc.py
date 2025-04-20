@@ -217,6 +217,11 @@ class QueueServiceStub(object):
                 request_serializer=Service__pb2.CreateQueueRequest.SerializeToString,
                 response_deserializer=Service__pb2.CRUDResponse.FromString,
                 _registered_method=True)
+        self.SyncQueues = channel.unary_unary(
+                '/QueueService/SyncQueues',
+                request_serializer=Service__pb2.SyncRequest.SerializeToString,
+                response_deserializer=Service__pb2.SyncResponse.FromString,
+                _registered_method=True)
 
 
 class QueueServiceServicer(object):
@@ -252,6 +257,12 @@ class QueueServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SyncQueues(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_QueueServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -279,6 +290,11 @@ def add_QueueServiceServicer_to_server(servicer, server):
                     servicer.CreateQueues,
                     request_deserializer=Service__pb2.CreateQueueRequest.FromString,
                     response_serializer=Service__pb2.CRUDResponse.SerializeToString,
+            ),
+            'SyncQueues': grpc.unary_unary_rpc_method_handler(
+                    servicer.SyncQueues,
+                    request_deserializer=Service__pb2.SyncRequest.FromString,
+                    response_serializer=Service__pb2.SyncResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -416,6 +432,33 @@ class QueueService(object):
             '/QueueService/CreateQueues',
             Service__pb2.CreateQueueRequest.SerializeToString,
             Service__pb2.CRUDResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SyncQueues(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/QueueService/SyncQueues',
+            Service__pb2.SyncRequest.SerializeToString,
+            Service__pb2.SyncResponse.FromString,
             options,
             channel_credentials,
             insecure,

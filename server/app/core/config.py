@@ -1,3 +1,7 @@
+"""
+This configuration file is responsible for retrieving environment settings and secrets.
+"""
+
 import os
 from dotenv import load_dotenv
 

@@ -121,6 +121,20 @@ class CRUDResponse(_message.Message):
     status_code: int
     def __init__(self, status_code: _Optional[int] = ...) -> None: ...
 
+class SyncRequest(_message.Message):
+    __slots__ = ("id",)
+    ID_FIELD_NUMBER: _ClassVar[int]
+    id: int
+    def __init__(self, id: _Optional[int] = ...) -> None: ...
+
+class SyncResponse(_message.Message):
+    __slots__ = ("messages", "status_code")
+    MESSAGES_FIELD_NUMBER: _ClassVar[int]
+    STATUS_CODE_FIELD_NUMBER: _ClassVar[int]
+    messages: _containers.RepeatedCompositeFieldContainer[Message]
+    status_code: int
+    def __init__(self, messages: _Optional[_Iterable[_Union[Message, _Mapping]]] = ..., status_code: _Optional[int] = ...) -> None: ...
+
 class Topic(_message.Message):
     __slots__ = ("id", "name")
     ID_FIELD_NUMBER: _ClassVar[int]

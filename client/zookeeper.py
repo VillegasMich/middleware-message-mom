@@ -1,3 +1,9 @@
+"""
+This file manages server discovery and load balancing using ZooKeeper. It provides functionality
+to refresh the list of available servers, retrieve a server for client connections, and handle
+server rotation for load distribution. The Kazoo library is used to interact with the ZooKeeper service.
+"""
+
 from random import randint
 from kazoo.client import KazooClient
 
@@ -12,6 +18,7 @@ current_index_server = 0
 
 
 def refresh_servers():
+    #Refreshes the list of servers from ZooKeeper
     global server_list, current_index
 
     if not zk.exists("/servers"):
@@ -26,6 +33,7 @@ def refresh_servers():
 
 
 def get_server():
+    #Returns the next server in the list for load balancing
     global current_index
 
     if not server_list:

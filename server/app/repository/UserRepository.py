@@ -7,6 +7,12 @@ from zookeeper import ZK_NODE_USERS, zk
 
 
 class UserRepository:
+    """
+    This class provides methods to interact with the database for user-related operations.
+    It includes functionality to register new users, validate user existence, and retrieve topic-related queues
+    for a specific user. This class ensures proper database transactions and integrates with ZooKeeper for
+    user metadata management.
+    """
     def __init__(self, db: Session):
         self.db = db
 

@@ -1,7 +1,12 @@
 from app.core.database import Base
 from sqlalchemy import Column, ForeignKey, Integer
 
-
+"""
+    ATTRIBUTES
+    id => Represents the unique id for the user topic table.
+    user_id => Represents the unique id of a user.
+    topic_id => Represents the unique id of a topic.
+"""
 class user_topic(Base):
     __tablename__ = "user_topic"
 
