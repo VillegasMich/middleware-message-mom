@@ -65,7 +65,7 @@ Además, se debe desarrollar una aplicación cliente de prueba, documentar todo 
 
 # 2. información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
 
-**IMAGEN ARQUITECTURA**
+![Screenshot_2025-04-21-11-20-16_1920x1080](https://github.com/user-attachments/assets/5da724c5-469b-4755-bcfb-1572e8cb71d6)
 
 ## Documentación Cliente
 
@@ -400,28 +400,16 @@ Para la implementación del middleware MOM se seleccionaron tecnologías que per
 
 Nuestro ZooKeeper tiene la siguiente estructura:
 
-```
-/
-├── servers
-│     ├──IP
-├── servers-metadata
-      ├──IP
-    ├──Queues
-      		├──ID
-			├──…
-    ├──Topics
-      		├──ID
-			├──…
-    ├──Users
-      		├──ID
-			├──…
-```
+![Screenshot_2025-04-21-11-18-40_1920x1080](https://github.com/user-attachments/assets/3fe4c046-bade-4631-baf1-c75e8e4a5250)
 
 Encontramos la ruta servers donde se encuentran las direcciones IP de los servidores disponibles actualmente, son nodos efímeros los cuales desaparecen al momento que el server se desconecta, y es de esta lista de servers que se eligen para interactuar con el cliente. También encontramos la ruta de servers-metadata donde también se encuentran las IP de los servidores, pero estos no desaparecen si el servidor llega a caer de forma inesperada, cada una de estas direcciones IP tiene a su vez por dentro las colas, los tópicos y los usuarios locales de cada servidor (los ID de cada elemento almacenado).
 
 Conociendo la estructura entonces podemos explicar el funcionamiento del sistema con el ZooKeeper:
 
-**IMAGEN DIAGRAMA DE SECUENCIA**
+![Screenshot_2025-04-21-11-19-20_1920x1080](https://github.com/user-attachments/assets/4b93741c-70b4-4a83-ae5c-91812aca5a1a)
+
+Después de cada petición, el ZooKeeper le entrega un nuevo server disponible a cliente a manera de round robin.
+
 
 ## opcionalmente - si quiere mostrar resultados o pantallazos
 
