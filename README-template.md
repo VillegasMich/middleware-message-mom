@@ -12,7 +12,7 @@
 
 # Diseño e Implementación de un Middleware orientado a mensajes
 
-# 1. breve descripción de la actividad
+# 1. Breve descripción de la actividad
 
 El estudiante debe construir un sistema distribuido en clúster que soporte:
 
@@ -28,26 +28,26 @@ Además, se debe desarrollar una aplicación cliente de prueba, documentar todo 
 
 ### Funcionales
 
-- Gestión de la conexión de clientes: El sistema debe permitir a múltiples clientes autenticarse, conectarse y desconectarse del MOM, ya sea de forma persistente (con estado) o sin mantener una conexión constante (sin estado).
-- Autenticación y Autorización: Los usuarios deben autenticarse antes de interactuar con el sistema.
-- Gestión del Ciclo de Vida de Tópicos: El sistema debe permitir la creación de tópicos, la eliminación de tópicos únicamente por parte del usuario que los creó, y listar todos los tópicos disponibles.
-- Gestión del Ciclo de Vida de Colas: El sistema debe permitir la creación de colas, la eliminación de colas únicamente por parte del usuario que las creó, y listar todas las colas disponibles.
-- Envío y Recepción de Mensajes: El sistema debe permitir enviar mensajes a una cola o tópico en específico, así como también recibir mensajes desde una cola o tópico.
-- Modelo de Suscripción: El sistema debe ofrecer un modelo de suscripción a las colas y tópicos tanto por tipo push como tipo pull.
-- API REST y gRPC: El sistema debe exponer servicios a los clientes a través de API REST, mientras que la comunicación entre servidores MOM es por medio de gRPC.
-- Persistencia de Datos: El sistema debe implementar un mecanismo de persistencia para asegurar que los mensajes y configuraciones no se pierdan ante una falla.
+- **Gestión de la conexión de clientes:** El sistema debe permitir a múltiples clientes autenticarse, conectarse y desconectarse del MOM, ya sea de forma persistente (con estado) o sin mantener una conexión constante (sin estado).
+- **Autenticación y Autorización:** Los usuarios deben autenticarse antes de interactuar con el sistema.
+- **Gestión del Ciclo de Vida de Tópicos:** El sistema debe permitir la creación de tópicos, la eliminación de tópicos únicamente por parte del usuario que los creó, y listar todos los tópicos disponibles.
+- **Gestión del Ciclo de Vida de Colas:** El sistema debe permitir la creación de colas, la eliminación de colas únicamente por parte del usuario que las creó, y listar todas las colas disponibles.
+- **Envío y Recepción de Mensajes:** El sistema debe permitir enviar mensajes a una cola o tópico en específico, así como también recibir mensajes desde una cola o tópico.
+- **Modelo de Suscripción:** El sistema debe ofrecer un modelo de suscripción a las colas y tópicos tanto por tipo push como tipo pull.
+- **API REST y gRPC:** El sistema debe exponer servicios a los clientes a través de API REST, mientras que la comunicación entre servidores MOM es por medio de gRPC.
+- **Persistencia de Datos:** El sistema debe implementar un mecanismo de persistencia para asegurar que los mensajes y configuraciones no se pierdan ante una falla.
 
 ### No Funcionales
 
-- Seguridad: Las credenciales de autenticación deben ser transmitidas mediante mecanismos de cifrado.
-- Tolerancia a fallos: El sistema debe ser capaz de recuperarse de fallos de algún nodo mediante replicación de datos y mecanismos de respaldo.
-- Escalabilidad: La arquitectura del sistema debe permitir la incorporación de nuevos nodos al cluster sin afectar la funcionalidad existente.
-- Particionamiento y Replicación: El sistema debe distribuir las colas y tópicos, además de otra información, entre diferentes nodos del cluster, además de replicar esta información.
-- Transparencia: El sistema debe ser transparente, es decir, los clientes no deben saber los detalles internos del cluster, como la ubicación de los tópicos o colas. Además, el uso del sistema debe ser homogéneo, independientemente del nodo al que se conecte el cliente.
-- Desempeño y Eficiencia: El sistema debe responder en tiempos aceptables ante operaciones de envío y recepción de mensajes.
-- Mantenibilidad: La arquitectura debe permitir la inclusión de nuevas funcionalidades sin necesidad de una reestructuración completa.
-- Multiusuario: El sistema debe soportar la conexión concurrente de múltiples usuarios, garantizando la correcta identificación y separación de sus recursos y mensajes.
-- Modelo de Comunicación Distribuida: El sistema debe soportar interacciones sincrónicas y asincrónicas.
+- **Seguridad:** Las credenciales de autenticación deben ser transmitidas mediante mecanismos de cifrado.
+- **Tolerancia a fallos:** El sistema debe ser capaz de recuperarse de fallos de algún nodo mediante replicación de datos y mecanismos de respaldo.
+- **Escalabilidad:** La arquitectura del sistema debe permitir la incorporación de nuevos nodos al cluster sin afectar la funcionalidad existente.
+- **Particionamiento y Replicación:** El sistema debe distribuir las colas y tópicos, además de otra información, entre diferentes nodos del cluster, además de replicar esta información.
+- **Transparencia:** El sistema debe ser transparente, es decir, los clientes no deben saber los detalles internos del cluster, como la ubicación de los tópicos o colas. Además, el uso del sistema debe ser homogéneo, independientemente del nodo al que se conecte el cliente.
+- **Desempeño y Eficiencia:** El sistema debe responder en tiempos aceptables ante operaciones de envío y recepción de mensajes.
+- **Mantenibilidad:** La arquitectura debe permitir la inclusión de nuevas funcionalidades sin necesidad de una reestructuración completa.
+- *Multiusuario:* El sistema debe soportar la conexión concurrente de múltiples usuarios, garantizando la correcta identificación y separación de sus recursos y mensajes.
+- **Modelo de Comunicación Distribuida:** El sistema debe soportar interacciones sincrónicas y asincrónicas.
 
 ## 1.2. Que aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
 
@@ -63,7 +63,7 @@ Además, se debe desarrollar una aplicación cliente de prueba, documentar todo 
 - Uso de elementos como el ZooKeeper de manera mas eficiente
 - Mayor calidad y cantidad de pruebas de integracion entre componentes
 
-# 2. información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
+# 2. Información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
 
 ![Screenshot_2025-04-21-11-20-16_1920x1080](https://github.com/user-attachments/assets/5da724c5-469b-4755-bcfb-1572e8cb71d6)
 
@@ -157,12 +157,67 @@ Como se dijo anteriormente se implementó el uso de un ZooKeeper (Apache) para e
 
 Con el servidor iniciado la documentación se puede encontrar en la ruta http://{IP}:8000/docs
 
-# 3. Descripción del ambiente de desarrollo y técnico:
+# 3. Descripción del ambiente de desarrollo y técnico
+
+## Como se compila y ejecuta.
+Antes de ejecutar cualquiera de nuestros dos servicios, el usuario debera de hacerle fork a el repositorio y inicializarlo en su maquina.
+
+### Cliente
+Para ejecutar el cliente de nuestra aplicación es necesario que se sigan los siguientes pasos:
+1. Dirigase a la carpeta `client`.
+2. Cree un `ambiente virtual de python` con el comando `python -m venv <nombre del ambiente>` 
+3. Ejecute el comando `pip install -r requirements.txt`. Espere a que carguen todas las dependencias.
+4. Ejecute el comando `python main.py`
+
+Y listo, si hay servidores disponibles usted debera de poder acceder como cliente a nuestro sistema MOM.
+
+### Servidor
+Para ejecutar el servidor de nuestra aplicación es necesario que siga los siguientes pasos:
+1. Dirigase a la carpeta `server`.
+2. Cree un `ambiente virtual de python` con el comando `python -m venv <nombre del ambiente>` 
+3. Ejecute el comando `pip install -r requirements.txt`. Espere a que carguen todas las dependencias.
+4. Cree un archivo `.env` donde debera de poner las siguientes `variables de entorno`.
+
+```js
+DATABASE_URL=mysql+pymysql://user:root@localhost:3306/mom
+SECRET_KEY= ...
+ALGORITHM=HS256
+SERVER_ELASTIC_IP= x.x.x.x
+PUBLIC_IP=0.0.0.0
+```
+---
+>>> #### Secret Key
+>>> - The SECRET_KEY enviroment variable must be generated with the following code (can be generated with ChatGPT) and it MUST be the same in every server you instanciate:
+>>> - La variable de entorno SECRET_KEY debe de ser generada por medio del siguiente script en python. **Ademas esta debe de ser LA MISMA en cada uno de los servidores que se vayan a inicializar**. 
+
+```python
+import secrets
+print(secrets.token_hex(32))
+```
+--- 
+
+5. Instale `docker` y `docker-compose` para poder ejecutar el contenedor. Dentro del archivo `docker-compose.yml` estan todas las especificaciónes del servicio en el contenedor.
+6. Ejecute el siguiente comando `docker-compose up -d`. Este inicializara motor mysql accesible con la dirección IP de su maquina en el puerto 3306 en el cual usted debera de crear una base de datos con nombre `mom`.
+7. Ejecute el comando `alembic upgrade head` para correr las migraciones contra la base de datos.
+8. Por ultimo ejecute el comando `fastapi run main.py` que le permitira correr el servidor a travez del CLI de `fastapi`.
+
+## Detalles del desarrollo.
+
+El desarrollo del proyecto fluyó de manera constante y efectiva a lo largo del tiempo asignado para su implementación. Logramos pequeñas victorias clave en las etapas tempranas, lo cual nos permitió enfocar más tiempo y energía en las funcionalidades críticas del sistema, como la comunicación entre nodos y la arquitectura distribuida.
+
+Durante el desarrollo del proyecto, no solo avanzamos técnicamente, sino también como equipo. Cada obstáculo nos llevó a investigar, compartir conocimientos y apoyarnos mutuamente, fortaleciendo tanto nuestras habilidades individuales como nuestra capacidad de trabajo colaborativo.
+
+Gracias a esto, podemos afirmar que el desarrollo del proyecto se dio de manera clara y organizada. Lo que nos permitio alcanzar llevar la solución a un buen nivel.
+
+## Detalles técnicos
+
 
 - Lenguaje de programación: Python
 - Base de datos: MySQL
 - ZooKeeper: Apache ZooKeeper
 - gRPC: Protobuf
+
+Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a investigar profundamente conceptos de implementación para poder implementar la teoría en soluciones prácticas. En ese proceso, las documentaciones oficiales de las herramientas utilizadas, así como el apoyo de agentes de inteligencia artificial, fueron fundamentales para guiarnos en la construcción y validación de nuestras ideas.
 
 ## Paquetes Cliente
 
@@ -386,13 +441,10 @@ Con el servidor iniciado la documentación se puede encontrar en la ruta http://
 
 Para la implementación del middleware MOM se seleccionaron tecnologías que permiten construir un sistema distribuido robusto, eficiente y escalable. FastAPI fue elegida como framework principal del servidor por su velocidad, soporte asincrónico nativo y facilidad para definir APIs REST, facilitando la interacción con los clientes. Para la comunicación entre servidores, se optó por gRPC debido a su eficiencia, bajo consumo de ancho de banda y soporte para transmisión binaria mediante protocolos Protobuf, lo cual es ideal para ambientes distribuidos de alto rendimiento. La persistencia de usuarios, colas, tópicos y mensajes se gestiona mediante MySQL, una base de datos relacional madura, confiable y ampliamente adoptada, lo cual garantiza integridad de datos y soporte para consultas complejas. Finalmente, se utilizó Apache ZooKeeper como mecanismo de coordinación y gestión del clúster de servidores, permitiendo detección de fallos, balanceo de carga, descubrimiento de servicios y almacenamiento distribuido de metadatos, funcionalidades esenciales para garantizar la disponibilidad y consistencia del sistema MOM.
 
-## como se compila y ejecuta.
 
-## detalles del desarrollo.
+## Descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
 
-## detalles técnicos
 
-## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
 
 ## opcional - detalles de la organización del código por carpetas o descripción de algún archivo. (ESTRUCTURA DE DIRECTORIOS Y ARCHIVOS IMPORTANTE DEL PROYECTO, comando 'tree' de linux)
 
@@ -421,9 +473,20 @@ Después de cada petición, el ZooKeeper le entrega un nuevo server disponible a
 
 ## como se lanza el servidor.
 
-## una mini guia de como un usuario utilizaría el software o la aplicación
+Los servidores en nuestro proyecto estan alojados en AWS como maquinas EC2 T2 micro, las cuales nos permiten tener una maquina ubuntu donde estara corriendo el programa servidor 
 
-## opcionalmente - si quiere mostrar resultados o pantallazos
+## Una mini guia de como un usuario utilizaría el software o la aplicación
+
+Un usuario que quiera utilizar la aplicación debera:
+
+1. Hacer todo el tutorial previamente explicado para inicializar su aplicación cliente.
+2. Registrarse en el sistema con usuario y contraseña.
+3. Cerrar sesion para que los cambios se vean reflejados.
+4. Ingresar nuevamente con su usuario y contraseña.
+5. Leer el menu y ingresar la opción que desee.
+6. En cada opción se le daran instrucciones claras acerca de lo que debe ingresar, sigalas de manera correcta.
+
+## Opcionalmente - si quiere mostrar resultados o pantallazos
 
 # 5. otra información que considere relevante para esta actividad.
 
