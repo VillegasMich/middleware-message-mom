@@ -219,9 +219,9 @@ Gracias a esto, podemos afirmar que el desarrollo del proyecto se dio de manera 
 
 Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a investigar profundamente conceptos de implementación para poder implementar la teoría en soluciones prácticas. En ese proceso, las documentaciones oficiales de las herramientas utilizadas, así como el apoyo de agentes de inteligencia artificial, fueron fundamentales para guiarnos en la construcción y validación de nuestras ideas.
 
-## Paquetes Cliente
+### Paquetes Cliente
 
-### 🔧 Utilidades y Core
+#### 🔧 Utilidades y Core
 
 - **annotated-types==0.7.0**  
   Tipos anotados con validaciones adicionales, usados junto a Pydantic.
@@ -234,7 +234,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🌐 Web y APIs
+#### 🌐 Web y APIs
 
 - **fastapi==0.115.11**  
   Framework moderno para construir APIs web en Python con tipado estático basado en Pydantic.
@@ -250,7 +250,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🛡️ Seguridad y Autenticación
+#### 🛡️ Seguridad y Autenticación
 
 - **bcrypt==4.3.0**  
   Algoritmo de hashing para contraseñas seguro.
@@ -266,7 +266,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🔒 Criptografía
+#### 🔒 Criptografía
 
 - **ecdsa==0.19.1**  
   Implementación de algoritmos de firma digital con curvas elípticas.
@@ -279,14 +279,14 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🐘 ZooKeeper
+#### 🐘 ZooKeeper
 
 - **kazoo==2.10.0**  
   Cliente de Python para Apache ZooKeeper. Útil para coordinación distribuida, replicación y particionamiento.
 
 ---
 
-### 🔍 Validación y Parsing
+#### 🔍 Validación y Parsing
 
 - **pydantic==2.10.6**  
   Validación de datos mediante anotaciones de tipos, base de FastAPI.
@@ -296,7 +296,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 📡 HTTP y Requests
+#### 📡 HTTP y Requests
 
 - **requests==2.32.3**  
   Librería HTTP simple y popular para realizar peticiones web.
@@ -315,7 +315,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 📝 Markdown y Consola
+#### 📝 Markdown y Consola
 
 - **markdown-it-py==3.0.0**  
   Analizador de Markdown en Python compatible con Markdown-It.
@@ -331,7 +331,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🧪 Herramientas de Desarrollo
+#### 🧪 Herramientas de Desarrollo
 
 - **ruff==0.11.0**  
   Linter y formateador ultrarrápido para Python escrito en Rust.
@@ -360,7 +360,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🔌 gRPC y Comunicación entre Servidores
+#### 🔌 gRPC y Comunicación entre Servidores
 
 - **grpcio-tools==1.71.0**  
   Herramientas necesarias para compilar archivos `.proto` y trabajar con gRPC en Python.
@@ -370,7 +370,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🔐 Seguridad y Autenticación
+#### 🔐 Seguridad y Autenticación
 
 - **passlib==1.7.4**  
   Manejo de contraseñas con múltiples algoritmos de hashing.
@@ -383,14 +383,14 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🐘 Coordinación Distribuida
+#### 🐘 Coordinación Distribuida
 
 - **kazoo==2.10.0**  
   Cliente para Apache ZooKeeper, utilizado para coordinación de clústeres, replicación y failover.
 
 ---
 
-### 🧠 Validación y Tipado
+#### 🧠 Validación y Tipado
 
 - **pydantic==2.10.6**  
   Validación de datos basada en anotaciones de tipos, clave en FastAPI.
@@ -400,7 +400,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🧪 Testing y Desarrollo
+#### 🧪 Testing y Desarrollo
 
 - **pytest==8.3.5**  
   Framework de pruebas robusto y flexible para Python.
@@ -413,7 +413,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🗄️ Base de Datos
+#### 🗄️ Base de Datos
 
 - **SQLAlchemy==2.0.39**  
   ORM poderoso para manejo de bases de datos en Python.
@@ -423,7 +423,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 
 ---
 
-### 🧬 Otros útiles
+#### 🧬 Otros útiles
 
 - **Jinja2==3.1.6**  
   Motor de plantillas usado por muchas apps web (ej. renderizado de HTML).
@@ -437,7 +437,7 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 - **uvloop==0.21.0**  
   Reemplazo para el loop de eventos de asyncio, mejora el rendimiento de aplicaciones async.
 
-## Justificación de las tecnologías usadas
+### Justificación de las tecnologías usadas
 
 Para la implementación del middleware MOM se seleccionaron tecnologías que permiten construir un sistema distribuido robusto, eficiente y escalable. FastAPI fue elegida como framework principal del servidor por su velocidad, soporte asincrónico nativo y facilidad para definir APIs REST, facilitando la interacción con los clientes. Para la comunicación entre servidores, se optó por gRPC debido a su eficiencia, bajo consumo de ancho de banda y soporte para transmisión binaria mediante protocolos Protobuf, lo cual es ideal para ambientes distribuidos de alto rendimiento. La persistencia de usuarios, colas, tópicos y mensajes se gestiona mediante MySQL, una base de datos relacional madura, confiable y ampliamente adoptada, lo cual garantiza integridad de datos y soporte para consultas complejas. Finalmente, se utilizó Apache ZooKeeper como mecanismo de coordinación y gestión del clúster de servidores, permitiendo detección de fallos, balanceo de carga, descubrimiento de servicios y almacenamiento distribuido de metadatos, funcionalidades esenciales para garantizar la disponibilidad y consistencia del sistema MOM.
 
