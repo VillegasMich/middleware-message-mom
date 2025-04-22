@@ -24,7 +24,7 @@ El estudiante debe construir un sistema distribuido en clúster que soporte:
 
 Además, se debe desarrollar una aplicación cliente de prueba, documentar todo el sistema, desplegarlo en AWS Academy, y presentar los resultados.
 
-## 1.1. Que aspectos cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
+## 1.1. Qué aspectos cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
 
 ### Funcionales
 
@@ -49,19 +49,19 @@ Además, se debe desarrollar una aplicación cliente de prueba, documentar todo 
 - *Multiusuario:* El sistema debe soportar la conexión concurrente de múltiples usuarios, garantizando la correcta identificación y separación de sus recursos y mensajes.
 - **Modelo de Comunicación Distribuida:** El sistema debe soportar interacciones sincrónicas y asincrónicas.
 
-## 1.2. Que aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
+## 1.2. Qué aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
 
 ### Funcionales
 
 - Manejo de wildcards como "\*" y "#" para el manejo de grupos de mensajes por medio de expresiones regulares
-- Implementacion de un ttl de los elementos
+- Implementación de un TTL de los elementos
 - Manejo del status de los mensajes de manera eficiente
 
 ### No Funcionales
 
-- Mejora de kos tiempos de busqueda entre los servidores (no utilizar busqueda lineal)
-- Uso de elementos como el ZooKeeper de manera mas eficiente
-- Mayor calidad y cantidad de pruebas de integracion entre componentes
+- Mejora de los tiempos de búsqueda entre los servidores (no utilizar búsqueda lineal)
+- Uso de elementos como el ZooKeeper de manera más eficiente
+- Mayor calidad y cantidad de pruebas de integración entre componentes
 
 # 2. Información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
 
@@ -99,7 +99,7 @@ Eliminar una cola
 
 Enviar mensaje a una cola
 
-- Envia un mensaje a una cola seleccionada.
+- Envía un mensaje a una cola seleccionada.
 
 Recibir mensaje de una cola
 
@@ -143,15 +143,15 @@ Salir del cliente
 
 ## Documentación Servidor
 
-El servidor MOM (Message Oriented Middleware) es el encargado de la recepción de las peticiones para el registro y autenticación de usuarios, creación de colas y tópicos, envío y recepción de mensajes, entre otras muchas funcionalidades. Como base es un servidor web construido en FasApi de tal manera que los clientes se comuniquen a través de peticiones HTTP, mantiene una persistencia de datos en una base de datos MySQL y el uso de comunicación gRPC para comunicarse con los otros servidores existentes.
+El servidor MOM (Message Oriented Middleware) es el encargado de la recepción de las peticiones para el registro y autenticación de usuarios, creación de colas y tópicos, envío y recepción de mensajes, entre otras muchas funcionalidades. Como base es un servidor web construido en FastAPI de tal manera que los clientes se comuniquen a través de peticiones HTTP, mantiene una persistencia de datos en una base de datos MySQL y el uso de comunicación gRPC para comunicarse con los otros servidores existentes.
 
-El servidor es quien aplica las distintas tareas que el cliente solicita a través de la consola, realiza el correcto manejo de los mensajes, colas y tópicos entre él y los distintos otros servidores existentes, esto con la gran ayuda del ZooKeeper del cual se hablará más adelante.
+El servidor es quien aplica las distintas tareas que el cliente solicita a través de la consola, realiza el correcto manejo de los mensajes, colas y tópicos entre él y los distintos otros servidores existentes, esto con la gran ayuda del ZooKeeper, del cual se hablará más adelante.
 
 El sistema de servidores implementa varias características clave que garantizan un rendimiento eficiente, disponibilidad y robustez. En primer lugar, la escalabilidad permite agregar nuevos servidores de forma transparente, sin afectar la operación del sistema. Además, se implementa particionamiento de datos, lo que distribuye la información entre múltiples servidores para evitar cuellos de botella y mejorar la eficiencia. También se cuenta con replicación, asegurando que los datos estén disponibles en al menos dos servidores activos, lo que reduce el riesgo de pérdida de información. Por último, el sistema está diseñado con tolerancia a fallos, de modo que si un servidor se cae, el cliente no percibe interrupciones. En ese caso, el sistema replica y redistribuye automáticamente los datos, y cuenta con mecanismos para restaurar el estado del servidor al momento de la falla.
 
 ## Documentación del ZooKeeper
 
-Como se dijo anteriormente se implementó el uso de un ZooKeeper (Apache) para el manejo del clúster de servidores, este software nos entrega muchas funcionalidades que ayudan para el correcto funcionamiento de los sistemas y de todas las características de los servidores mencionadas anteriormente. Entre sus principales ventajas se encuentran: la coordinación distribuida, que permite mantener una visión consistente del estado del sistema entre todos los nodos; la detección de fallos, que permite identificar rápidamente servidores inactivos y redirigir la carga de forma automática; y el descubrimiento de servicios, gracias al cual los clientes pueden conectarse siempre al servidor más adecuado sin intervención manual. Además, ZooKeeper facilita la gestión de la configuración centralizada, la sincronización de procesos distribuidos y la elección de líderes, aspectos fundamentales para garantizar alta disponibilidad, tolerancia a fallos y balanceo de carga en entornos distribuidos con múltiples servidores.
+Como se dijo anteriormente, se implementó el uso de un ZooKeeper (Apache) para el manejo del clúster de servidores. Este software nos entrega muchas herramientas que ayudan para el correcto funcionamiento de los sistemas y de todas las características de los servidores mencionadas anteriormente. Entre sus principales ventajas se encuentran: la coordinación distribuida, que permite mantener una visión consistente del estado del sistema entre todos los nodos; la detección de fallos, que permite identificar rápidamente servidores inactivos y redirigir la carga de forma automática; y el descubrimiento de servicios, gracias al cual los clientes pueden conectarse siempre al servidor más adecuado sin intervención manual. Además, ZooKeeper facilita la gestión de la configuración centralizada, la sincronización de procesos distribuidos y la elección de líderes, aspectos fundamentales para garantizar alta disponibilidad, tolerancia a fallos y balanceo de carga en entornos distribuidos con múltiples servidores.
 
 ## Documentación API
 
@@ -160,23 +160,23 @@ Con el servidor iniciado la documentación se puede encontrar en la ruta http://
 # 3. Descripción del ambiente de desarrollo y técnico
 
 ## Como se compila y ejecuta.
-Antes de ejecutar cualquiera de nuestros dos servicios, el usuario debera de hacerle fork a el repositorio y inicializarlo en su maquina.
+Antes de ejecutar cualquiera de nuestros dos servicios, el usuario debera de hacerle fork a el repositorio e inicializarlo en su máquina.
 
 ### Cliente
 Para ejecutar el cliente de nuestra aplicación es necesario que se sigan los siguientes pasos:
-1. Dirigase a la carpeta `client`.
+1. Diríjase a la carpeta `client`.
 2. Cree un `ambiente virtual de python` con el comando `python -m venv <nombre del ambiente>` 
 3. Ejecute el comando `pip install -r requirements.txt`. Espere a que carguen todas las dependencias.
 4. Ejecute el comando `python main.py`
 
-Y listo, si hay servidores disponibles usted debera de poder acceder como cliente a nuestro sistema MOM.
+Y listo. Si hay servidores disponibles usted deberá de poder acceder como cliente a nuestro sistema MOM.
 
 ### Servidor
 Para ejecutar el servidor de nuestra aplicación es necesario que siga los siguientes pasos:
-1. Dirigase a la carpeta `server`.
+1. Diríjase a la carpeta `server`.
 2. Cree un `ambiente virtual de python` con el comando `python -m venv <nombre del ambiente>` 
 3. Ejecute el comando `pip install -r requirements.txt`. Espere a que carguen todas las dependencias.
-4. Cree un archivo `.env` donde debera de poner las siguientes `variables de entorno`.
+4. Cree un archivo `.env` donde deberá de poner las siguientes `variables de entorno`.
 
 ```js
 DATABASE_URL=mysql+pymysql://user:root@localhost:3306/mom
@@ -187,7 +187,7 @@ PUBLIC_IP=0.0.0.0
 ```
 ---
 > #### Secret Key
-> - La variable de entorno SECRET_KEY debe de ser generada por medio del siguiente script en python. **Ademas esta debe de ser LA MISMA en cada uno de los servidores que se vayan a inicializar**. 
+> - La variable de entorno SECRET_KEY debe de ser generada por medio del siguiente script en python. **Además, esta debe de ser LA MISMA en cada uno de los servidores que se vayan a inicializar**. 
 
 ```python
 import secrets
@@ -195,10 +195,10 @@ print(secrets.token_hex(32))
 ```
 --- 
 
-5. Instale `docker` y `docker-compose` para poder ejecutar el contenedor. Dentro del archivo `docker-compose.yml` estan todas las especificaciónes del servicio en el contenedor.
-6. Ejecute el siguiente comando `docker-compose up -d`. Este inicializara motor mysql accesible con la dirección IP de su maquina en el puerto 3306 en el cual usted debera de crear una base de datos con nombre `mom`.
+5. Instale `docker` y `docker-compose` para poder ejecutar el contenedor. Dentro del archivo `docker-compose.yml` están todas las especificaciónes del servicio en el contenedor.
+6. Ejecute el siguiente comando `docker-compose up -d`. Este inicializará motor mysql accesible con la dirección IP de su máquina en el puerto 3306 en el cual usted deberá de crear una base de datos con nombre `mom`.
 7. Ejecute el comando `alembic upgrade head` para correr las migraciones contra la base de datos.
-8. Por ultimo ejecute el comando `fastapi run main.py` que le permitira correr el servidor a travez del CLI de `fastapi`.
+8. Por último, ejecute el comando `fastapi run main.py` que le permitirá correr el servidor a través del CLI de `fastapi`.
 
 ## Detalles del desarrollo.
 
@@ -206,7 +206,7 @@ El desarrollo del proyecto fluyó de manera constante y efectiva a lo largo del 
 
 Durante el desarrollo del proyecto, no solo avanzamos técnicamente, sino también como equipo. Cada obstáculo nos llevó a investigar, compartir conocimientos y apoyarnos mutuamente, fortaleciendo tanto nuestras habilidades individuales como nuestra capacidad de trabajo colaborativo.
 
-Gracias a esto, podemos afirmar que el desarrollo del proyecto se dio de manera clara y organizada. Lo que nos permitio alcanzar llevar la solución a un buen nivel.
+Gracias a esto, podemos afirmar que el desarrollo del proyecto se dio de manera clara y organizada. Lo que nos permitió alcanzar llevar la solución a un buen nivel.
 
 ## Detalles técnicos
 
@@ -216,7 +216,7 @@ Gracias a esto, podemos afirmar que el desarrollo del proyecto se dio de manera 
 - ZooKeeper: Apache ZooKeeper
 - gRPC: Protobuf
 
-Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a investigar profundamente conceptos de implementación para poder implementar la teoría en soluciones prácticas. En ese proceso, las documentaciones oficiales de las herramientas utilizadas, así como el apoyo de agentes de inteligencia artificial, fueron fundamentales para guiarnos en la construcción y validación de nuestras ideas.
+Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a investigar profundamente varios conceptos para poder implementar la teoría en soluciones prácticas. En ese proceso, las documentaciones oficiales de las herramientas utilizadas, así como el apoyo de agentes de inteligencia artificial, fueron fundamentales para guiarnos en la construcción y validación de nuestras ideas.
 
 ### Paquetes Cliente
 
@@ -463,7 +463,7 @@ Conociendo la estructura entonces podemos explicar el funcionamiento del sistema
 
 ![Screenshot_2025-04-21-11-19-20_1920x1080](https://github.com/user-attachments/assets/4b93741c-70b4-4a83-ae5c-91812aca5a1a)
 
-Después de cada petición, el ZooKeeper le entrega un nuevo server disponible a cliente a manera de round robin.
+Después de cada petición, el ZooKeeper le entrega un nuevo server disponible a cliente a manera de Round Robin.
 
 
 ## opcionalmente - si quiere mostrar resultados o pantallazos
@@ -474,20 +474,20 @@ Después de cada petición, el ZooKeeper le entrega un nuevo server disponible a
 
 ## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
 
-## como se lanza el servidor.
+## Cómo se lanza el servidor.
 
-Los servidores en nuestro proyecto estan alojados en AWS como maquinas EC2 T2 micro, las cuales nos permiten tener una maquina ubuntu donde estara corriendo el programa servidor 
+Los servidores en nuestro proyecto estan alojados en AWS como máquinas EC2 T2 micro, las cuales nos permiten tener una máquina ubuntu donde estará corriendo el programa del servidor.
 
-## Una mini guia de como un usuario utilizaría el software o la aplicación
+## Mini guía de cómo un usuario utilizaría el software o la aplicación
 
-Un usuario que quiera utilizar la aplicación debera:
+Un usuario que quiera utilizar la aplicación deberá:
 
 1. Hacer todo el tutorial previamente explicado para inicializar su aplicación cliente.
 2. Registrarse en el sistema con usuario y contraseña.
-3. Cerrar sesion para que los cambios se vean reflejados.
+3. Cerrar sesión para que los cambios se vean reflejados.
 4. Ingresar nuevamente con su usuario y contraseña.
-5. Leer el menu y ingresar la opción que desee.
-6. En cada opción se le daran instrucciones claras acerca de lo que debe ingresar, sigalas de manera correcta.
+5. Leer el menú e ingresar la opción que desee.
+6. En cada opción se le darán instrucciones claras acerca de lo que debe ingresar, sígalas de manera correcta.
 
 ## Opcionalmente - si quiere mostrar resultados o pantallazos
 
