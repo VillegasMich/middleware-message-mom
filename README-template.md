@@ -186,8 +186,8 @@ SERVER_ELASTIC_IP= x.x.x.x
 PUBLIC_IP=0.0.0.0
 ```
 ---
->>> #### Secret Key
->>> - La variable de entorno SECRET_KEY debe de ser generada por medio del siguiente script en python. **Ademas esta debe de ser LA MISMA en cada uno de los servidores que se vayan a inicializar**. 
+> #### Secret Key
+> - La variable de entorno SECRET_KEY debe de ser generada por medio del siguiente script en python. **Ademas esta debe de ser LA MISMA en cada uno de los servidores que se vayan a inicializar**. 
 
 ```python
 import secrets
@@ -446,6 +446,10 @@ Para la implementación del middleware MOM se seleccionaron tecnologías que per
 
 
 ## opcional - detalles de la organización del código por carpetas o descripción de algún archivo. (ESTRUCTURA DE DIRECTORIOS Y ARCHIVOS IMPORTANTE DEL PROYECTO, comando 'tree' de linux)
+### Cliente
+![Screenshot 2025-04-21 195704](https://github.com/user-attachments/assets/2dfd24d1-f762-46e2-bb2e-aee8c7b6ec53)
+### Servidor
+![Screenshot 2025-04-21 195819](https://github.com/user-attachments/assets/f1be9c1c-f6d5-48b6-81f9-eb89fd36e3f6)
 
 ### Estructura del ZooKeeper
 
