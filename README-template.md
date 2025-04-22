@@ -187,7 +187,6 @@ PUBLIC_IP=0.0.0.0
 ```
 ---
 >>> #### Secret Key
->>> - The SECRET_KEY enviroment variable must be generated with the following code (can be generated with ChatGPT) and it MUST be the same in every server you instanciate:
 >>> - La variable de entorno SECRET_KEY debe de ser generada por medio del siguiente script en python. **Ademas esta debe de ser LA MISMA en cada uno de los servidores que se vayan a inicializar**. 
 
 ```python
