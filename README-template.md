@@ -159,7 +159,7 @@ Con el servidor iniciado la documentación se puede encontrar en la ruta http://
 
 # 3. Descripción del ambiente de desarrollo y técnico
 
-## Como se compila y ejecuta.
+## Cómo se compila y ejecuta
 Antes de ejecutar cualquiera de nuestros dos servicios, el usuario debera de hacerle fork a el repositorio e inicializarlo en su máquina.
 
 ### Cliente
@@ -200,7 +200,7 @@ print(secrets.token_hex(32))
 7. Ejecute el comando `alembic upgrade head` para correr las migraciones contra la base de datos.
 8. Por último, ejecute el comando `fastapi run main.py` que le permitirá correr el servidor a través del CLI de `fastapi`.
 
-## Detalles del desarrollo.
+## Detalles del desarrollo
 
 El desarrollo del proyecto fluyó de manera constante y efectiva a lo largo del tiempo asignado para su implementación. Logramos pequeñas victorias clave en las etapas tempranas, lo cual nos permitió enfocar más tiempo y energía en las funcionalidades críticas del sistema, como la comunicación entre nodos y la arquitectura distribuida.
 
@@ -445,7 +445,7 @@ Para la implementación del middleware MOM se seleccionaron tecnologías que per
 
 
 
-## opcional - detalles de la organización del código por carpetas o descripción de algún archivo. (ESTRUCTURA DE DIRECTORIOS Y ARCHIVOS IMPORTANTE DEL PROYECTO, comando 'tree' de linux)
+## Detalles de la organización del código por carpetas
 ### Cliente
 ![Screenshot 2025-04-21 195704](https://github.com/user-attachments/assets/2dfd24d1-f762-46e2-bb2e-aee8c7b6ec53)
 ### Servidor
@@ -466,17 +466,41 @@ Conociendo la estructura entonces podemos explicar el funcionamiento del sistema
 Después de cada petición, el ZooKeeper le entrega un nuevo server disponible a cliente a manera de Round Robin.
 
 
-## opcionalmente - si quiere mostrar resultados o pantallazos
-
 # 4. Descripción del ambiente de EJECUCIÓN (en producción) lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
 
-# IP o nombres de dominio en nube o en la máquina servidor.
+# IP o nombres de dominio en nube o en la máquina servidor
+
+Actualmente en AWS se encuentran 4 máquinas EC2 instanciadas. Se presentan con su nombre personalizado en AWS y sus respectivas IPs públicas.
+
+1. Zookeeper
+   
+   Nombre: mom-zookeeper
+   
+   IP: 52.21.11.66
+
+3. Servidor MOM 1
+
+   Nombre: mom-server-1
+   
+   IP: 34.194.148.181
+
+3. Servidor MOM 2
+
+   Nombre: mom-server-2
+   
+   IP: 44.197.47.224
+
+5. Servidor MOM 3
+
+   Nombre: mom-server-3
+   
+   IP: 35.168.118.155
 
 ## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
 
-## Cómo se lanza el servidor.
+## Cómo se lanza el servidor
 
-Los servidores en nuestro proyecto estan alojados en AWS como máquinas EC2 T2 micro, las cuales nos permiten tener una máquina ubuntu donde estará corriendo el programa del servidor.
+Los servidores en nuestro proyecto están alojados en AWS como máquinas EC2 T2 micro, las cuales nos permiten tener una máquina ubuntu donde estará corriendo el programa del servidor.
 
 ## Mini guía de cómo un usuario utilizaría el software o la aplicación
 
@@ -489,16 +513,23 @@ Un usuario que quiera utilizar la aplicación deberá:
 5. Leer el menú e ingresar la opción que desee.
 6. En cada opción se le darán instrucciones claras acerca de lo que debe ingresar, sígalas de manera correcta.
 
-## Opcionalmente - si quiere mostrar resultados o pantallazos
+## Pantallazos
 
-# 5. otra información que considere relevante para esta actividad.
+# 5. Otra información relevante
 
-# referencias:
+# Referencias:
 
-<debemos siempre reconocer los créditos de partes del código que reutilizaremos, así como referencias a youtube, o referencias bibliográficas utilizadas para desarrollar el proyecto o la actividad>
+A continuación se presentan los links de las páginas web y recursos utilizados para la investigación, entendimiento, y desarrollo del proyecto.
 
-## sitio1-url
+### Documentación Zookeeper
 
-## sitio2-url
+https://zookeeper.apache.org/doc/r3.4.6/zookeeperProgrammers.html
 
-## url de donde tomo info para desarrollar este proyecto
+https://zookeeper.apache.org/doc/r3.8.0/index.html
+
+### Documentación RabbitMQ
+
+Se usó la información del modelo de mensajería de RabbitMQ como guía para modelar gran parte de las funcionalidades del proyecto. Se tomó como un ejemplo a seguir para aplicar las mejores prácticas y arquitectura adecuada.
+
+https://www.rabbitmq.com/tutorials
+
