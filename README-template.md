@@ -46,7 +46,7 @@ Además, se debe desarrollar una aplicación cliente de prueba, documentar todo 
 - **Transparencia:** El sistema debe ser transparente, es decir, los clientes no deben saber los detalles internos del cluster, como la ubicación de los tópicos o colas. Además, el uso del sistema debe ser homogéneo, independientemente del nodo al que se conecte el cliente.
 - **Desempeño y Eficiencia:** El sistema debe responder en tiempos aceptables ante operaciones de envío y recepción de mensajes.
 - **Mantenibilidad:** La arquitectura debe permitir la inclusión de nuevas funcionalidades sin necesidad de una reestructuración completa.
-- *Multiusuario:* El sistema debe soportar la conexión concurrente de múltiples usuarios, garantizando la correcta identificación y separación de sus recursos y mensajes.
+- **Multiusuario:** El sistema debe soportar la conexión concurrente de múltiples usuarios, garantizando la correcta identificación y separación de sus recursos y mensajes.
 - **Modelo de Comunicación Distribuida:** El sistema debe soportar interacciones sincrónicas y asincrónicas.
 
 ## 1.2. Qué aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor (requerimientos funcionales y no funcionales)
@@ -531,7 +531,7 @@ Vista desde la terminal del cliente.
 
 ![image](https://github.com/user-attachments/assets/c79f305a-103b-433f-b501-580892a2dc6c)
 
-3. Menú principal
+2. Menú principal
 
 ![image](https://github.com/user-attachments/assets/8827e6ff-43ef-41c2-b380-a256e180ac18)
 
