@@ -137,6 +137,10 @@ Suscribirse a un tópico
 
 - Permite al usuario suscribirse a un tópico para recibir mensajes publicados.
 
+Cancelar suscripción a un tópico
+
+- Detiene la recepción automática de mensajes desde un tópico suscrito.
+
 Salir del cliente
 
 - Finaliza la ejecución del cliente y cierra la conexión con el middleware.
