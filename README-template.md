@@ -162,6 +162,12 @@ Con el servidor iniciado la documentación se puede encontrar en la ruta http://
 ## Cómo se compila y ejecuta
 Antes de ejecutar cualquiera de nuestros dos servicios, el usuario deberá de hacerle fork al repositorio e inicializarlo en su máquina.
 
+### Zookeeper
+Adentro de la máquina virtual mom-zookeeper, sólo es necesario correr el siguiente comando para monitorear el zookeeper:
+```
+docker exec -it zookeeper zkCli.sh -server localhost:2181
+```
+
 ### Cliente
 Para ejecutar el cliente de nuestra aplicación es necesario que se sigan los siguientes pasos:
 1. Diríjase a la carpeta `client`.
