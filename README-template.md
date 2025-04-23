@@ -160,7 +160,7 @@ Con el servidor iniciado la documentación se puede encontrar en la ruta http://
 # 3. Descripción del ambiente de desarrollo y técnico
 
 ## Cómo se compila y ejecuta
-Antes de ejecutar cualquiera de nuestros dos servicios, el usuario debera de hacerle fork a el repositorio e inicializarlo en su máquina.
+Antes de ejecutar cualquiera de nuestros dos servicios, el usuario deberá de hacerle fork al repositorio e inicializarlo en su máquina.
 
 ### Cliente
 Para ejecutar el cliente de nuestra aplicación es necesario que se sigan los siguientes pasos:
@@ -217,6 +217,49 @@ Gracias a esto, podemos afirmar que el desarrollo del proyecto se dio de manera 
 - gRPC: Protobuf
 
 Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a investigar profundamente varios conceptos para poder implementar la teoría en soluciones prácticas. En ese proceso, las documentaciones oficiales de las herramientas utilizadas, así como el apoyo de agentes de inteligencia artificial, fueron fundamentales para guiarnos en la construcción y validación de nuestras ideas.
+
+En la sección 4. Descripción del ambiente de Ejecución, se listan en detalle todas las librerías usadas y sus respectivas versiones.
+
+### Justificación de las tecnologías usadas
+
+Para la implementación del middleware MOM se seleccionaron tecnologías que permiten construir un sistema distribuido robusto, eficiente y escalable. FastAPI fue elegida como framework principal del servidor por su velocidad, soporte asincrónico nativo y facilidad para definir APIs REST, facilitando la interacción con los clientes. Para la comunicación entre servidores, se optó por gRPC debido a su eficiencia, bajo consumo de ancho de banda y soporte para transmisión binaria mediante protocolos Protobuf, lo cual es ideal para ambientes distribuidos de alto rendimiento. La persistencia de usuarios, colas, tópicos y mensajes se gestiona mediante MySQL, una base de datos relacional madura, confiable y ampliamente adoptada, lo cual garantiza integridad de datos y soporte para consultas complejas. Finalmente, se utilizó Apache ZooKeeper como mecanismo de coordinación y gestión del clúster de servidores, permitiendo detección de fallos, balanceo de carga, descubrimiento de servicios y almacenamiento distribuido de metadatos, funcionalidades esenciales para garantizar la disponibilidad y consistencia del sistema MOM.
+
+
+## Descripción y cómo se configuran los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
+
+Más arriba en esta documentación, desde la sección 3.Descripción del ambiente del desarrollo, se puede evidenciar toda la configuración necesaria para el proyecto.
+
+## Detalles de la organización del código por carpetas
+### Cliente
+![Screenshot 2025-04-21 195704](https://github.com/user-attachments/assets/2dfd24d1-f762-46e2-bb2e-aee8c7b6ec53)
+### Servidor
+![Screenshot 2025-04-21 195819](https://github.com/user-attachments/assets/f1be9c1c-f6d5-48b6-81f9-eb89fd36e3f6)
+
+### Estructura del ZooKeeper
+
+Nuestro ZooKeeper tiene la siguiente estructura:
+
+![Screenshot_2025-04-21-11-18-40_1920x1080](https://github.com/user-attachments/assets/3fe4c046-bade-4631-baf1-c75e8e4a5250)
+
+Encontramos la ruta /servers donde se encuentran las direcciones IP de los servidores disponibles actualmente, son nodos efímeros los cuales desaparecen al momento que el server se desconecta, y es de esta lista de servers que se eligen para interactuar con el cliente. También encontramos la ruta de /servers-metadata donde también se encuentran las IP de los servidores, pero estos no desaparecen si el servidor llega a caer de forma inesperada, cada una de estas direcciones IP tiene a su vez por dentro las colas, los tópicos y los usuarios locales de cada servidor (los ID de cada elemento almacenado).
+
+Conociendo la estructura entonces podemos explicar el funcionamiento del sistema con el ZooKeeper:
+
+![Screenshot_2025-04-21-11-19-20_1920x1080](https://github.com/user-attachments/assets/4b93741c-70b4-4a83-ae5c-91812aca5a1a)
+
+Después de cada petición, el ZooKeeper le entrega un nuevo server disponible a cliente a manera de Round Robin.
+
+# 4. Descripción del ambiente de EJECUCIÓN (en producción) lenguaje de programación, librerías, paquetes, etc, con sus números de versiones
+
+Lenguaje: Python v3.12.3
+
+Framework: FastAPI v0.115.12
+
+Base de Datos: MySQL v9.2.0
+
+Zookeeper: Apache Zookeeper v3.8
+
+gRPC: grpcio v1.71.0
 
 ### Paquetes Cliente
 
@@ -436,38 +479,6 @@ Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a inv
 - **uvloop==0.21.0**  
   Reemplazo para el loop de eventos de asyncio, mejora el rendimiento de aplicaciones async.
 
-### Justificación de las tecnologías usadas
-
-Para la implementación del middleware MOM se seleccionaron tecnologías que permiten construir un sistema distribuido robusto, eficiente y escalable. FastAPI fue elegida como framework principal del servidor por su velocidad, soporte asincrónico nativo y facilidad para definir APIs REST, facilitando la interacción con los clientes. Para la comunicación entre servidores, se optó por gRPC debido a su eficiencia, bajo consumo de ancho de banda y soporte para transmisión binaria mediante protocolos Protobuf, lo cual es ideal para ambientes distribuidos de alto rendimiento. La persistencia de usuarios, colas, tópicos y mensajes se gestiona mediante MySQL, una base de datos relacional madura, confiable y ampliamente adoptada, lo cual garantiza integridad de datos y soporte para consultas complejas. Finalmente, se utilizó Apache ZooKeeper como mecanismo de coordinación y gestión del clúster de servidores, permitiendo detección de fallos, balanceo de carga, descubrimiento de servicios y almacenamiento distribuido de metadatos, funcionalidades esenciales para garantizar la disponibilidad y consistencia del sistema MOM.
-
-
-## Descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
-
-
-
-## Detalles de la organización del código por carpetas
-### Cliente
-![Screenshot 2025-04-21 195704](https://github.com/user-attachments/assets/2dfd24d1-f762-46e2-bb2e-aee8c7b6ec53)
-### Servidor
-![Screenshot 2025-04-21 195819](https://github.com/user-attachments/assets/f1be9c1c-f6d5-48b6-81f9-eb89fd36e3f6)
-
-### Estructura del ZooKeeper
-
-Nuestro ZooKeeper tiene la siguiente estructura:
-
-![Screenshot_2025-04-21-11-18-40_1920x1080](https://github.com/user-attachments/assets/3fe4c046-bade-4631-baf1-c75e8e4a5250)
-
-Encontramos la ruta servers donde se encuentran las direcciones IP de los servidores disponibles actualmente, son nodos efímeros los cuales desaparecen al momento que el server se desconecta, y es de esta lista de servers que se eligen para interactuar con el cliente. También encontramos la ruta de servers-metadata donde también se encuentran las IP de los servidores, pero estos no desaparecen si el servidor llega a caer de forma inesperada, cada una de estas direcciones IP tiene a su vez por dentro las colas, los tópicos y los usuarios locales de cada servidor (los ID de cada elemento almacenado).
-
-Conociendo la estructura entonces podemos explicar el funcionamiento del sistema con el ZooKeeper:
-
-![Screenshot_2025-04-21-11-19-20_1920x1080](https://github.com/user-attachments/assets/4b93741c-70b4-4a83-ae5c-91812aca5a1a)
-
-Después de cada petición, el ZooKeeper le entrega un nuevo server disponible a cliente a manera de Round Robin.
-
-
-# 4. Descripción del ambiente de EJECUCIÓN (en producción) lenguaje de programación, librerias, paquetes, etc, con sus numeros de versiones.
-
 # IP o nombres de dominio en nube o en la máquina servidor
 
 Actualmente en AWS se encuentran 4 máquinas EC2 instanciadas. Se presentan con su nombre personalizado en AWS y sus respectivas IPs públicas.
@@ -496,7 +507,6 @@ Actualmente en AWS se encuentran 4 máquinas EC2 instanciadas. Se presentan con 
    
    IP: 35.168.118.155
 
-## descripción y como se configura los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
 
 ## Cómo se lanza el servidor
 
@@ -515,9 +525,29 @@ Un usuario que quiera utilizar la aplicación deberá:
 
 ## Pantallazos
 
+Vista desde la terminal del cliente.
+
+1. Registro y Login
+
+![image](https://github.com/user-attachments/assets/c79f305a-103b-433f-b501-580892a2dc6c)
+
+3. Menú principal
+
+![image](https://github.com/user-attachments/assets/8827e6ff-43ef-41c2-b380-a256e180ac18)
+
+3. Ejemplos de peticiones, y evidencia de los mensajes de éxito respectivos.
+
+![image](https://github.com/user-attachments/assets/105474f2-cd57-46ee-8a7a-4cbba2e782e7)
+
+![image](https://github.com/user-attachments/assets/c4706ac5-9ae4-4509-9d86-c81a367031f9)
+
+![image](https://github.com/user-attachments/assets/7fb6b8af-45ff-45ae-9524-cf0aaaa27d8d)
+
+![image](https://github.com/user-attachments/assets/5ac4c1c4-f8c9-4139-b0b7-7a2885eb34c4)
+
 # 5. Otra información relevante
 
-# Referencias:
+## Referencias:
 
 A continuación se presentan los links de las páginas web y recursos utilizados para la investigación, entendimiento, y desarrollo del proyecto.
 
@@ -532,4 +562,10 @@ https://zookeeper.apache.org/doc/r3.8.0/index.html
 Se usó la información del modelo de mensajería de RabbitMQ como guía para modelar gran parte de las funcionalidades del proyecto. Se tomó como un ejemplo a seguir para aplicar las mejores prácticas y arquitectura adecuada.
 
 https://www.rabbitmq.com/tutorials
+
+### Apoyo de Inteligencia Artificial
+
+Se hizo uso de ChatGPT para efectos de corrección de redacción, investigación, y consejos para implementar las mejores arquitecturas y buenas prácticas de programación.
+
+https://chatgpt.com/
 
