@@ -574,3 +574,4 @@ https://www.rabbitmq.com/tutorials
 Se hizo uso de ChatGPT para efectos de corrección de redacción, investigación, y consejos para implementar las mejores arquitecturas y buenas prácticas de programación.
 
 https://chatgpt.com/
+
