@@ -218,7 +218,7 @@ Gracias a esto, podemos afirmar que el desarrollo del proyecto se dio de manera 
 
 Como equipo, nos enfrentamos a varios desafíos técnicos que nos llevaron a investigar profundamente varios conceptos para poder implementar la teoría en soluciones prácticas. En ese proceso, las documentaciones oficiales de las herramientas utilizadas, así como el apoyo de agentes de inteligencia artificial, fueron fundamentales para guiarnos en la construcción y validación de nuestras ideas.
 
-En la sección 4. Descripción del ambiente de Ejecución, se listan en detalle todas las librerías usadas y sus respectivas versiones.
+En la sección [4. Descripción del ambiente de Ejecución](#4-descripción-del-ambiente-de-ejecución-en-producción-lenguaje-de-programación-librerías-paquetes-etc-con-sus-números-de-versiones), se listan en detalle todas las librerías usadas y sus respectivas versiones.
 
 ### Justificación de las tecnologías usadas
 
@@ -227,7 +227,7 @@ Para la implementación del middleware MOM se seleccionaron tecnologías que per
 
 ## Descripción y cómo se configuran los parámetros del proyecto (ej: ip, puertos, conexión a bases de datos, variables de ambiente, parámetros, etc)
 
-Más arriba en esta documentación, desde la sección 3.Descripción del ambiente del desarrollo, se puede evidenciar toda la configuración necesaria para el proyecto.
+Más arriba en esta documentación, desde la sección [3.Descripción del ambiente del desarrollo](#3-descripción-del-ambiente-de-desarrollo-y-técnico), se puede evidenciar toda la configuración necesaria para el proyecto.
 
 ## Detalles de la organización del código por carpetas
 ### Cliente
